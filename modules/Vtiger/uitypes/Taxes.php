@@ -5,9 +5,9 @@
  *
  * @package   UIType
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author YetiForce.com
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author YetiForce S.A.
  */
 class Vtiger_Taxes_UIType extends Vtiger_Base_UIType
 {
@@ -83,7 +83,7 @@ class Vtiger_Taxes_UIType extends Vtiger_Base_UIType
 	}
 
 	/** {@inheritdoc} */
-	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel)
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
 	{
 		return [
 			'value' => \App\Purifier::decodeHtml($this->getDisplayValue($value, $recordModel->getId(), $recordModel, true, false)),
@@ -133,7 +133,7 @@ class Vtiger_Taxes_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/** {@inheritdoc} */

@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 namespace vtlib;
@@ -613,7 +613,7 @@ class PackageImport extends PackageExport
 	 */
 	public function importModule()
 	{
-		$tabname = $this->_modulexml->name;
+		$moduleName = (string) $this->_modulexml->name;
 		$tabLabel = $this->_modulexml->label;
 		$tabVersion = $this->_modulexml->version;
 		$isextension = false;
@@ -632,7 +632,7 @@ class PackageImport extends PackageExport
 		$vtigerMaxVersion = $this->_modulexml->dependencies->vtiger_max_version;
 
 		$moduleInstance = new Module();
-		$moduleInstance->name = $tabname;
+		$moduleInstance->name = $moduleName;
 		$moduleInstance->label = $tabLabel;
 		$moduleInstance->isentitytype = (true !== $isextension);
 		$moduleInstance->version = (!$tabVersion) ? 0 : $tabVersion;
@@ -1156,12 +1156,9 @@ class PackageImport extends PackageExport
 		Functions::recurseDelete($dirName);
 		register_shutdown_function(function () {
 			try {
-				$viewer = \Vtiger_Viewer::getInstance();
-				$viewer->clearAllCache();
 				Functions::recurseDelete('cache/templates_c');
-			} catch (\Throwable $e) {
+			} catch (\Exception $e) {
 				\App\Log::error($e->getMessage() . PHP_EOL . $e->__toString());
-				throw $e;
 			}
 		});
 		\App\Module::createModuleMetaFile();

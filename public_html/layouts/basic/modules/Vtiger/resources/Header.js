@@ -5,7 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  *************************************************************************************/
 'use strict';
 
@@ -110,9 +110,7 @@ $.Class(
 		},
 		registerCalendarButtonClickEvent: function () {
 			let element = $('#calendarBtn');
-			let dateFormat = element.data('dateFormat');
 			let currentDate = element.data('date');
-			let vtigerDateFormat = app.convertToDatePickerFormat(dateFormat);
 			element.on('click', function (e) {
 				e.stopImmediatePropagation();
 				element.closest('div.nav').find('div.open').removeClass('open');
@@ -124,7 +122,7 @@ $.Class(
 				}
 			});
 			element.DatePicker({
-				format: vtigerDateFormat,
+				format: App.Fields.Date.convertToDatePickerFormat(element.data('dateFormat')),
 				date: currentDate,
 				calendars: 1,
 				starts: 1,
@@ -436,24 +434,6 @@ $.Class(
 				$(this).parents('.d-inline-block').find('.dropdown-toggle .textHolder').html($(this).text());
 			});
 		},
-		listenTextAreaChange: function () {
-			let thisInstance = this;
-			$('textarea').on('keyup', function () {
-				let elem = $(this);
-				if (!elem.data('has-scroll')) {
-					elem.data('has-scroll', true);
-					elem.on('scroll keyup', function () {
-						thisInstance.resizeTextArea($(this));
-					});
-				}
-				thisInstance.resizeTextArea($(this));
-			});
-		},
-		resizeTextArea: function (elem) {
-			elem.height(1);
-			elem.scrollTop(0);
-			elem.height(elem[0].scrollHeight - elem[0].clientHeight + elem.height());
-		},
 		registerKnowledgeBaseModal() {
 			$('.js-knowledge-base-modal').on('click', () => {
 				if (window.KnowledgeBaseModalVueComponent.mounted === undefined) {
@@ -484,7 +464,6 @@ $.Class(
 				quickCreateModal = container.find('.quickCreateModules');
 			app.showNewScrollbarLeft(menuContainer, { suppressScrollX: true });
 			app.showNewScrollbar(menuContainer.find('.subMenu').last(), { suppressScrollX: true });
-			thisInstance.listenTextAreaChange();
 			thisInstance.registerFooTable(); //Enable footable
 			$('.js-clear-history').on('click', () => {
 				app.clearBrowsingHistory();

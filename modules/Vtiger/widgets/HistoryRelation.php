@@ -5,8 +5,8 @@
  *
  * @package Widget
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Tomasz Kur <t.kur@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -107,10 +107,10 @@ class Vtiger_HistoryRelation_Widget extends Vtiger_Basic_Widget
 			}
 			$body = trim(App\Purifier::purify($row['body']));
 			if (!$request->getBoolean('isFullscreen')) {
-				$body = App\TextParser::textTruncate($body, 100);
+				$body = App\TextUtils::textTruncate($body, 100);
 			} else {
 				$body = str_replace(['<p></p>', '<p class="MsoNormal">'], ["\r\n", "\r\n"], App\Purifier::decodeHtml(App\Purifier::purify($body)));
-				$body = nl2br(App\TextParser::textTruncate($body, 500), false);
+				$body = nl2br(App\TextUtils::textTruncate($body, 500), false);
 			}
 			$row['body'] = $body;
 			$history[] = $row;

@@ -3,8 +3,8 @@
 /**
  * OSSMailView graf dashboard class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 class OSSMailView_Graf_Dashboard extends Vtiger_IndexAjax_View
 {
@@ -31,9 +31,7 @@ class OSSMailView_Graf_Dashboard extends Vtiger_IndexAjax_View
 		return '&search_params=' . json_encode([$conditions]);
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$userId = \App\User::getCurrentUserId();

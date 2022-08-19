@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {assign var=CONF_DATA value=\App\Json::decode(html_entity_decode($WIDGET->get('data')))}
 <script type="text/javascript">
 	YetiForce_Bar_Widget_Js('YetiForce_SummationByMonths_Widget_Js', {}, {
@@ -14,10 +14,10 @@
 							callback: function yAxisTickCallback(label, index, labels) {
 								return App.Fields.Double.formatToDisplay(label);
 							},
-							{if $CONF_DATA['plotTickSize']}
+							{if !empty($CONF_DATA['plotTickSize'])}
 								stepValue: {$CONF_DATA['plotTickSize']},
 							{/if}
-							{if $CONF_DATA['plotLimit']}
+							{if !empty($CONF_DATA['plotLimit'])}
 								max: {$CONF_DATA['plotLimit']},
 							{/if}
 						},

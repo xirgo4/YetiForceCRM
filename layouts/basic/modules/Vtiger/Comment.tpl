@@ -6,7 +6,7 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-* Contributor(s): YetiForce.com
+* Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
@@ -34,7 +34,7 @@
 							<img class="q-message-avatar gt-sm mr-2" alt="userImage" src="{$IMAGE['url']}">
 						{else}
 							<div class="q-message-avatar gt-sm visible u-fs-26px flex flex-center">
-								<span class="{if $COMMENT->get('customer')}yfi-public-webservice{else}fas fa-user{/if}"></span>
+								<span class="{if $COMMENT->get('customer')}yfi-share-portal-record{else}fas fa-user{/if}"></span>
 							</div>
 						{/if}
 						<div class="full-width">
@@ -78,8 +78,9 @@
 												title="{$CHILD_COMMENTS_COUNT}&nbsp;{if $CHILD_COMMENTS_COUNT eq 1}{\App\Language::translate('LBL_REPLY',$MODULE_NAME)}{else}{\App\Language::translate('LBL_REPLIES',$MODULE_NAME)}{/if}"
 												data-js="click">
 												<span class="js-child-comments-count">{$CHILD_COMMENTS_COUNT}</span>
-												&nbsp;
-												<span class="fas fa-share"></span>
+												{if empty($IS_READ_ONLY)}
+													<span class="fas fa-share ml-1"></span>
+												{/if}
 											</button>
 										</span>
 										<span class="d-none hideThreadBlock" data-child-comments-count="{$CHILD_COMMENTS_COUNT}">
@@ -132,7 +133,13 @@
 								{/if}
 								<span class="q-message-text-content">
 									<div class="js-comment-info" data-js="html">{$COMMENT->getDisplayValue('commentcontent')}</div>
-									<div class="u-w-fit q-message-stamp ml-auto">{\App\Fields\DateTime::formatToViewDate($COMMENT->getCommentedTime())}</div>
+									<div class="u-w-fit q-message-stamp ml-auto">
+										{if \Config\Modules\ModComments::$dateFormat === 'user'}
+											{\App\Fields\DateTime::formatToViewDate($COMMENT->getCommentedTime())}
+										{else}
+											{\App\Fields\DateTime::formatToDisplay($COMMENT->getCommentedTime())}
+										{/if}
+									</div>
 								</span>
 							</div>
 						</div>
@@ -155,7 +162,11 @@
 								<span class="ml-auto">
 									<em class="mr-1">{\App\Language::translate('LBL_MODIFIED',$MODULE_NAME)}</em>
 									<span class="js-comment-modified-time commentModifiedTime" data-js="html">
-										{\App\Fields\DateTime::formatToViewDate($COMMENT->getModifiedTime())}
+										{if \Config\Modules\ModComments::$dateFormat === 'user'}
+											{\App\Fields\DateTime::formatToViewDate($COMMENT->getModifiedTime())}
+										{else}
+											{\App\Fields\DateTime::formatToDisplay($COMMENT->getModifiedTime())}
+										{/if}
 									</span>
 								</span>
 							{/if}

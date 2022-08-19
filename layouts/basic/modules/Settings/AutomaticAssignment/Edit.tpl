@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Settings-AutomaticAssingment-Edit -->
 	<div class="verticalScroll ">
@@ -31,7 +31,6 @@
 								{\App\Language::translate($BLOCK, $QUALIFIED_MODULE)}
 							</h5>
 						</div>
-						{assign var=HR value=false}
 						<div class="c-panel__body p-2 js-block-content {if !$smarty.foreach.structre.first}d-none{/if}">
 							<div class="form-group row mb-0">
 								{foreach from=$FIELDS item=FIELD_MODEL key=FIELD_NAME name=field}
@@ -54,7 +53,7 @@
 												{\App\Language::translate($FIELD_MODEL->getFieldLabel(), $QUALIFIED_MODULE)}
 												{if $FIELD_MODEL->isMandatory()}<span class="redColor">*</span>{/if}
 												{if $FIELD_MODEL->get('tooltip')}
-													<div class="js-popover-tooltip ml-1 d-inline my-auto u-h-fit u-cursor-pointer popover-triggered" data-placement="top" data-content="{\App\Language::translate($FIELD_MODEL->get('tooltip'), $QUALIFIED_MODULE)}">
+													<div class="js-popover-tooltip ml-1 d-inline my-auto u-h-fit u-cursor-pointer" data-placement="top" data-content="{\App\Language::translate($FIELD_MODEL->get('tooltip'), $QUALIFIED_MODULE)}">
 														<span class="fas fa-info-circle"></span>
 													</div>
 												{/if}:

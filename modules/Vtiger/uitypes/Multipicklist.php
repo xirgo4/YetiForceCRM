@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Multipicklist_UIType extends Vtiger_Base_UIType
@@ -70,19 +70,28 @@ class Vtiger_Multipicklist_UIType extends Vtiger_Base_UIType
 		$fieldName = App\Colors::sanitizeValue($this->getFieldModel()->getName());
 		foreach ($values as $value) {
 			$displayValue = App\Language::translate($value, $moduleName);
+			if ($icon = \App\Fields\Picklist::getIcon($this->getFieldModel()->getName(), $value) ?: '') {
+				['type' => $type, 'name' => $name] = $icon;
+				$icon = '';
+				if ('icon' === $type) {
+					$icon = "<span class=\"{$name} mr-1\"></span>";
+				} elseif ('image' === $type && ($src = \App\Layout\Media::getImageUrl($name))) {
+					$icon = '<img class="icon-img--picklist mr-1" src="' . $src . '">';
+				}
+			}
 			$value = App\Colors::sanitizeValue($value);
 			$trValueRaw[] = $displayValue;
-			$trValue[] = "<span class=\"picklistValue picklistLb_{$moduleName}_{$fieldName}_{$value}\">$displayValue</span>";
+			$trValue[] = "<span class=\"picklistValue picklistLb_{$moduleName}_{$fieldName}_{$value}\">{$icon}{$displayValue}</span>";
 		}
 		if ($rawText) {
 			$valueRaw = str_ireplace(' |##| ', ', ', implode(' |##| ', $trValueRaw));
 			if (\is_int($length)) {
-				$valueRaw = \App\TextParser::textTruncate($valueRaw, $length);
+				$valueRaw = \App\TextUtils::textTruncate($valueRaw, $length);
 			}
 		} else {
 			$valueHtml = str_ireplace(' |##| ', ' ', implode(' |##| ', $trValue));
 			if (\is_int($length)) {
-				$valueHtml = \App\TextParser::htmlTruncate($valueHtml, $length);
+				$valueHtml = \App\TextUtils::htmlTruncateByWords($valueHtml, $length);
 			}
 		}
 		return $rawText ? $valueRaw : $valueHtml;
@@ -94,7 +103,8 @@ class Vtiger_Multipicklist_UIType extends Vtiger_Base_UIType
 		if (\is_array($value)) {
 			return $value;
 		}
-		return explode(' |##| ', \App\Purifier::encodeHtml($value));
+
+		return $value ? explode(' |##| ', \App\Purifier::encodeHtml($value)) : [];
 	}
 
 	/** {@inheritdoc} */
@@ -132,7 +142,7 @@ class Vtiger_Multipicklist_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/**

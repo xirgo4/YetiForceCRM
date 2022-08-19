@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<div id="selectAllMsgDiv" class="alert-block msgDiv">
 		<strong>
@@ -16,7 +16,7 @@
 	</div>
 	{include file=\App\Layout::getTemplatePath('ListViewAlphabet.tpl', $RELATED_MODULE_NAME) MODULE_MODEL=$RELATED_MODULE}
 	{assign var=IS_INVENTORY value=($RELATED_VIEW === 'List' && !empty($INVENTORY_MODULE) && !empty($INVENTORY_FIELDS))}
-	<div class="listViewEntriesDiv u-overflow-scroll-non-desktop">
+	<div class="listViewEntriesDiv u-overflow-scroll-non-desktop table-responsive">
 		<table class="table tableBorderHeadBody listViewEntriesTable {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
 			<thead>
 				<tr class="listViewHeaders">
@@ -61,7 +61,7 @@
 							{/if}
 							{if $HEADER_FIELD->getFieldDataType() eq 'tree' || $HEADER_FIELD->getFieldDataType() eq 'categoryMultipicklist'}
 								<div class="d-flex align-items-center">
-									<input name="searchInSubcategories" value="1" type="checkbox" class="searchInSubcategories mr-1" id="searchInSubcategories{$HEADER_FIELD_NAME}" title="{\App\Language::translate('LBL_SEARCH_IN_SUBCATEGORIES',$MODULE_NAME)}" data-columnname="{$HEADER_FIELD->getColumnName()}" {if !empty($SEARCH_DETAILS[$HEADER_FIELD_NAME]['specialOption'])} checked {/if}>
+									<input name="searchInSubcategories" value="1" type="checkbox" class="searchInSubcategories mr-1 ml-1" id="searchInSubcategories{$HEADER_FIELD_NAME}" title="{\App\Language::translate('LBL_SEARCH_IN_SUBCATEGORIES',$MODULE_NAME)}" data-columnname="{$HEADER_FIELD->getColumnName()}" {if !empty($SEARCH_DETAILS[$HEADER_FIELD_NAME]['specialOption'])} checked {/if}>
 									<span class="js-popover-tooltip delay0" data-js="popover" data-placement="top" data-original-title="{\App\Language::translate($HEADER_FIELD->getFieldLabel(), $MODULE)}" data-content="{\App\Language::translate('LBL_SEARCH_IN_SUBCATEGORIES',$MODULE_NAME)}">
 										<span class="fas fa-info-circle"></span>
 									</span>
@@ -85,6 +85,10 @@
 							{\App\Language::translate('LBL_RELATION_COMMENT', $RELATED_MODULE->get('name'))}
 						</th>
 					{/if}
+					{if $IS_INVENTORY || $IS_WIDGETS}
+						<th>
+						</th>
+					{/if}
 				</tr>
 			</thead>
 			<tbody>
@@ -104,14 +108,13 @@
 						{foreach item=HEADER_FIELD from=$RELATED_HEADERS}
 							<td>
 								{assign var=FIELD_UI_TYPE_MODEL value=$HEADER_FIELD->getUITypeModel()}
-								{assign var=ARRAY_ELEMENT value=$HEADER_FIELD->getName()}
-								{if isset($SEARCH_DETAILS[$ARRAY_ELEMENT])}
-									{assign var=SEARCH_INFO value=$SEARCH_DETAILS[$ARRAY_ELEMENT]}
+								{assign var=LISTVIEW_HEADER_NAME value=$HEADER_FIELD->getFullName()}
+								{if isset($SEARCH_DETAILS[$LISTVIEW_HEADER_NAME])}
+									{assign var=SEARCH_INFO value=$SEARCH_DETAILS[$LISTVIEW_HEADER_NAME]}
 								{else}
 									{assign var=SEARCH_INFO value=[]}
 								{/if}
-								{include file=\App\Layout::getTemplatePath($FIELD_UI_TYPE_MODEL->getListSearchTemplateName(), $RELATED_MODULE_NAME)
-										FIELD_MODEL=$HEADER_FIELD SEARCH_INFO=$SEARCH_INFO USER_MODEL=$USER_MODEL MODULE_MODEL=$RELATED_MODULE MODULE=$RELATED_MODULE_NAME}
+								{include file=\App\Layout::getTemplatePath($FIELD_UI_TYPE_MODEL->getListSearchTemplateName(), $RELATED_MODULE_NAME)	FIELD_MODEL=$HEADER_FIELD SEARCH_INFO=$SEARCH_INFO USER_MODEL=$USER_MODEL MODULE_MODEL=$RELATED_MODULE MODULE=$RELATED_MODULE_NAME}
 							</td>
 						{/foreach}
 						<td class="reducePadding" colspan="{$ADDITIONAL_TD + 1}"></td>
@@ -143,11 +146,10 @@
 							{assign var=COUNT value=$COUNT+1}
 							{assign var=RELATED_HEADERNAME value=$HEADER_FIELD->getFieldName()}
 							<td class="{$WIDTHTYPE}" data-field-type="{$HEADER_FIELD->getFieldDataType()}" nowrap
-								{if $smarty.foreach.listHeaderForeach.iteration eq $RELATED_HEADER_COUNT}colspan="2" {/if}>
-								{if ($HEADER_FIELD->isNameField() eq true or $HEADER_FIELD->getUIType() eq '4') && $RELATED_RECORD->isViewable()}
-									<a class="modCT_{$RELATED_MODULE_NAME} js-list__field js-popover-tooltip--record" data-js="width" title=""
-										href="{$RELATED_RECORD->getDetailViewUrl()}">
-										{$RELATED_RECORD->getListViewDisplayValue($RELATED_HEADERNAME)}
+								{if $smarty.foreach.listHeaderForeach.iteration eq $RELATED_HEADER_COUNT} colspan="2" {/if}>
+								{if empty($HEADER_FIELD->get('source_field_name')) && ($HEADER_FIELD->isNameField() eq true or $HEADER_FIELD->getUIType() eq '4') &&  $RELATED_MODULE->isListViewNameFieldNavigationEnabled() && $RELATED_RECORD->isViewable()}
+									<a class="modCT_{$RELATED_MODULE_NAME} js-list__field js-popover-tooltip--record" data-js="width" title="" href="{$RELATED_RECORD->getDetailViewUrl()}">
+										{$RELATED_RECORD->getListViewDisplayValue($HEADER_FIELD)}
 									</a>
 								{elseif $HEADER_FIELD->get('fromOutsideList') eq true}
 									{if $HEADER_FIELD->get('isEditable')}
@@ -158,10 +160,10 @@
 											value="{$HEADER_FIELD->getEditViewDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}"
 											data-js="change" />
 									{else}
-										{$HEADER_FIELD->getDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}
+										{$HEADER_FIELD->getUITypeModel()->getListViewDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}
 									{/if}
 								{else}
-									{$RELATED_RECORD->getListViewDisplayValue($RELATED_HEADERNAME)}
+									{$RELATED_RECORD->getListViewDisplayValue($HEADER_FIELD)}
 								{/if}
 								{if $HEADER_FIELD@last}
 								</td>
@@ -196,7 +198,7 @@
 					{if $IS_INVENTORY || $IS_WIDGETS}
 						<tr class="js-hidden-row {if !$SHOW_RELATED_WIDGETS}d-none{/if}" data-id="{$RELATED_RECORD->getId()}">
 							{if $RELATED_MODULE->isQuickSearchEnabled()}
-								{$COUNT = $COUNT+1}
+								{$COUNT = $COUNT+2}
 							{/if}
 							<td colspan="{$COUNT + $ADDITIONAL_TD}" class="backgroundWhiteSmoke">
 								{if $IS_INVENTORY}

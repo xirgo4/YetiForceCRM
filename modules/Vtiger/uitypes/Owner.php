@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Owner_UIType extends Vtiger_Base_UIType
@@ -79,7 +79,7 @@ class Vtiger_Owner_UIType extends Vtiger_Base_UIType
 			return $ownerName;
 		}
 		if (\is_int($length)) {
-			$ownerName = \App\TextParser::textTruncate($ownerName, $length);
+			$ownerName = \App\TextUtils::textTruncate($ownerName, $length);
 		}
 		switch (\App\Fields\Owner::getType($value)) {
 			case 'Users':
@@ -180,7 +180,7 @@ class Vtiger_Owner_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'y', 'ny', 'om', 'nom', 'ogr', 'wr', 'nwr'];
+		return ['e', 'n', 'y', 'ny', 'om', 'nom', 'ogr', 'ogu', 'wr', 'nwr', 'ef', 'nf'];
 	}
 
 	/** {@inheritdoc} */

@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o.
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Settings_Vtiger_List_View extends Settings_Vtiger_Index_View
@@ -21,9 +21,7 @@ class Settings_Vtiger_List_View extends Settings_Vtiger_Index_View
 	 */
 	public $listViewModel;
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function preProcess(App\Request $request, $display = true)
 	{
 		parent::preProcess($request, false);
@@ -36,9 +34,7 @@ class Settings_Vtiger_List_View extends Settings_Vtiger_Index_View
 		$viewer->view('ListViewHeader.tpl', $request->getModule(false));
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$viewer = $this->getViewer($request);
@@ -98,9 +94,9 @@ class Settings_Vtiger_List_View extends Settings_Vtiger_Index_View
 			$sourceModule = $request->getByType('sourceModule', 2);
 			$model->set('sourceModule', $sourceModule);
 		}
-		if (!$request->isEmpty('formodule')) {
-			$sourceModule = $request->getByType('formodule', 1);
-			$model->set('formodule', $sourceModule);
+		if (!$request->isEmpty('forModule')) {
+			$sourceModule = $request->getByType('forModule', 1);
+			$model->set('forModule', $sourceModule);
 		}
 		if (!$this->listViewHeaders) {
 			$this->listViewHeaders = $model->getListViewHeaders();

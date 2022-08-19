@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -176,5 +176,32 @@ class Currency
 	{
 		\App\Cache::delete('CurrencyGetAll', 'All');
 		\App\Cache::delete('CurrencySupported', 'All');
+	}
+
+	/**
+	 * Add the currency by code.
+	 *
+	 * @param string $code
+	 *
+	 * @return int|null
+	 */
+	public static function addCurrency(string $code): ?int
+	{
+		$supported = self::getSupported();
+		if (empty($supported[$code])) {
+			\App\Log::error('No currency code to add found: ' . $code);
+			return null;
+		}
+		$db = \App\Db::getInstance();
+		$db->createCommand()
+			->insert('vtiger_currency_info', [
+				'currency_name' => $supported[$code]['currency_name'],
+				'currency_code' => $code,
+				'currency_symbol' => $supported[$code]['currency_symbol'],
+				'conversion_rate' => 1,
+				'currency_status' => 'Active',
+			])->execute();
+		self::clearCache();
+		return $db->getLastInsertID('vtiger_currency_info_id_seq');
 	}
 }

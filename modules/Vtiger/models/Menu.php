@@ -5,8 +5,8 @@
  *
  * @package Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 class Vtiger_Menu_Model
 {
@@ -41,7 +41,7 @@ class Vtiger_Menu_Model
 
 	public static function getBreadcrumbs($pageTitle = false)
 	{
-		$breadcrumbs = false;
+		$breadcrumbs = [];
 		$request = App\Request::init();
 		$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
 		$roleMenu = 'user_privileges/menu_' . filter_var($userPrivModel->get('roleid'), FILTER_SANITIZE_NUMBER_INT) . '.php';
@@ -75,7 +75,7 @@ class Vtiger_Menu_Model
 				$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
 				if ($moduleModel && $moduleModel->getDefaultUrl()) {
 					if ($mid) {
-						$url = $menus[$mid]['dataurl'] ?? $parentList[$mid]['dataurl'];
+						$url = $menus[$mid]['dataurl'] ?? $parentList[$mid]['dataurl'] ?? $moduleModel->getDefaultUrl();
 					} else {
 						$url = $moduleModel->getDefaultUrl();
 					}
@@ -216,7 +216,7 @@ class Vtiger_Menu_Model
 		$name = '';
 		$type = $row['type'];
 		if (\is_int($type)) {
-			$type = Settings_Menu_Module_Model::TYPES[$type];
+			$type = \App\Menu::TYPES[$type];
 			$moduleName = $row['name'];
 		} else {
 			$moduleName = $row['mod'] ?? '';

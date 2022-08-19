@@ -7,8 +7,8 @@ namespace App\Conditions\QueryFields;
  *
  * @package UIType
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -19,7 +19,7 @@ class OwnerField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function operatorE()
+	public function operatorE(): array
 	{
 		if (!\is_array($this->value)) {
 			$this->value = explode('##', $this->value);
@@ -36,7 +36,7 @@ class OwnerField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function operatorN()
+	public function operatorN(): array
 	{
 		if (!\is_array($this->value)) {
 			$this->value = explode('##', $this->value);
@@ -100,6 +100,25 @@ class OwnerField extends BaseField
 	}
 
 	/**
+	 * Users who belong to the same group as the currently logged in user.
+	 *
+	 * @return array
+	 */
+	public function operatorOgu(): array
+	{
+		$groups = \App\Fields\Owner::getInstance($this->getModuleName())->getGroups(false, 'private');
+		if ($groups) {
+			$condition = ['or'];
+			foreach (array_keys($groups)  as $idGroup) {
+				$condition[] = [$this->getColumnName() => (new \App\Db\Query())->select(['userid'])->from(["condition_groups_{$idGroup}_" . \App\Layout::getUniqueId() => \App\PrivilegeUtil::getQueryToUsersByGroup((int) $idGroup)])];
+			}
+		} else {
+			$condition = [$this->getColumnName() => (new \yii\db\Expression('0=1'))];
+		}
+		return $condition;
+	}
+
+	/**
 	 * Watched record.
 	 *
 	 * @return array
@@ -146,7 +165,7 @@ class OwnerField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function getOrderBy($order = false)
+	public function getOrderBy($order = false): array
 	{
 		$this->queryGenerator->addJoin(['LEFT JOIN', 'vtiger_users', 'vtiger_users.id = ' . $this->getColumnName()]);
 		$this->queryGenerator->addJoin(['LEFT JOIN', 'vtiger_groups', 'vtiger_groups.groupid = ' . $this->getColumnName()]);
@@ -161,7 +180,7 @@ class OwnerField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function operatorNy()
+	public function operatorNy(): array
 	{
 		return ['and',
 			['not', [$this->getColumnName() => null]],
@@ -174,7 +193,7 @@ class OwnerField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function operatorY()
+	public function operatorY(): array
 	{
 		return ['or',
 			[$this->getColumnName() => null],

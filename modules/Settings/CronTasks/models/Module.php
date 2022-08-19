@@ -3,8 +3,8 @@
 /**
  * Settings CronTasks Module Model class.
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Rafal Pospiech <r.pospiech@yetiforce.com>
  */
 class Settings_CronTasks_Module_Model extends Settings_Vtiger_Module_Model

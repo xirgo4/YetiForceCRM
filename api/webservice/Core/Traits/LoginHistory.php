@@ -5,8 +5,8 @@
  *
  * @package   API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -30,7 +30,7 @@ trait LoginHistory
 			->insert($this->controller->app['tables']['loginHistory'], array_merge([
 				'time' => date('Y-m-d H:i:s'),
 				'ip' => $this->controller->request->getServer('REMOTE_ADDR'),
-				'agent' => \App\TextParser::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false),
+				'agent' => \App\TextUtils::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false),
 				'user_name' => $this->controller->request->has('userName') ? $this->controller->request->get('userName') : $this->getUserData('user_name'),
 				'user_id' => $this->getUserData('id'),
 			],

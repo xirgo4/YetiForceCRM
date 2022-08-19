@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Products_ListView_Model extends Vtiger_ListView_Model
@@ -23,7 +23,7 @@ class Products_ListView_Model extends Vtiger_ListView_Model
 	{
 		$moduleModel = $this->getModule();
 		$moduleName = $moduleModel->get('name');
-		$queryGenerator = $this->get('query_generator');
+		$queryGenerator = $this->getQueryGenerator();
 		// Limit the choice of products/services only to the ones related to currently selected Opportunity - last step.
 		if (Settings_SalesProcesses_Module_Model::checkRelatedToPotentialsLimit($this->get('src_module'))) {
 			if ($this->isEmpty('filterFields')) {

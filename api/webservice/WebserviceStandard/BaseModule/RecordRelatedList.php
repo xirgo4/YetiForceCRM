@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -47,6 +47,8 @@ class RecordRelatedList extends \Api\Core\BaseAction
 
 	/**
 	 * Get related record list method.
+	 *
+	 * @api
 	 *
 	 * @throws \Api\Core\Exception
 	 *
@@ -200,7 +202,7 @@ class RecordRelatedList extends \Api\Core\BaseAction
 				$value = $relatedRecordModel->get($fieldName);
 				$response['records'][$id][$fieldName] = $fieldModel->getUITypeModel()->getApiDisplayValue($value, $relatedRecordModel);
 				if ($isRawData) {
-					$response['rawData'][$id][$fieldName] = $value;
+					$response['rawData'][$id][$fieldName] = $relatedRecordModel->getRawValue($fieldName);
 				}
 			}
 		}

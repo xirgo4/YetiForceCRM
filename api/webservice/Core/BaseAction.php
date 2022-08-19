@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -190,30 +190,20 @@ class BaseAction
 	}
 
 	/**
-	 * Get information, whether to check inventory levels.
-	 *
-	 * @return bool
-	 */
-	public function getCheckStockLevels(): bool
-	{
-		$parentId = \Api\WebservicePremium\Privilege::USER_PERMISSIONS !== $this->getPermissionType() ? $this->getParentCrmId() : 0;
-		return empty($parentId) || (bool) \Vtiger_Record_Model::getInstanceById($parentId)->get('check_stock_levels');
-	}
-
-	/**
 	 * Get parent record.
 	 *
 	 * @throws \Api\Core\Exception
 	 *
-	 * @return int
+	 * @return int|null
 	 */
-	public function getParentCrmId(): int
+	public function getParentCrmId(): ?int
 	{
 		if ($this->controller && ($parentId = $this->controller->request->getHeader('x-parent-id'))) {
 			$hierarchy = new \Api\WebservicePremium\BaseModule\Hierarchy();
 			$hierarchy->setAllUserData($this->userData);
 			$hierarchy->findId = $parentId;
-			$hierarchy->moduleName = \App\Record::getType(\App\Record::getParentRecord($this->getUserCrmId()));
+			$parentRecord = \App\Record::getParentRecord($this->getUserCrmId());
+			$hierarchy->moduleName = $parentRecord ? '' : \App\Record::getType($parentRecord);
 			$records = $hierarchy->get();
 			if (isset($records[$parentId])) {
 				return $parentId;
@@ -299,7 +289,7 @@ class BaseAction
 		$data['ip'] = $this->controller->request->getServer('REMOTE_ADDR');
 		$data['parent_id'] = $this->controller->request->getHeader('x-parent-id') ?: 0;
 		$data['last_method'] = $this->controller->request->getServer('REQUEST_URI');
-		$data['agent'] = \App\TextParser::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false);
+		$data['agent'] = \App\TextUtils::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false);
 		\App\Db::getInstance('webservice')->createCommand()
 			->update($this->controller->app['tables']['session'], $data, ['id' => $this->userData['sid']])
 			->execute();
@@ -317,7 +307,7 @@ class BaseAction
 		if (!\is_array($this->userData['custom_params'])) {
 			$this->userData['custom_params'] = \App\Json::isEmpty($this->userData['custom_params']) ? [] : \App\Json::decode($this->userData['custom_params']);
 		}
-		$this->userData['custom_params']['agent'] = \App\TextParser::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false);
+		$this->userData['custom_params']['agent'] = \App\TextUtils::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false);
 		if (isset($data['custom_params'])) {
 			$data['custom_params'] = \App\Json::encode(\App\Utils::merge($this->userData['custom_params'], $data['custom_params']));
 		}

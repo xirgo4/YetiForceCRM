@@ -5,8 +5,8 @@
  *
  * @package Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -583,24 +583,27 @@ class Vtiger_Inventory_Model
 	/**
 	 * Get discounts configuration.
 	 *
-	 * @return array config data
+	 * @param string $key
+	 *
+	 * @return mixed config data
 	 */
-	public static function getDiscountsConfig()
+	public static function getDiscountsConfig(string $key = '')
 	{
 		if (\App\Cache::has('Inventory', 'DiscountConfiguration')) {
-			return \App\Cache::get('Inventory', 'DiscountConfiguration');
-		}
-		$config = [];
-		$dataReader = (new \App\Db\Query())->from('a_#__discounts_config')->createCommand(\App\Db::getInstance('admin'))->query();
-		while ($row = $dataReader->read()) {
-			$value = $row['value'];
-			if (\in_array($row['param'], ['discounts'])) {
-				$value = explode(',', $value);
+			$config = \App\Cache::get('Inventory', 'DiscountConfiguration');
+		} else {
+			$config = [];
+			$dataReader = (new \App\Db\Query())->from('a_#__discounts_config')->createCommand(\App\Db::getInstance('admin'))->query();
+			while ($row = $dataReader->read()) {
+				$value = $row['value'];
+				if (\in_array($row['param'], ['discounts'])) {
+					$value = explode(',', $value);
+				}
+				$config[$row['param']] = $value;
 			}
-			$config[$row['param']] = $value;
+			\App\Cache::save('Inventory', 'DiscountConfiguration', $config, \App\Cache::LONG);
 		}
-		\App\Cache::save('Inventory', 'DiscountConfiguration', $config, \App\Cache::LONG);
-		return $config;
+		return $key ? $config[$key] : $config;
 	}
 
 	/**

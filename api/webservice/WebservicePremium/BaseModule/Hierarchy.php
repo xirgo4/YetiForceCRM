@@ -5,8 +5,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -85,7 +85,7 @@ class Hierarchy extends \Api\Core\BaseAction
 	 *				type="object",
 	 * 				@OA\Property(property="id", type="integer", example=117),
 	 * 				@OA\Property(property="parent", type="integer", example=0),
-	 * 				@OA\Property(property="name", type="string", example="YetiForce Sp. z o.o."),
+	 * 				@OA\Property(property="name", type="string", example="YetiForce S.A."),
 	 * 			),
 	 *		),
 	 *	),

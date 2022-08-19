@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 require_once 'VTJsonCondition.php';
 require_once 'include/runtime/Cache.php';
@@ -132,7 +132,8 @@ class VTWorkflowManager
 				'schdayofweek' => $wf->schdayofweek,
 				'schannualdates' => $wf->schannualdates,
 				'nexttrigger_time' => empty($wf->nexttrigger_time) ? null : $wf->nexttrigger_time,
-				'params' => empty($wf->params) ? null : $wf->params
+				'params' => empty($wf->params) ? null : $wf->params,
+				'sequence' => (int) $wf->sequence,
 			])->execute();
 			$wf->id = $db->getLastInsertID('com_vtiger_workflows_workflow_id_seq');
 		}
@@ -155,7 +156,7 @@ class VTWorkflowManager
 	/**
 	 * Function returns scheduled workflows.
 	 *
-	 * @param DateTime $referenceTime
+	 * @param object $referenceTime DateTime
 	 *
 	 * @return Workflow
 	 */
@@ -184,7 +185,9 @@ class VTWorkflowManager
 			$rows = (new \App\Db\Query())
 				->select(['workflow_id', 'module_name', 'summary', 'test', 'execution_condition', 'defaultworkflow', 'type', 'filtersavedinnew', 'params'])
 				->from('com_vtiger_workflows')
-				->where(['module_name' => $moduleName])->all();
+				->where(['module_name' => $moduleName])
+				->orderBy(['sequence' => SORT_ASC])
+				->all();
 			\App\Cache::save('WorkflowsForModule', $moduleName, $rows);
 		}
 		if ($executionCondition) {

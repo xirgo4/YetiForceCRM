@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-Detail-Widget-PDFViewerContainer -->
 	{assign var=WIDGET_UID value="id-{\App\Layout::getUniqueId('PDFViewerContainer')}"}
@@ -12,7 +12,7 @@
 					<div class="c-detail-widget__header__title">
 						<h5 class="mb-0 text-truncate">{\App\Language::translate($WIDGET['label'],$MODULE_NAME)}</h5>
 					</div>
-					{if \App\Privilege::isPermitted('OSSMail') && $USER_MODEL->get('internal_mailer') && \App\Privilege::isPermitted($MODULE_NAME, 'ExportPdf')}
+					{if \App\Mail::checkInternalMailClient() && \App\Privilege::isPermitted($MODULE_NAME, 'ExportPdf')}
 						<div class="row inline justify-center js-hb__container ml-auto">
 							<button type="button" class="btn btn-info mr-0 js-email-pdf btn-sm" data-js="click" data-url="index.php?module={$MODULE_NAME}&action=PDF&mode=generate&email_pdf=1&single_pdf=0&fromview=Detail&record={$RECORD->getId()}&pdf_template[]=">
 								<span class="fas fa-envelope mr-1"></span>{\App\Language::translate('LBL_SEND_EMAIL', $MODULE_NAME)}

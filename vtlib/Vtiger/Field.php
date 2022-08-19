@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 namespace vtlib;
@@ -213,7 +213,7 @@ class Field extends FieldBasic
 	public static function getAllForBlock($blockInstance, $moduleInstance = false)
 	{
 		$cache = \Vtiger_Cache::getInstance();
-		if ($cache->getBlockFields($blockInstance->id, $moduleInstance->id)) {
+		if ($moduleInstance && $cache->getBlockFields($blockInstance->id, $moduleInstance->id)) {
 			return $cache->getBlockFields($blockInstance->id, $moduleInstance->id);
 		}
 		$instances = false;
@@ -259,7 +259,7 @@ class Field extends FieldBasic
 				->all();
 			\App\Cache::save('AllFieldForModule', $moduleId, $rows);
 		}
-		$instances = false;
+		$instances = [];
 		foreach ($rows as $row) {
 			$instance = new self();
 			$instance->initialize($row, $moduleId);
@@ -287,7 +287,7 @@ class Field extends FieldBasic
 	public function setTreeTemplate($tree, $moduleInstance)
 	{
 		$db = \App\Db::getInstance();
-		$db->createCommand()->insert('vtiger_trees_templates', ['name' => (string) $tree->name, 'module' => $moduleInstance->id, 'access' => $tree->access])->execute();
+		$db->createCommand()->insert('vtiger_trees_templates', ['name' => (string) $tree->name, 'tabid' => $moduleInstance->id, 'access' => $tree->access])->execute();
 		$templateId = $db->getLastInsertID('vtiger_trees_templates_templateid_seq');
 
 		foreach ($tree->tree_values->tree_value as $treeValue) {

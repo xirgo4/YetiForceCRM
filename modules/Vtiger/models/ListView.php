@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -53,8 +53,11 @@ class Vtiger_ListView_Model extends \App\Base
 			}
 		}
 		$instance->set('module', $moduleModel)->set('query_generator', $queryGenerator);
+		if (($customView = \App\CustomView::getCustomViewById($viewId)) && $customView['advanced_conditions']) {
+			$instance->set('advancedConditionsRaw', $customView['advanced_conditions']);
+			$instance->set('advancedConditions', \App\Condition::validAdvancedConditions($customView['advanced_conditions']));
+		}
 		\App\Cache::staticSave('ListView_Model', $cacheName, $instance);
-
 		return $instance;
 	}
 
@@ -82,7 +85,6 @@ class Vtiger_ListView_Model extends \App\Base
 		} else {
 			$moduleModel->getModalRecordsListFields($queryGenerator, $sourceModule);
 		}
-
 		return $instance->set('module', $moduleModel)->set('query_generator', $queryGenerator);
 	}
 
@@ -227,7 +229,7 @@ class Vtiger_ListView_Model extends \App\Base
 	/**
 	 * Function to get the list of Mass actions for the module.
 	 *
-	 * @param type $linkParams
+	 * @param array $linkParams
 	 *
 	 * @return Vtiger_Link_Model[]
 	 */
@@ -302,7 +304,7 @@ class Vtiger_ListView_Model extends \App\Base
 			$massActionLinks[] = [
 				'linktype' => 'LISTVIEWMASSACTION',
 				'linklabel' => 'LBL_TRANSFER_OWNERSHIP',
-				'linkurl' => 'javascript:Vtiger_List_Js.triggerTransferOwnership("index.php?module=' . $moduleModel->getName() . '&view=MassActionAjax&mode=transferOwnership")',
+				'linkurl' => 'javascript:Vtiger_List_Js.triggerTransferOwnership("index.php?module=' . $moduleModel->getName() . '&view=TransferOwnership")',
 				'linkicon' => 'yfi yfi-change-of-owner',
 			];
 		}
@@ -321,6 +323,15 @@ class Vtiger_ListView_Model extends \App\Base
 				'linkdata' => ['url' => "index.php?module={$moduleModel->getName()}&view=RecordConverter&sourceView=List", 'type' => 'modal'],
 				'linkicon' => 'fas fa-exchange-alt',
 				'linkclass' => 'u-cursor-pointer js-mass-action',
+			];
+		}
+		if ($moduleModel->isPermitted('MassSendSMS') && ($smsNotifierModel = \Vtiger_Module_Model::getInstance('SMSNotifier'))->isSMSActiveForModule($moduleModel->getName())) {
+			$massActionLinks[] = [
+				'linktype' => 'LISTVIEWMASSACTION',
+				'linklabel' => 'LBL_MASS_SEND_SMS',
+				'linkdata' => ['url' => $smsNotifierModel->getMassSMSUrlForModule($moduleModel->getName()), 'type' => 'modal'],
+				'linkicon' => 'fas fa-comment-sms',
+				'linkclass' => 'js-mass-action',
 			];
 		}
 		foreach ($massActionLinks as $massActionLink) {
@@ -434,7 +445,11 @@ class Vtiger_ListView_Model extends \App\Base
 			}
 			foreach ($fields as $fieldInfo) {
 				$fieldName = $fieldInfo['field_name'];
-				$fieldModel = Vtiger_Module_Model::getInstance($fieldInfo['module_name'])->getFieldByName($fieldName);
+				$fieldModel = clone Vtiger_Module_Model::getInstance($fieldInfo['module_name'])->getFieldByName($fieldName);
+				if (!empty($fieldInfo['label'])) {
+					$fieldModel->set('label', $fieldInfo['label']);
+					$fieldModel->set('isLabelCustomized', true);
+				}
 				if (!empty($fieldInfo['source_field_name'])) {
 					if (!$this->getModule()->getFieldByName($fieldInfo['source_field_name'])->isActiveField()) {
 						continue;
@@ -449,6 +464,20 @@ class Vtiger_ListView_Model extends \App\Base
 					}
 				}
 				$headerFields[] = $fieldModel;
+			}
+			if (($advancedConditions = $this->get('advancedConditions')) && !empty($advancedConditions['relationColumns'])) {
+				foreach ($advancedConditions['relationColumns'] as $relationId) {
+					if (($row = \App\Relation::getById($relationId)) && \App\Privilege::isPermitted($row['related_modulename'])) {
+						$headerFields[] = Vtiger_Field_Model::init($row['related_modulename'], [
+							'uitype' => 10,
+							'label' => $row['label'],
+							'referenceList' => [$row['related_modulename']],
+							'searchByAjax' => true,
+							'relationId' => $relationId,
+							'permissions' => true,
+						], 'relationColumn_' . $relationId);
+					}
+				}
 			}
 		}
 		foreach ($headerFields as $fieldModel) {
@@ -497,6 +526,9 @@ class Vtiger_ListView_Model extends \App\Base
 		$srcRecord = $this->get('src_record');
 		if ($this->getModule()->get('name') === $this->get('src_module') && !empty($srcRecord)) {
 			$queryGenerator->addCondition('id', $srcRecord, 'n');
+		}
+		if ($advancedConditions = $this->get('advancedConditions')) {
+			$queryGenerator->setAdvancedConditions($advancedConditions);
 		}
 		if ($searchParams = $this->get('search_params')) {
 			$queryGenerator->parseAdvFilter($searchParams);
@@ -602,16 +634,15 @@ class Vtiger_ListView_Model extends \App\Base
 	}
 
 	/**
-	 * Function to get the list view entries.
+	 * Function to get the list view entries count.
 	 *
-	 * @param Vtiger_Paging_Model $pagingModel
-	 *
-	 * @return array - Associative array of record id mapped to Vtiger_Record_Model instance.
+	 * @return int|string|null number of records. The result may be a string depending on the
+	 *                         underlying database engine and to support integer values higher than a 32bit PHP integer can handle.
 	 */
 	public function getListViewCount()
 	{
 		$this->loadListViewCondition();
-		return $this->getQueryGenerator()->createQuery()->count();
+		return $this->getQueryGenerator()->setDistinct('id')->createQuery()->count();
 	}
 
 	/**

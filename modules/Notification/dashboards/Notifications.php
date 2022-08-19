@@ -3,8 +3,10 @@
 /**
  * Notifications Dashboard Class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @package Dashboard
+ *
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Notification_Notifications_Dashboard extends Vtiger_IndexAjax_View

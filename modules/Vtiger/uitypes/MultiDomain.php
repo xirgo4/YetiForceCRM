@@ -1,12 +1,16 @@
 <?php
 /**
- *  UIType multi domain Field Class.
+ * UIType multi domain field file.
  *
  * @package UIType
  *
- * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Rafal Pospiech <r.pospiech@yetiforce.com>
+ * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ */
+/**
+ * UIType multi domain field Class.
  */
 class Vtiger_MultiDomain_UIType extends Vtiger_Base_UIType
 {
@@ -68,7 +72,7 @@ class Vtiger_MultiDomain_UIType extends Vtiger_Base_UIType
 		}
 		$value = str_ireplace(',', ', ', trim($value, ','));
 		if (\is_int($length)) {
-			$value = \App\TextParser::textTruncate($value, $length);
+			$value = \App\TextUtils::textTruncate($value, $length);
 		}
 		return \App\Purifier::encodeHtml($value);
 	}
@@ -94,6 +98,6 @@ class Vtiger_MultiDomain_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 }

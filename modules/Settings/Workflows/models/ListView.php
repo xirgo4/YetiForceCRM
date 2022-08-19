@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 /**
  * Settings List View Model Class.
@@ -88,7 +88,7 @@ class Settings_Workflows_ListView_Model extends Settings_Vtiger_ListView_Model
 	/**	 * *
 	 * Function which will get the list view count.
 	 *
-	 * @return - number of records
+	 * @return int number of records
 	 */
 	public function getListViewCount()
 	{

@@ -6,8 +6,10 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
+
+use App\Purifier;
 
 class Users_Login_Action extends \App\Controller\Action
 {
@@ -81,7 +83,8 @@ class Users_Login_Action extends \App\Controller\Action
 	public function check2fa(App\Request $request): void
 	{
 		$userId = \App\Session::get('2faUserId');
-		if (Users_Totp_Authmethod::verifyCode(\App\User::getUserModel($userId)->getDetail('authy_secret_totp'), $request->getByType('user_code', 'Digital'))) {
+		$authMethod = new Users_Totp_Authmethod($userId);
+		if ($authMethod->verifyCode(\App\User::getUserModel($userId)->getDetail('authy_secret_totp'), $request->getByType('user_code', Purifier::DIGITS))) {
 			\App\Session::set('authenticated_user_id', $userId);
 			\App\Session::delete('2faUserId');
 			\App\Session::delete('LoginAuthyMethod');
@@ -172,7 +175,7 @@ class Users_Login_Action extends \App\Controller\Action
 		\App\Session::set('app_unique_key', App\Config::main('application_unique_key'));
 		\App\Session::set('user_name', $this->userRecordModel->get('user_name'));
 		\App\Session::set('full_user_name', $this->userModel->getName());
-		\App\Session::set('fingerprint', $request->get('fingerprint'));
+		\App\Session::set('fingerprint', $request->getByType('fingerprint', Purifier::ALNUM2));
 		\App\Session::set('user_agent', \App\Request::_getServer('HTTP_USER_AGENT', ''));
 
 		$eventHandler = new \App\EventHandler();
@@ -258,7 +261,7 @@ class Users_Login_Action extends \App\Controller\Action
 	 */
 	public function failedLogin(App\Request $request, string $type): void
 	{
-		$status = '2fa' === $type ? 'Failed login' : 'ERR_WRONG_2FA_CODE';
+		$status = '2fa' === $type ? 'ERR_WRONG_2FA_CODE' : 'Failed login';
 		$bfInstance = Settings_BruteForce_Module_Model::getCleanInstance();
 		if ($bfInstance->isActive()) {
 			$bfInstance->updateBlockedIp();
@@ -266,10 +269,14 @@ class Users_Login_Action extends \App\Controller\Action
 				$bfInstance->sendNotificationEmail();
 				\App\Session::set('UserLoginMessage', App\Language::translate('LBL_TOO_MANY_FAILED_LOGIN_ATTEMPTS', 'Users'));
 				\App\Session::set('UserLoginMessageType', 'error');
-				$status = '2fa' === $type ? 'ERR_LOGIN_IP_BLOCK' : 'ERR_2FA_IP_BLOCK';
+				$status = '2fa' === $type ? 'ERR_2FA_IP_BLOCK' : 'ERR_LOGIN_IP_BLOCK';
 			}
 		}
-		Users_Module_Model::getInstance('Users')->saveLoginHistory(App\Purifier::encodeHtml($request->getRaw('username')), $status);
+		$userName = $request->getRaw('username');
+		if (!$userName) {
+			$userName = \App\Session::get('user_name');
+		}
+		Users_Module_Model::getInstance('Users')->saveLoginHistory(Purifier::encodeHtml($userName), $status);
 		header('location: index.php?module=Users&view=Login');
 	}
 }

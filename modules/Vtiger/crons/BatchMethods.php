@@ -4,8 +4,8 @@
  *
  * @package   Cron
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -21,12 +21,17 @@ class Vtiger_BatchMethods_Cron extends \App\CronHandler
 		while ($rows = $query->all()) {
 			foreach ($rows as $row) {
 				$this->updateLastActionTime();
-				$methodInstance = new \App\BatchMethod($row, false);
-				$methodInstance->execute();
-				if ($methodInstance->isCompleted()) {
-					$methodInstance->delete();
+				try {
+					$methodInstance = new \App\BatchMethod($row, false);
+					$methodInstance->execute();
+					if ($methodInstance->isCompleted()) {
+						$methodInstance->delete();
+					}
+					unset($methodInstance);
+				} catch (\Throwable $th) {
+					\App\Log::error("Batch method error: Method: {$row['method']} | ID: {$row['id']} \n{$th->__toString()}", 'BatchMethods');
+					throw $th;
 				}
-				unset($methodInstance);
 			}
 			if ($this->checkTimeout()) {
 				return;

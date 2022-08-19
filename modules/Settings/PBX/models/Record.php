@@ -3,8 +3,8 @@
 /**
  * Record Model.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Settings_PBX_Record_Model extends Settings_Vtiger_Record_Model
@@ -112,12 +112,8 @@ class Settings_PBX_Record_Model extends Settings_Vtiger_Record_Model
 		return $this->editFields;
 	}
 
-	/**
-	 * Function to get the list view actions for the record.
-	 *
-	 * @return Vtiger_Link_Model[] - Associate array of Vtiger_Link_Model instances
-	 */
-	public function getRecordLinks()
+	/** {@inheritdoc} */
+	public function getRecordLinks(): array
 	{
 		$links = [];
 		$recordLinks = [

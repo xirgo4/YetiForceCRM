@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Relation_Model extends \App\Base
@@ -26,7 +26,7 @@ class Vtiger_Relation_Model extends \App\Base
 	protected $parentModule = false;
 	protected $relatedModule = false;
 	/**
-	 * @var \App\Relation\RelationInterface Class that includes basic operations on relations
+	 * @var \App\Relation\RelationAbstraction Class that includes basic operations on relations
 	 */
 	protected $typeRelationModel;
 	/**
@@ -36,6 +36,7 @@ class Vtiger_Relation_Model extends \App\Base
 
 	//one to many
 	const RELATION_O2M = 1;
+
 	//Many to many and many to one
 	const RELATION_M2M = 2;
 
@@ -59,7 +60,6 @@ class Vtiger_Relation_Model extends \App\Base
 	public function setParentModuleModel($moduleModel)
 	{
 		$this->parentModule = $moduleModel;
-
 		return $this;
 	}
 
@@ -96,7 +96,6 @@ class Vtiger_Relation_Model extends \App\Base
 	public function setRelationModuleModel($relationModel)
 	{
 		$this->relatedModule = $relationModel;
-
 		return $this;
 	}
 
@@ -229,7 +228,7 @@ class Vtiger_Relation_Model extends \App\Base
 	 *
 	 * @return \App\QueryGenerator
 	 */
-	public function getQueryGenerator()
+	public function getQueryGenerator(): App\QueryGenerator
 	{
 		if (!$this->has('query_generator')) {
 			$this->set('query_generator', new \App\QueryGenerator($this->getRelationModuleName()));
@@ -240,7 +239,7 @@ class Vtiger_Relation_Model extends \App\Base
 	/**
 	 * Get relation type.
 	 *
-	 * @return int|self::RELATION_O2M|self::RELATION_M2M
+	 * @return int
 	 */
 	public function getRelationType()
 	{
@@ -280,7 +279,7 @@ class Vtiger_Relation_Model extends \App\Base
 	 * @param Vtiger_Module_Model $relatedModuleModel
 	 * @param bool|int            $relationId
 	 *
-	 * @return self|false
+	 * @return $this|bool
 	 */
 	public static function getInstance($parentModuleModel, $relatedModuleModel, $relationId = false)
 	{
@@ -350,11 +349,11 @@ class Vtiger_Relation_Model extends \App\Base
 	}
 
 	/**
-	 * Get type relation model .
+	 * Get type relation model.
 	 *
-	 * @return \App\Relation\RelationInterface
+	 * @return \App\Relation\RelationAbstraction
 	 */
-	public function getTypeRelationModel(): App\Relation\RelationInterface
+	public function getTypeRelationModel(): App\Relation\RelationAbstraction
 	{
 		if (!isset($this->typeRelationModel)) {
 			$name = ucfirst($this->get('name'));
@@ -573,6 +572,47 @@ class Vtiger_Relation_Model extends \App\Base
 			$url .= '&time=current';
 		}
 		return $url;
+	}
+
+	/**
+	 * Get create url from parent record.
+	 *
+	 * @param bool $fullView
+	 *
+	 * @return string
+	 */
+	public function getCreateViewUrl(bool $fullView = false)
+	{
+		$parentRecord = $this->getParentRecord();
+		$relatedModuleModel = $this->getRelationModuleModel();
+		if (!$fullView && $relatedModuleModel->isQuickCreateSupported()) {
+			$createViewUrl = $relatedModuleModel->getQuickCreateUrl();
+		} else {
+			$createViewUrl = $relatedModuleModel->getCreateRecordUrl();
+		}
+		$createViewUrl .= '&sourceModule=' . $parentRecord->getModule()->getName() . '&sourceRecord=' . $parentRecord->getId() . '&relationOperation=true&relationId=' . $this->getId();
+		if ($this->isDirectRelation()) {
+			$relationField = $this->getRelationField();
+			$createViewUrl .= '&' . $relationField->getName() . '=' . $parentRecord->getId();
+		}
+
+		return $createViewUrl;
+	}
+
+	/**
+	 * Get delete url from parent record.
+	 *
+	 * @param int $relatedRecordId
+	 *
+	 * @return string
+	 */
+	public function getDeleteUrl(int $relatedRecordId)
+	{
+		$parentModuleName = $this->getParentModuleModel()->getName();
+		$relatedModuleName = $this->getRelationModuleModel()->getName();
+		$recordId = $this->getParentRecord()->getId();
+
+		return "index.php?module={$parentModuleName}&related_module={$relatedModuleName}&action=RelationAjax&mode=deleteRelation&related_record_list=[{$relatedRecordId}]&src_record={$recordId}&relationId={$this->getId()}";
 	}
 
 	/**
@@ -826,15 +866,21 @@ class Vtiger_Relation_Model extends \App\Base
 		return $relationModels;
 	}
 
-	public function getAutoCompleteField($recordModel)
+	/**
+	 * Get autocomplete fields.
+	 *
+	 * @param \Vtiger_Record_Model $recordModel
+	 *
+	 * @return array
+	 */
+	public function getAutoCompleteField($recordModel): array
 	{
 		$fields = [];
 		$fieldsReferenceList = [];
 		$excludedModules = ['Users'];
 		$relatedModel = $this->getRelationModuleModel();
-		$relatedModuleName = $relatedModel->getName();
 		if ($relationField = $this->getRelationField()) {
-			$fields[$relationField->getFieldName()] = $recordModel->getId();
+			$fields[$relationField->getName()] = $recordModel->getId();
 		}
 		$parentModelFields = $this->getParentModuleModel()->getFields();
 		foreach ($parentModelFields as $fieldName => $fieldModel) {
@@ -843,9 +889,6 @@ class Vtiger_Relation_Model extends \App\Base
 				foreach ($referenceList as $module) {
 					if (!\in_array($module, $excludedModules) && 'userCreator' !== !$fieldModel->getFieldDataType()) {
 						$fieldsReferenceList[$module] = $fieldModel;
-					}
-					if ($relatedModuleName == $module) {
-						$fields[$fieldName] = $recordModel->getId();
 					}
 				}
 			}
@@ -858,13 +901,14 @@ class Vtiger_Relation_Model extends \App\Base
 					if (\array_key_exists($module, $fieldsReferenceList) && $module != $recordModel->getModuleName()) {
 						$parentFieldModel = $fieldsReferenceList[$module];
 						$relId = $recordModel->get($parentFieldModel->getName());
-						if ('' != $relId && 0 != $relId) {
+						if (!empty($relId) && \App\Record::isExists($relId)) {
 							$fields[$fieldName] = $relId;
 						}
 					}
 				}
 			}
 		}
+
 		return $fields;
 	}
 
@@ -1000,7 +1044,7 @@ class Vtiger_Relation_Model extends \App\Base
 	{
 		$fields = $this->get('fields');
 		if (!$fields) {
-			$fields = false;
+			$fields = [];
 			$relatedModel = $this->getRelationModuleModel();
 			$relatedModelFields = $relatedModel->getFields();
 

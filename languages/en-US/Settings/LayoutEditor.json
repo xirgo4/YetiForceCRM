@@ -73,6 +73,7 @@
     "LBL_FIELD_TYPE": "Field type",
     "Editor": "WYSIWYG Editor",
     "Related1M": "Related field 1:M",
+    "MultiReference": "Related field M:M",
     "LBL_DISPLAY_TYPE": "Visibility",
     "LBL_DISPLAY_TYPE_1": "Field visible everywhere",
     "LBL_DISPLAY_TYPE_2": "Field visible only in preview",
@@ -217,11 +218,12 @@
     "BTN_WEBSERVICE_APP_EDIT": "Edit field configuration",
     "LBL_WSA_VISIBILITY": "Visibility",
     "LBL_WSA_VISIBILITY_DEFAULT": "Inherits from field visibility",
-    "LBL_LOGGED_CONTACT": "Contact currently logged in",
+    "LBL_LOGGED_CONTACT": "Contact online in Portal",
     "LBL_ACCOUNT_ON_CONTACT": "Account assigned to contact",
     "LBL_ACCOUNT_LOGGED_CONTACT": "Account of contact currently logged in",
     "LBL_DISABLE_FIELD": "Disable the field",
-    "LBL_SAVE_AND_CLOSE": "Save and close"
+    "LBL_SAVE_AND_CLOSE": "Save and close",
+    "MultiAttachment": "Attachments"
   },
   "js": {
     "JS_BLOCK_NAME_EXISTS": "Block Name already exists",

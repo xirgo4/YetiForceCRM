@@ -7,9 +7,10 @@ namespace App;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Mailer
 {
@@ -99,7 +100,7 @@ class Mailer
 	{
 		Log::trace('Send mail from template', 'Mailer');
 		if (empty($params['template'])) {
-			Log::warning('No templete', 'Mailer');
+			Log::warning('No template', 'Mailer');
 			return false;
 		}
 		$recordModel = false;
@@ -114,7 +115,7 @@ class Mailer
 		}
 		$template = Mail::getTemplate($params['template']);
 		if (!$template) {
-			Log::warning('No mail templete', 'Mailer');
+			Log::warning('No mail template', 'Mailer');
 			return false;
 		}
 		$textParser = $recordModel ? TextParser::getInstanceByModel($recordModel) : TextParser::getInstance($params['moduleName'] ?? '');
@@ -537,7 +538,7 @@ class Mailer
 			}
 		}
 		$status = false;
-		$attachmentsToRemove = [];
+		$attachmentsToRemove = $update = [];
 		if ($rowQueue['attachments']) {
 			$attachments = Json::decode($rowQueue['attachments']);
 			if (isset($attachments['ids'])) {
@@ -559,18 +560,23 @@ class Mailer
 			$mailer->setCustomParams(Json::decode($rowQueue['params']));
 		}
 		if ($mailer->getSmtp('individual_delivery')) {
+			$emails = [];
 			foreach (Json::decode($rowQueue['to']) as $email => $name) {
-				$separateMailer = $mailer->cloneMailer();
 				if (is_numeric($email)) {
 					$email = $name;
 					$name = '';
 				}
+				$emails[$email] = $name;
+			}
+			foreach ($emails as $email => $name) {
+				$separateMailer = $mailer->cloneMailer();
 				$separateMailer->to($email, $name);
 				$status = $separateMailer->send();
-				unset($separateMailer);
 				if (!$status) {
+					$update['to'] = Json::encode($emails);
 					break;
 				}
+				unset($separateMailer, $emails[$email]);
 			}
 		} else {
 			foreach (Json::decode($rowQueue['to']) as $email => $name) {
@@ -590,10 +596,9 @@ class Mailer
 				unlink($file);
 			}
 		} else {
-			$db->createCommand()->update('s_#__mail_queue', [
-				'status' => 2,
-				'error' => implode(PHP_EOL, static::$error),
-			], ['id' => $rowQueue['id']])->execute();
+			$update['status'] = 2;
+			$update['error'] = implode(PHP_EOL, static::$error);
+			$db->createCommand()->update('s_#__mail_queue', $update, ['id' => $rowQueue['id']])->execute();
 		}
 		return $status;
 	}
@@ -636,15 +641,18 @@ class Mailer
 			Log::error('Mailer Error: No smtp data entered', 'Mailer');
 			return false;
 		}
-		$params = [
-			'default_port' => $this->smtp['smtp_port'],
-			'validate_cert' => !empty($this->smtp['smtp_validate_cert']),
-			'imap_max_retries' => 0,
-			'imap_params' => [],
-			'imap_open_add_connection_type' => true,
-		];
 		$folder = Utils::convertCharacterEncoding($this->smtp['smtp_folder'], 'UTF-8', 'UTF7-IMAP');
-		$mbox = \OSSMail_Record_Model::imapConnect($this->smtp['smtp_username'], Encryption::getInstance()->decrypt($this->smtp['smtp_password']), $this->smtp['smtp_host'], $folder, false, $params);
+		$mbox = \OSSMail_Record_Model::imapConnect(
+			$this->smtp['smtp_username'],
+			Encryption::getInstance()->decrypt($this->smtp['smtp_password']),
+			$this->smtp['smtp_host'] . ':' . $this->smtp['smtp_port'], $folder, false,
+			[
+				'validate_cert' => !empty($this->smtp['smtp_validate_cert']),
+				'imap_max_retries' => 0,
+				'imap_params' => [],
+				'imap_open_add_connection_type' => true,
+			]
+		);
 		if (false === $mbox && !imap_last_error()) {
 			static::$error[] = 'IMAP error - ' . imap_last_error();
 			Log::error('Mailer Error: IMAP error - ' . imap_last_error(), 'Mailer');
@@ -653,6 +661,7 @@ class Mailer
 		\App\Log::beginProfile(__METHOD__ . '|imap_append', 'Mail|IMAP');
 		imap_append($mbox, \OSSMail_Record_Model::$imapConnectMailbox, $this->mailer->getSentMIMEMessage(), '\\Seen');
 		\App\Log::endProfile(__METHOD__ . '|imap_append', 'Mail|IMAP');
+
 		return true;
 	}
 

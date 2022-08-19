@@ -1,16 +1,17 @@
 <?php
 
 /**
- * Calendar model class.
+ * Calendar model file.
  *
  * @package Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author   Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 /**
- * Vtiger_Calendar_Model class.
+ * Calendar model class.
  */
 abstract class Vtiger_Calendar_Model extends App\Base
 {
@@ -63,14 +64,16 @@ abstract class Vtiger_Calendar_Model extends App\Base
 		$links[] = Vtiger_Link_Model::getInstanceFromValues([
 			'linktype' => 'SIDEBARWIDGET',
 			'linklabel' => 'LBL_USERS',
-			'linkurl' => "module={$this->getModuleName()}&view=RightPanel&mode=getUsersList",
-			'linkclass' => 'js-calendar__filter--users'
+			'linkclass' => 'js-calendar__filter--users',
+			'template' => 'Filters/Users.tpl',
+			'filterData' => Vtiger_CalendarRightPanel_Model::getUsersList($this->getModuleName()),
 		]);
 		$links[] = Vtiger_Link_Model::getInstanceFromValues([
 			'linktype' => 'SIDEBARWIDGET',
 			'linklabel' => 'LBL_GROUPS',
-			'linkurl' => "module={$this->getModuleName()}&view=RightPanel&mode=getGroupsList",
 			'linkclass' => 'js-calendar__filter--groups',
+			'template' => 'Filters/Groups.tpl',
+			'filterData' => Vtiger_CalendarRightPanel_Model::getGroupsList($this->getModuleName()),
 		]);
 		return $links;
 	}
@@ -98,12 +101,12 @@ abstract class Vtiger_Calendar_Model extends App\Base
 	{
 		$result = [];
 		foreach (App\Fields\Date::getHolidays(DateTimeField::convertToDBTimeZone($this->get('start'))->format('Y-m-d'), DateTimeField::convertToDBTimeZone($this->get('end'))->format('Y-m-d')) as $holiday) {
-			$item = [];
-			$item['title'] = $holiday['name'];
-			$item['type'] = $holiday['type'];
-			$item['start'] = $holiday['date'];
-			$item['rendering'] = 'background';
-			if ('national' === $item['type']) {
+			$item = [
+				'title' => $holiday['name'],
+				'start' => $holiday['date'],
+				'display' => 'background',
+			];
+			if ('national' === $holiday['type']) {
 				$item['color'] = '#FFAB91';
 				$item['icon'] = 'fas fa-flag';
 			} else {
@@ -130,76 +133,26 @@ abstract class Vtiger_Calendar_Model extends App\Base
 	abstract public function getEntity();
 
 	/**
-	 * Get entity count for year view.
-	 *
-	 * @return array
-	 */
-	public function getEntityYearCount()
-	{
-		$currentUser = \App\User::getCurrentUserModel();
-		$startDate = DateTimeField::convertToDBTimeZone($this->get('start'));
-		$startDate = strtotime($startDate->format('Y-m-d H:i:s'));
-		$endDate = DateTimeField::convertToDBTimeZone($this->get('end'));
-		$endDate = strtotime($endDate->format('Y-m-d H:i:s'));
-		$dataReader = $this->getQuery()
-			->createCommand()
-			->query();
-		$return = [];
-		while ($record = $dataReader->read()) {
-			$dateTimeFieldInstance = new DateTimeField($record['date_start'] . ' ' . $record['time_start']);
-			$userDateTimeString = $dateTimeFieldInstance->getDisplayDateTimeValue();
-			$dateTimeComponents = explode(' ', $userDateTimeString);
-			$dateComponent = $dateTimeComponents[0];
-			$startDateFormated = DateTimeField::__convertToDBFormat($dateComponent, $currentUser->getDetail('date_format'));
-
-			$dateTimeFieldInstance = new DateTimeField($record['due_date'] . ' ' . $record['time_end']);
-			$userDateTimeString = $dateTimeFieldInstance->getDisplayDateTimeValue();
-			$dateTimeComponents = explode(' ', $userDateTimeString);
-			$dateComponent = $dateTimeComponents[0];
-			$endDateFormated = DateTimeField::__convertToDBFormat($dateComponent, $currentUser->getDetail('date_format'));
-
-			$begin = new DateTime($startDateFormated);
-			$end = new DateTime($endDateFormated);
-			$end->modify('+1 day');
-			$interval = DateInterval::createFromDateString('1 day');
-			foreach (new DatePeriod($begin, $interval, $end) as $dt) {
-				$date = strtotime($dt->format('Y-m-d'));
-				if ($date >= $startDate && $date <= $endDate) {
-					$date = date('Y-m-d', $date);
-					$return[$date]['date'] = $date;
-					if (isset($return[$date]['count'])) {
-						++$return[$date]['count'];
-					} else {
-						$return[$date]['count'] = 1;
-					}
-				}
-			}
-		}
-		$dataReader->close();
-
-		return array_values($return);
-	}
-
-	/**
 	 * Update event.
 	 *
-	 * @param int    $recordId
-	 * @param string $date
-	 * @param array  $delta
+	 * @param int          $recordId Record ID
+	 * @param string       $start    Start date
+	 * @param string       $end      End date
+	 * @param \App\Request $request  Request instance
 	 *
 	 * @return bool
 	 */
-	public function updateEvent(int $recordId, string $date, array $delta)
+	public function updateEvent(int $recordId, string $start, string $end, App\Request $request): bool
 	{
-		$start = DateTimeField::convertToDBTimeZone($date, \App\User::getCurrentUserModel(), false);
 		try {
 			$recordModel = Vtiger_Record_Model::getInstanceById($recordId, $this->getModuleName());
 			if ($success = $recordModel->isEditable()) {
-				$end = $this->changeDateTime($recordModel->get('due_date') . ' ' . $recordModel->get('time_end'), $delta);
+				$start = DateTimeField::convertToDBTimeZone($start);
 				$recordModel->set('date_start', $start->format('Y-m-d'));
 				$recordModel->set('time_start', $start->format('H:i:s'));
-				$recordModel->set('due_date', $end['date']);
-				$recordModel->set('time_end', $end['time']);
+				$end = DateTimeField::convertToDBTimeZone($end);
+				$recordModel->set('due_date', $end->format('Y-m-d'));
+				$recordModel->set('time_end', $end->format('H:i:s'));
 				$recordModel->save();
 				$success = true;
 			}
@@ -208,28 +161,5 @@ abstract class Vtiger_Calendar_Model extends App\Base
 			$success = false;
 		}
 		return $success;
-	}
-
-	/**
-	 * Modify date.
-	 *
-	 * @param string $datetime
-	 * @param array  $delta
-	 *
-	 * @return string[]
-	 */
-	public function changeDateTime($datetime, $delta)
-	{
-		$date = new DateTime($datetime);
-		if (0 != $delta['days']) {
-			$date = $date->modify('+' . $delta['days'] . ' days');
-		}
-		if (0 != $delta['hours']) {
-			$date = $date->modify('+' . $delta['hours'] . ' hours');
-		}
-		if (0 != $delta['minutes']) {
-			$date = $date->modify('+' . $delta['minutes'] . ' minutes');
-		}
-		return ['date' => $date->format('Y-m-d'), 'time' => $date->format('H:i:s')];
 	}
 }

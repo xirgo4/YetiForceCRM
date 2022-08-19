@@ -6,8 +6,8 @@
  *
  * @package Config
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 
 namespace Config;
@@ -148,8 +148,14 @@ class Security
 	 */
 	public static $hpkpKeysHeader = [];
 
+	/** Verify referer header */
+	public static $verifyRefererHeader = true;
+
 	/** Enable CSRF protection */
 	public static $csrfActive = true;
+
+	/** Default expire time of CSRF token in seconds */
+	public static $csrfLifetimeToken = 28800;
 
 	/** Enable verified frame protection, used in CSRF */
 	public static $csrfFrameBreaker = true;
@@ -166,7 +172,10 @@ class Security
 	/** Allowed domains for loading images, used in CSP. */
 	public static $allowedImageDomains = [];
 
-	/** Allowed domains for loading frame, used in CSP and validate referer. */
+	/**
+	 * Specifies valid parents that may embed a page using <frame>, <iframe>, <object>, <embed> or <applet> and validate referer.
+	 * CSP: frame-ancestors.
+	 */
 	public static $allowedFrameDomains = [];
 
 	/** Allowed domains for loading script, used in CSP. */
@@ -175,8 +184,17 @@ class Security
 	/** Allowed domains which can be used as the target of a form submissions from a given context, used in CSP. */
 	public static $allowedFormDomains = ['https://www.paypal.com'];
 
+	/** Allowed domains which can be loaded using script interfaces. */
+	public static $allowedConnectDomains = [];
+
 	/** Generally allowed domains, used in CSP. */
 	public static $generallyAllowedDomains = [];
+
+	/**
+	 * Specifies valid sources for nested browsing contexts loading using elements such as <frame> and <iframe>.
+	 * CSP: frame-src.
+	 */
+	public static $allowedDomainsLoadInFrame = [];
 
 	/** List of allowed domains for fields with HTML support */
 	public static $purifierAllowedDomains = [];

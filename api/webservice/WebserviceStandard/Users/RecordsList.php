@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -36,6 +36,8 @@ class RecordsList extends \Api\Core\BaseAction
 
 	/**
 	 * Get users list method.
+	 *
+	 * @api
 	 *
 	 * @return array
 	 *
@@ -250,6 +252,12 @@ class RecordsList extends \Api\Core\BaseAction
 	 */
 	protected function getRawDataFromRow(array $row): array
 	{
+		foreach ($this->fields as $fieldName => $fieldModel) {
+			if (\array_key_exists($fieldName, $row)) {
+				$row[$fieldName] = $fieldModel->getUITypeModel()->getRawValue($row[$fieldName]);
+			}
+		}
+
 		return $row;
 	}
 }

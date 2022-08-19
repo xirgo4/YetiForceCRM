@@ -5,8 +5,8 @@
  *
  * @package Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Maciej Stencel <m.stencel@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radoslaw Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -59,7 +59,7 @@ class Vtiger_PDF_Model extends \App\Base
 	 *
 	 * @var array
 	 */
-	protected $viewToPicklistValue = ['Detail' => 'PLL_DETAILVIEW', 'List' => 'PLL_LISTVIEW'];
+	protected $viewToPicklistValue = ['Detail' => 'PLL_DETAILVIEW', 'List' => 'PLL_LISTVIEW', 'RelatedList' => 'PLL_RELATEDLISTVIEW'];
 
 	/**
 	 * Custom columns.
@@ -109,8 +109,8 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public function get($key)
 	{
-		if ('conditions' === $key && !\is_array(parent::get($key))) {
-			return json_decode(parent::get($key), true);
+		if ('conditions' === $key && ($value = parent::get($key)) && !\is_array($value)) {
+			return json_decode($value, true);
 		}
 		return parent::get($key);
 	}
@@ -479,31 +479,6 @@ class Vtiger_PDF_Model extends \App\Base
 	}
 
 	/**
-	 * Export record to PDF file.
-	 *
-	 * @param int    $recordId   - id of a record
-	 * @param int    $templateId - id of pdf template
-	 * @param string $filePath   - path name for saving pdf file
-	 * @param string $saveFlag   - save option flag
-	 */
-	public static function exportToPdf($recordId, $templateId, $filePath = '', $saveFlag = '')
-	{
-		$template = self::getInstanceById($templateId);
-		$template->setVariable('recordId', $recordId);
-
-		$pdf = new \App\Pdf\YetiForcePDF();
-		$pdf->setPageSize($template->getFormat(), $template->getOrientation());
-		$pdf->setWatermark($pdf->getTemplateWatermark($template));
-		$pdf->setFileName($template->parseVariables($template->get('filename')));
-		$pdf->parseParams($template->getParameters());
-		$pdf->loadHtml($template->parseVariables($template->getBody()));
-		$pdf->setHeader($template->parseVariables($template->getHeader()));
-		$pdf->setFooter($template->parseVariables($template->getFooter()));
-
-		$pdf->output($filePath, $saveFlag);
-	}
-
-	/**
 	 * Gets TextParser.
 	 *
 	 * @return \App\TextParser
@@ -584,8 +559,6 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public function getPath(string $prefix = '')
 	{
-		$filePath = 'cache' . \DIRECTORY_SEPARATOR . 'pdf' . \DIRECTORY_SEPARATOR;
-		$tmpFileName = tempnam($filePath, 'PDF' . $prefix . time());
-		return $filePath .= basename($tmpFileName);
+		return \App\Fields\File::createTempFile($prefix, 'pdf');
 	}
 }

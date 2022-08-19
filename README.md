@@ -5,7 +5,7 @@
 [![Latest Stable Version](https://poser.pugx.org/yetiforce/yetiforce-crm/v/stable)](https://packagist.org/packages/yetiforce/yetiforce-crm)
 ![release date](https://img.shields.io/github/release-date/YetiForceCompany/YetiForceCRM)
 ![PHP Version](https://img.shields.io/packagist/php-v/yetiforce/yetiforce-crm)
-[![Tested on PHP 7.3 to nightly](https://img.shields.io/badge/tested%20on-PHP%207.3%20|%207.4%20|%208.0%20-brightgreen.svg?maxAge=2419200)](https://github.com/YetiForceCompany/YetiForceCRM/actions?query=workflow%3Atests)
+[![Tested on PHP 7.4 to nightly](https://img.shields.io/badge/tested%20on-PHP%207.4%20%7C%208.0%20%7C%208.1%20-brightgreen.svg?maxAge=2419200)](https://github.com/YetiForceCompany/YetiForceCRM/actions?query=workflow%3Atests)
 [![Download YetiForce CRM](https://img.shields.io/sourceforge/dt/yetiforce.svg)](https://sourceforge.net/projects/yetiforce/files/latest/download)
 [![GitHub contributors](https://img.shields.io/github/contributors/YetiForceCompany/YetiForceCRM.svg)](https://GitHub.com/YetiForceCompany/YetiForceCRM/graphs/contributors/)
 [![Crowdin](https://d322cqt584bo4o.cloudfront.net/yetiforcecrm/localized.svg)](https://crowdin.com/project/yetiforcecrm)
@@ -21,6 +21,8 @@
 [![SecurityHeaders.io](https://img.shields.io/security-headers?url=https%3A%2F%2Fgitdeveloper.yetiforce.com)](https://securityheaders.io/?q=https://gitdeveloper.yetiforce.com)
 [![mozilla-observatory](https://img.shields.io/mozilla-observatory/grade/gitdeveloper.yetiforce.com?publish)](https://observatory.mozilla.org/analyze/gitdeveloper.yetiforce.com)
 [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://registry.hub.docker.com/r/yetiforce/yetiforcecrm/)
+
+<img src="https://stats.yetiforce.com/matomo.php?idsite=4&amp;rec=1" style="border:0" alt="" />
 
 <p align="center">
 	<a href='http://www.capterra.com/customer-relationship-management-software/reviews/159123/Yetiforce%20/YetiForce?utm_source=vendor&utm_medium=badge&utm_campaign=capterra_reviews_badge'>  <img border='0' src='https://assets.capterra.com/badge/470cd214b89233aa4e89972fa49c3253.png?v=2111411&p=159123' /></a>
@@ -48,7 +50,7 @@
 	</a>
 </p>
 
-We design an innovative CRM system that is dedicated for large and medium sized companies. We dedicate it to everyone who values open source software, security and innovation. YetiForce was built on a rock-solid Vtiger foundation, but has hundreds of changes that help to accomplish even the most challenging tasks in the simplest way. Every function within the system was thought through and automated to ensure that all of them work together seamlessly and form a coherent integrity. We looked at the entire sales process and consequently refined the system, module by module. We have years of experience creating tailor made CRM software for a variety of different companies. Download it and have a first-hand experience.
+We design an innovative CRM system that is dedicated to large and medium-sized companies. We dedicate it to everyone who values open source software, security, and innovation. YetiForce was built on a rock-solid Vtiger foundation but has hundreds of changes that help to accomplish even the most challenging tasks in the simplest way. Every function within the system was thought through and automated to ensure that all of them work together seamlessly and form coherent integrity. We looked at the entire sales process and consequently refined the system, module by module. We have years of experience creating tailor-made CRM software for a variety of different companies. Download it and have a first-hand experience.
 
 ## 😎 Demos
 
@@ -149,14 +151,17 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 ### Gallery: https://public.yetiforce.com/gallery
 
-![](https://public.yetiforce.com/img/main/1_Home_page.png)
-
-![](https://public.yetiforce.com/gallery/uploads/big/7679123c2d73f4065c9abc532d1bde77.png)
-
-![](https://public.yetiforce.com/img/main/3_Home_page.png)
-
-![](https://public.yetiforce.com/img/main/4_Calendar.png)
-
-![](https://public.yetiforce.com/img/main/8_List_Accounts.png)
-
-![](https://public.yetiforce.com/img/main/24_Detail_Projects_Gantt_Months.png)
+![](https://yetiforce.com/images/v6/1_home.png)
+![](https://yetiforce.com/images/v6/1_home2.png)
+![](https://yetiforce.com/images/v6/1_home3.png)
+![](https://yetiforce.com/images/v6/2_kanban1.png)
+![](https://yetiforce.com/images/v6/2_kanban2.png)
+![](https://yetiforce.com/images/v6/3_detail.png)
+![](https://yetiforce.com/images/v6/3_edit.png)
+![](https://yetiforce.com/images/v6/3_list.png)
+![](https://yetiforce.com/images/v6/4_detail.png)
+![](https://yetiforce.com/images/v6/5_perms.png)
+![](https://yetiforce.com/images/v6/5_progreswizard.png)
+![](https://yetiforce.com/images/v6/6_calendar.png)
+![](https://yetiforce.com/images/v6/7_map.png)
+![](https://yetiforce.com/images/v6/8_admin.png)

@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 namespace vtlib;
@@ -217,7 +217,7 @@ class Filter
 	 */
 	public static function getAllForModule(ModuleBasic $moduleInstance)
 	{
-		$instances = false;
+		$instances = [];
 		$dataReader = (new \App\Db\Query())->from('vtiger_customview')
 			->where(['entitytype' => $moduleInstance->name])
 			->createCommand()->query();

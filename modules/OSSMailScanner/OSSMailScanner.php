@@ -2,8 +2,8 @@
 /**
  * OSSMailScanner CRMEntity class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 
 /**
@@ -32,9 +32,6 @@ class OSSMailScanner
 			$dbCommand->insert('vtiger_ossmailscanner_config', ['conf_type' => 'cron', 'parameter' => 'email', 'value' => ''])->execute();
 			$dbCommand->insert('vtiger_ossmailscanner_config', ['conf_type' => 'cron', 'parameter' => 'time', 'value' => ''])->execute();
 			$dbCommand->insert('vtiger_ossmailscanner_config', ['conf_type' => 'emailsearch', 'parameter' => 'changeTicketStatus', 'value' => 'false'])->execute();
-			$moduleModel = Settings_Picklist_Module_Model::getInstance('HelpDesk');
-			$fieldModel = Settings_Picklist_Field_Model::getInstance('ticketstatus', $moduleModel);
-			$moduleModel->addPickListValues($fieldModel, 'Answered');
 			$Module = vtlib\Module::getInstance($moduleName);
 			$userId = Users_Record_Model::getCurrentUserModel()->get('user_name');
 			$dbCommand->insert('vtiger_ossmails_logs', ['action' => 'Action_InstallModule', 'info' => $moduleName . ' ' . $Module->version, 'user' => $userId])->execute();

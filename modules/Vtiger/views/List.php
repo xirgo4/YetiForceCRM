@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Vtiger_List_View extends Vtiger_Index_View
@@ -15,6 +15,12 @@ class Vtiger_List_View extends Vtiger_Index_View
 	protected $listViewCount = false;
 	protected $listViewLinks = false;
 	protected $listViewHeaders = false;
+	/**
+	 * Page title.
+	 *
+	 * @var string
+	 */
+	protected $pageTitle = 'LBL_VIEW_LIST';
 
 	/**
 	 * List view model instance.
@@ -32,7 +38,7 @@ class Vtiger_List_View extends Vtiger_Index_View
 		$moduleName = $request->getModule();
 		$moduleName = 'Vtiger' === $moduleName ? 'YetiForce' : $moduleName;
 		$title = App\Language::translate($moduleName, $moduleName);
-		$title = $title . ' ' . App\Language::translate('LBL_VIEW_LIST', $moduleName);
+		$title = $title . ' ' . App\Language::translate($this->pageTitle, $moduleName);
 
 		if ($request->has('viewname') && !empty(CustomView_Record_Model::getAll($moduleName)[$request->getByType('viewname', 2)])) {
 			$customView = CustomView_Record_Model::getAll($moduleName)[$request->getByType('viewname', 2)];
@@ -45,7 +51,7 @@ class Vtiger_List_View extends Vtiger_Index_View
 	public function getBreadcrumbTitle(App\Request $request)
 	{
 		$moduleName = $request->getModule();
-		$title = \App\Language::translate('LBL_VIEW_LIST', $moduleName);
+		$title = \App\Language::translate($this->pageTitle, $moduleName);
 		if ($request->has('viewname') && !empty(CustomView_Record_Model::getAll($moduleName)[$request->getByType('viewname', 2)])) {
 			$customView = CustomView_Record_Model::getAll($moduleName)[$request->getByType('viewname', 2)];
 			$title .= '<div class="pl-1 pb-1 align-items-end"><small class="breadCrumbsFilter"> [' . \App\Language::translate('LBL_FILTER', $moduleName)
@@ -96,14 +102,10 @@ class Vtiger_List_View extends Vtiger_Index_View
 		}
 	}
 
+	/** {@inheritdoc} */
 	public function preProcessTplName(App\Request $request)
 	{
 		return 'ListViewPreProcess.tpl';
-	}
-
-	protected function preProcessDisplay(App\Request $request)
-	{
-		parent::preProcessDisplay($request);
 	}
 
 	/** {@inheritdoc} */
@@ -137,7 +139,17 @@ class Vtiger_List_View extends Vtiger_Index_View
 			$viewer->assign('VIEWID', $this->viewName);
 		}
 		$viewer->assign('VIEW', $request->getByType('view', 1));
-		$viewer->view('ListViewContents.tpl', $moduleName);
+		$viewer->view($this->getProcessTemplate(), $moduleName);
+	}
+
+	/**
+	 * Get template name for process.
+	 *
+	 * @return string
+	 */
+	public function getProcessTemplate(): string
+	{
+		return 'ListViewContents.tpl';
 	}
 
 	/** {@inheritdoc} */
@@ -225,6 +237,12 @@ class Vtiger_List_View extends Vtiger_Index_View
 		if ($request->has('entityState')) {
 			$this->listViewModel->set('entityState', $request->getByType('entityState'));
 		}
+		$advancedConditions = $request->has('advancedConditions') ? $request->getArray('advancedConditions') : [];
+		if ($advancedConditions) {
+			$this->listViewModel->set('advancedConditions', \App\Condition::validAdvancedConditions($advancedConditions));
+		} else {
+			$advancedConditions = $this->listViewModel->get('advancedConditionsRaw');
+		}
 		$searchParams = App\Condition::validSearchParams($moduleName, $request->getArray('search_params'));
 		if (!empty($searchParams) && \is_array($searchParams)) {
 			$transformedSearchParams = $this->listViewModel->getQueryGenerator()->parseBaseSearchParamsToCondition($searchParams);
@@ -274,10 +292,11 @@ class Vtiger_List_View extends Vtiger_Index_View
 		$viewer->assign('PAGE_COUNT', $pagingModel->getPageCount());
 		$viewer->assign('START_PAGIN_FROM', $pagingModel->getStartPagingFrom());
 		$viewer->assign('VIEW_MODEL', $this->listViewModel);
-		$viewer->assign('IS_MODULE_EDITABLE', $this->listViewModel->getModule()->isPermitted('EditView'));
+		$viewer->assign('IS_MODULE_EDITABLE', $this->listViewModel->getModule()->isPermitted('CreateView'));
 		$viewer->assign('IS_MODULE_DELETABLE', $this->listViewModel->getModule()->isPermitted('Delete'));
 		$viewer->assign('SEARCH_DETAILS', $searchParams);
 		$viewer->assign('SEARCH_PARAMS', $searchParamsRaw);
+		$viewer->assign('ADVANCED_CONDITIONS', $advancedConditions);
 		$viewer->assign('LOCKED_EMPTY_FIELDS', $request->isEmpty('lockedEmptyFields', true) ? [] : $request->getArray('lockedEmptyFields'));
 	}
 }

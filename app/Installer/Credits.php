@@ -7,8 +7,8 @@ namespace App\Installer;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Adrian Koń <a.kon@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -26,12 +26,10 @@ class Credits
 	 * @var array
 	 */
 	public static $licenses = [
-		'yetiforce/yetiforcepdf' => 'YetiForce Public License v3',
 		'bootstrap-tabdrop' => 'Apache-2.0',
 		'color-convert' => 'MIT',
 		'@fortawesome/fontawesome-free' => 'MIT',
 		'fontawesome-web' => 'MIT',
-		'jquery-ui-touch-punch' => 'MIT',
 		'ckeditor/ckeditor' => 'MPL-1.1+',
 		'block-ui' => 'MIT',
 		'jquery-slimscroll' => 'MIT',
@@ -42,6 +40,7 @@ class Credits
 		'@mdi/font' => 'MIT',
 		'domhandler' => 'BSD-2-Clause',
 		'domutils' => 'BSD-2-Clause',
+		'@vue/compiler-sfc' => 'MIT',
 	];
 
 	/**
@@ -55,7 +54,7 @@ class Credits
 			'YetiForce' => [
 				'name' => 'YetiForce',
 				'version' => \App\Version::get(),
-				'license' => 'YetiForce Public License 4.0',
+				'license' => 'YetiForce Public License 5.0',
 				'homepage' => 'https://yetiforce.com/en/yetiforce/license',
 				'notPackageFile' => true,
 				'showLicenseModal' => true,
@@ -85,7 +84,7 @@ class Credits
 				'notPackageFile' => true,
 				'showLicenseModal' => false,
 				'description' => 'LBL_CHAT_SOUND_DESCRIPTION',
-			]];
+			], ];
 	}
 
 	/**

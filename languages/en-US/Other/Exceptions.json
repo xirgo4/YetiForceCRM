@@ -22,8 +22,9 @@
     "ERR_FILE_EMPTY_NAME": "File name is empty",
     "ERR_FILE_ERROR_REQUEST": "File transfer error: %s",
     "ERR_FILE_ILLEGAL_FORMAT": "Illegal file format",
+    "ERR_FILE_ILLEGAL_NAME": "Illegal file name",
     "ERR_FILE_WRONG_IMAGE": "Wrong image file",
-    "ERR_FILE_PHP_CODE_INJECTION": "File contains dangerous PHP code and was rejected",
+    "ERR_FILE_CODE_INJECTION": "File contains dangerous code and was rejected",
     "ERR_FILE_XPACKET_CODE_INJECTION": "File contains dangerous XPACKET code and was rejected",
     "ERR_NO_PERMISSIONS_TO_CREATE_DIRECTORIES": "No permissions to create directories",
     "ERR_DIRECTORY_CANNOT_BE_CREATED": "The directory cannot be created",
@@ -49,6 +50,9 @@
     "ERR_TOKEN_DOES_NOT_EXIST": "The token does not exist or has expired",
     "ERR_NO_TOKEN": "No token",
     "ERR_INCORRECT_2FA_TOTP_CODE": "Incorrect 2FA TOTP code",
-    "ERR_NO_2FA_TOTP_CODE": "No 2FA TOTP code"
+    "ERR_NO_2FA_TOTP_CODE": "No 2FA TOTP code",
+    "ERR_FUNCTION_NOT_FOUND_IN_CLASS": "Function %s not found in class %s object",
+    "ERR_FILE_SIZE_EXCEEDED": "File size exceeded",
+    "ERR_FILE_TYPE": "Invalid file type"
   }
 }

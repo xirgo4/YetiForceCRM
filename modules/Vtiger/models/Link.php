@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -24,13 +24,11 @@ class Vtiger_Link_Model extends vtlib\Link
 	 *
 	 * @throws Exception
 	 *
-	 * @return <Object>
+	 * @return mixed
 	 */
 	public function get($propertyName)
 	{
-		if (property_exists($this, $propertyName)) {
-			return $this->{$propertyName};
-		}
+		return property_exists($this, $propertyName) ? $this->{$propertyName} : '';
 	}
 
 	/**
@@ -55,7 +53,7 @@ class Vtiger_Link_Model extends vtlib\Link
 	 */
 	public function isActive()
 	{
-		return isset($this->active) ? $this->active : true;
+		return $this->active ?? true;
 	}
 
 	/**
@@ -143,7 +141,7 @@ class Vtiger_Link_Model extends vtlib\Link
 	 */
 	public function getClassName()
 	{
-		return $this->get('linkclass');
+		return $this->get('linkclass') ?? '';
 	}
 
 	/**
@@ -270,9 +268,9 @@ class Vtiger_Link_Model extends vtlib\Link
 				$parent = $value;
 			}
 			$newUrlParts = [];
-			array_push($newUrlParts, $key);
+			$newUrlParts[] = $key;
 			if (!empty($value) || 0 == $value) {
-				array_push($newUrlParts, $value);
+				$newUrlParts[] = $value;
 			}
 			$parametersParts[$index] = implode('=', $newUrlParts);
 		}

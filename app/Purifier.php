@@ -1,74 +1,67 @@
 <?php
+/**
+ * Purifier file.
+ *
+ * @package App
+ *
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ */
 
 namespace App;
 
 /**
  * Purifier basic class.
- *
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @copyright YetiForce Sp. z o.o
- * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
- * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Purifier
 {
-	/**
-	 * Purify type date in user format.
-	 */
+	/** @var string Purify type date in user format. */
 	public const DATE_USER_FORMAT = 'DateInUserFormat';
 
-	/**
-	 * Purify type integer.
-	 */
+	/** @var string Purify type integer. */
 	public const INTEGER = 'Integer';
 
-	/**
-	 * Purify type standard.
-	 */
+	/** @var string Purify type standard. */
 	public const STANDARD = 'Standard';
 
-	/**
-	 * Purify type sql.
-	 */
+	/** @var string Purify type sql. */
 	public const SQL = 'Sql';
 
-	/**
-	 * Purify type text.
-	 */
+	/** @var string Purify type text. */
 	public const TEXT = 'Text';
 
-	/**
-	 * Purify type number.
-	 */
+	/** @var string Purify type number. */
 	public const NUMBER = 'Number';
 
-	/**
-	 * Purify type html.
-	 */
+	/** @var string Purify type html. */
 	public const HTML = 'Html';
 
-	/**
-	 * Purify type boolean.
-	 */
+	/** @var string Purify type boolean. */
 	public const BOOL = 'Bool';
 
-	/**
-	 * Purify type url.
-	 */
+	/** @var string Purify type url. */
 	public const URL = 'Url';
 
-	/**
-	 * Purify type Alnum.
-	 */
+	/** @var string Purify type Alnum. */
 	public const ALNUM = 'Alnum';
-	/**
-	 * Purify type Alnum.
-	 */
+
+	/** @var string Purify type Alnum 2 (A-Za-z0-9\/\+\-). */
+	public const ALNUM2 = 'AlnumType2';
+
+	/** @var string Purify type AlnumExtended. */
 	public const ALNUM_EXTENDED = 'AlnumExtended';
-	/**
-	 * Purify type HTML text parser.
-	 */
+
+	/** @var string Purify type Digits. */
+	public const DIGITS = 'Digits';
+
+	/** @var string Purify type HTML text parser */
 	public const HTML_TEXT_PARSER = 'HtmlTextParser';
+
+	/** @var string Purify type Path. */
+	public const PATH = 'Path';
+
 	/**
 	 * Default charset.
 	 *
@@ -304,6 +297,8 @@ class Purifier
 		$config->set('URI.SafeIframeRegexp', '%^(http:|https:)?//(www\.youtube(?:-nocookie)?\.com/embed/|player\.vimeo\.com/video/)%');
 		$config->set('HTML.DefinitionRev', 1);
 		$config->set('HTML.TargetBlank', true);
+		$config->set('Attr.EnableID', true);
+		$config->set('CSS.MaxImgLength', null);
 		$config->set('URI.AllowedSchemes', [
 			'http' => true,
 			'https' => true,
@@ -346,6 +341,16 @@ class Purifier
 			$def->addElement('source', 'Block', 'Flow', 'Common', [
 				'src' => 'URI',
 				'type' => 'Text',
+			]);
+			$def->addElement('link', 'Block', 'Flow', 'Common', [
+				'href' => 'URI',
+				'type' => 'Text',
+				'rel' => 'Text',
+			]);
+			$def->addElement('yetiforce', 'Inline', 'Inline', 'Common', [
+				'type' => 'Text',
+				'crm-id' => 'Length',
+				'attachment-id' => 'Length',
 			]);
 			$def->addElement('s', 'Inline', 'Inline', 'Common');
 			$def->addElement('var', 'Inline', 'Inline', 'Common');
@@ -416,150 +421,136 @@ class Purifier
 			}
 		} else {
 			$value = null;
-			if (property_exists('App\Validator', $type)) {
-				$value = Validator::{$type}($input) ?: null;
-			} else {
-				switch ($type) {
-					case 'Standard': // only word
-					case 1:
-						$value = Validator::standard($input) ? $input : null;
-						break;
-					case 'Alnum': // word and int
-					case 2:
-						$value = Validator::alnum($input) ? $input : null;
-						break;
-					case 'AlnumExtended':
-						$value = preg_match('/^[\sA-Za-z0-9\,\_\.\=\-]+$/', $input) ? $input : null;
-						break;
-					case 'AlnumType2':
-						$value = preg_match('/^[\sA-Za-z0-9\/\+]+$/', $input) ? $input : null;
-						break;
-					case 'AlnumSpace':
-						$value = Validator::alnumSpace($input) ? $input : null;
-						break;
-					case 'DateInUserFormat': // date in user format
-						if (!$input) {
-							return '';
-						}
-						$value = Validator::dateInUserFormat($input) ? ($convert ? Fields\Date::formatToDB($input) : $input) : null;
-						break;
-					case 'Time':
-						$value = Validator::time($input) ? $input : null;
-						break;
-					case 'TimePeriod':
-						$value = Validator::timePeriod($input) ? $input : null;
-						break;
-					case 'TimeInUserFormat':
-						$value = Validator::timeInUserFormat($input) ? ($convert ? Fields\Time::formatToDB($input) : $input) : null;
-						break;
-					case 'DateRangeUserFormat': // date range user format
-						$dateFormat = User::getCurrentUserModel()->getDetail('date_format');
-						$v = [];
-						foreach (explode(',', $input) as $i) {
-							if (!Validator::dateInUserFormat($i)) {
-								$v = [];
-								break;
-							}
-							[$y, $m, $d] = Fields\Date::explode($i, $dateFormat);
-							if (checkdate((int) $m, (int) $d, (int) $y) && is_numeric($y) && is_numeric($m) && is_numeric($d)) {
-								$v[] = \DateTimeField::convertToDBFormat($i);
-							}
-						}
-						if ($v) {
-							$value = $v;
-						}
-						break;
-					case 'Date': // date in base format yyyy-mm-dd
-						$value = Validator::date($input) ? $input : null;
-						break;
-					case 'DateTime': // date in base format Y-m-d H:i:s
-						$value = Validator::dateTime($input) ? $input : null;
-						break;
-					case 'DateTimeInUserFormat':
-						$value = Validator::dateTimeInUserFormat($input) ? $input : null;
-						break;
-					case 'DateTimeInIsoFormat': // date in base format yyyy-mm-dd
-						$value = Validator::dateTimeInIsoFormat($input) ? date('Y-m-d H:i:s', strtotime($input)) : null;
-						break;
-					case 'Bool':
-						$value = self::bool($input);
-						break;
-					case 'NumberInUserFormat': // number in user format
-						$input = Fields\Double::formatToDb($rawInput = $input);
-						if (is_numeric($input) && Fields\Double::formatToDisplay($input, false) === Fields\Double::truncateZeros($rawInput)) {
-							$value = $input;
-						}
-						break;
-					case 'Number':
-						$dbFormat = Fields\Double::formatToDb($input);
-						if (is_numeric($dbFormat) && Fields\Double::formatToDisplay($dbFormat, false) === Fields\Double::truncateZeros($input)) {
-							$value = $input;
-						}
-						break;
-					case 'Double':
-						if (false !== ($input = filter_var($input, FILTER_VALIDATE_FLOAT))) {
-							$value = $input;
-						}
-						break;
-					case 'Phone':
-						$value = preg_match('/^[\s0-9+\-()]+$/', $input) ? $input : null;
-						break;
-					case 'Email':
-						if (!$input) {
-							return '';
-						}
-						$value = Validator::email($input) ? $input : null;
-						break;
-					case 'Html':
-						$value = self::purifyHtml($input);
-						break;
-					case 'Integer': // Integer
-						if (false !== ($input = filter_var($input, FILTER_VALIDATE_INT))) {
-							$value = $input;
-						}
-						break;
-					case 'Digital': // Digital - eg. 000523
-						if (false !== ($input = filter_var($input, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-9]+$/']]))) {
-							$value = $input;
-						}
-						break;
-					case 'Color': // colors
-						$value = preg_match('/^(#[0-9a-fA-F]{6})$/', $input) ? $input : null;
-						break;
-					case 'Year': // 2018 etc
-						if (is_numeric($input) && (int) $input >= 0 && (int) $input <= 3000 && 4 === \strlen((string) $input)) {
-							$value = (string) $input;
-						}
-						break;
-					case 'Version':
-						$value = preg_match('/^[\.0-9]+$/', $input) ? $input : null;
-						break;
-					case 'Path':
-						$value = Fields\File::checkFilePath($input) ? static::encodeHtml(static::purify($input)) : null;
-						break;
-					case 'Url':
-						if (!$input) {
-							return '';
-						}
-						$value = Validator::url($input) ? $input : null;
-						break;
-					case 'MailId':
-							$value = preg_match('/^[\sA-Za-z0-9\<\>\_\[\.\]\=\-\+\@\$\!\#\%\&\'\*\+\/\?\^\_\`\{\|\}\~\-\"\:\(\)]+$/', $input) ? $input : null;
+			switch ($type) {
+				case 'Standard': // only word
+				case 1:
+					$value = Validator::standard($input) ? $input : null;
+					break;
+				case 'Alnum': // word and int
+				case 2:
+					$value = Validator::alnum($input) ? $input : null;
+					break;
+				case 'AlnumExtended':
+					$value = preg_match('/^[\sA-Za-z0-9\,\_\.\=\-]+$/', $input) ? $input : null;
+					break;
+				case 'AlnumType2':
+					$value = preg_match('/^[\sA-Za-z0-9\/\+\-]+$/', $input) ? $input : null;
+					break;
+				case 'DateInUserFormat': // date in user format
+					if (!$input) {
+						return '';
+					}
+					$value = Validator::dateInUserFormat($input) ? ($convert ? Fields\Date::formatToDB($input) : $input) : null;
+					break;
+				case 'TimeInUserFormat':
+					$value = Validator::timeInUserFormat($input) ? ($convert ? Fields\Time::formatToDB($input) : $input) : null;
+					break;
+				case 'DateRangeUserFormat': // date range user format
+					$dateFormat = User::getCurrentUserModel()->getDetail('date_format');
+					$v = [];
+					foreach (explode(',', $input) as $i) {
+						if (!Validator::dateInUserFormat($i)) {
+							$v = [];
 							break;
-					case 'ClassName':
-						$value = preg_match('/^[a-z\\\_]+$/i', $input) ? $input : null;
-						break;
-					case self::SQL:
-						$value = $input && Validator::sql($input) ? $input : null;
-						break;
-					case self::HTML_TEXT_PARSER:
-						$value = self::purifyTextParser($input);
-						break;
-					case 'Text':
-					default:
+						}
+						[$y, $m, $d] = Fields\Date::explode($i, $dateFormat);
+						if (checkdate((int) $m, (int) $d, (int) $y) && is_numeric($y) && is_numeric($m) && is_numeric($d)) {
+							$v[] = \DateTimeField::convertToDBFormat($i);
+						}
+					}
+					if ($v) {
+						$value = $v;
+					}
+					break;
+				case 'DateTimeInIsoFormat': // date in base format yyyy-mm-dd
+					$value = Validator::dateTimeInIsoFormat($input) ? date('Y-m-d H:i:s', strtotime($input)) : null;
+					break;
+				case 'Bool':
+					$value = self::bool($input);
+					break;
+				case 'NumberInUserFormat': // number in user format
+					$input = Fields\Double::formatToDb($rawInput = $input);
+					if (is_numeric($input) && Fields\Double::formatToDisplay($input, false) === Fields\Double::truncateZeros($rawInput)) {
+						$value = $input;
+					}
+					break;
+				case 'Number':
+					$dbFormat = Fields\Double::formatToDb($input);
+					if (is_numeric($dbFormat) && Fields\Double::formatToDisplay($dbFormat, false) === Fields\Double::truncateZeros($input)) {
+						$value = $input;
+					}
+					break;
+				case 'Double':
+					if (false !== ($input = filter_var($input, FILTER_VALIDATE_FLOAT))) {
+						$value = $input;
+					}
+					break;
+				case 'Phone':
+					$value = preg_match('/^[\s0-9+\-()]+$/', $input) ? $input : null;
+					break;
+				case 'Email':
+					if (!$input) {
+						return '';
+					}
+					$value = Validator::email($input) ? $input : null;
+					break;
+				case 'Html':
+					$value = self::purifyHtml($input);
+					break;
+				case 'Integer': // Integer
+					if (false !== ($input = filter_var($input, FILTER_VALIDATE_INT))) {
+						$value = $input;
+					}
+					break;
+				case 'Digits': // Digits - eg. 000523
+					if (false !== ($input = filter_var($input, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-9]+$/']]))) {
+						$value = $input;
+					}
+					break;
+				case 'Color': // colors
+					$value = preg_match('/^(#[0-9a-fA-F]{6})$/', $input) ? $input : null;
+					break;
+				case 'Year': // 2018 etc
+					if (is_numeric($input) && (int) $input >= 0 && (int) $input <= 3000 && 4 === \strlen((string) $input)) {
+						$value = (string) $input;
+					}
+					break;
+				case 'Version':
+					$value = preg_match('/^[\.0-9]+$/', $input) ? $input : null;
+					break;
+				case self::PATH:
+					$value = Validator::path($input) && Validator::path(static::purify($input)) ? $input : null;
+					break;
+				case 'Url':
+					if (!$input) {
+						return '';
+					}
+					$value = Validator::url($input) ? $input : null;
+					break;
+				case 'MailId':
+					$value = preg_match('/^[\sA-Za-z0-9\<\>\_\[\.\]\=\-\+\@\$\!\#\%\&\'\*\+\/\?\^\_\`\{\|\}\~\-\"\:\(\)]+$/', $input) ? $input : null;
+					break;
+				case 'ClassName':
+					$value = preg_match('/^[a-z\\\_]+$/i', $input) ? $input : null;
+					break;
+				case self::SQL:
+					$value = $input && Validator::sql($input) ? $input : null;
+					break;
+				case self::HTML_TEXT_PARSER:
+					$value = self::purifyTextParser($input);
+					break;
+				case 'Text':
+					$value = self::purify($input);
+					break;
+				default:
+					if (method_exists('App\Validator', $type)) {
+						if (Validator::{$type}($input)) {
+							$value = $input;
+						}
+					} else {
 						$value = self::purify($input);
-						break;
-				}
+					}
+					break;
 			}
 			if (null === $value) {
 				\App\Log::error('purifyByType: ' . $input, 'IllegalValue');

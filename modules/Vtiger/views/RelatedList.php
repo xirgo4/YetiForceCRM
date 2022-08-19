@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_RelatedList_View extends Vtiger_Index_View
@@ -55,8 +55,8 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 		if ($request->has('limit')) {
 			$pagingModel->set('limit', $request->getInteger('limit'));
 		}
-		$parentRecordModel = Vtiger_Record_Model::getInstanceById($parentId, $moduleName);
 		$cvId = $request->isEmpty('cvId', true) ? 0 : $request->getByType('cvId', 'Alnum');
+		$parentRecordModel = Vtiger_Record_Model::getInstanceById($parentId, $moduleName);
 		$relationListView = Vtiger_RelationListView_Model::getInstance($parentRecordModel, $relatedModuleName, $request->getInteger('relationId'), $cvId);
 
 		$orderBy = $request->getArray('orderby', \App\Purifier::STANDARD, [], \App\Purifier::SQL);
@@ -125,6 +125,9 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 		if ('ListPreview' === $relatedView) {
 			$relationListView->setFields(array_merge(['id'], $relationListView->getRelatedModuleModel()->getNameFields()));
 		}
+		if ($request->has('fields')) {
+			$relationListView->setFields(array_merge(['id'], $request->getArray('fields', 'Alnum')));
+		}
 		if ($request->has('quickSearchEnabled')) {
 			$relationListView->set('quickSearchEnabled', $request->getBoolean('quickSearchEnabled'));
 		}
@@ -177,7 +180,7 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 		$viewer->assign('LOCKED_EMPTY_FIELDS', $request->isEmpty('lockedEmptyFields', true) ? [] : $request->getArray('lockedEmptyFields'));
 		if ($relationListView->isWidgetsList()) {
 			$viewer->assign('IS_WIDGETS', true);
-			$viewer->assign('HIERARCHY_VALUE', App\Config::module('ModComments', 'DEFAULT_SOURCE'));
+			$viewer->assign('HIERARCHY_VALUE', \Config\Modules\ModComments::$defaultSource);
 			$viewer->assign('HIERARCHY', \App\ModuleHierarchy::getModuleLevel($relatedModuleName));
 		} else {
 			$viewer->assign('IS_WIDGETS', false);

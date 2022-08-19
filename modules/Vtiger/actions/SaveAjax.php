@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_SaveAjax_Action extends Vtiger_Save_Action
@@ -29,14 +29,13 @@ class Vtiger_SaveAjax_Action extends Vtiger_Save_Action
 			if (!$fieldModel->isViewable()) {
 				continue;
 			}
-			$recordFieldValue = $this->record->get($fieldName);
 			$prevDisplayValue = false;
 			if (false !== ($recordFieldValuePrev = $this->record->getPreviousValue($fieldName))) {
 				$prevDisplayValue = $fieldModel->getDisplayValue($recordFieldValuePrev, $this->record->getId(), $this->record);
 			}
 			$result[$fieldName] = [
-				'value' => \App\Purifier::encodeHtml($recordFieldValue),
-				'display_value' => $fieldModel->getDisplayValue($recordFieldValue, $this->record->getId(), $this->record),
+				'value' => \App\Purifier::encodeHtml($this->record->getRawValue($fieldName)),
+				'display_value' => $fieldModel->getDisplayValue($this->record->get($fieldName), $this->record->getId(), $this->record),
 				'prev_display_value' => $prevDisplayValue,
 			];
 		}

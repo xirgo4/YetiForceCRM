@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -547,8 +547,8 @@ class Request
 	 */
 	public function getModule($raw = true)
 	{
-		$moduleName = $this->getByType('module', 'Alnum');
-		if (!$raw && !$this->isEmpty('parent', true) && 'Settings' === ($parentModule = $this->getByType('parent', 'Alnum'))) {
+		$moduleName = $this->getByType('module', \App\Purifier::ALNUM);
+		if (!$raw && !$this->isEmpty('parent', true) && 'Settings' === ($parentModule = $this->getByType('parent', \App\Purifier::ALNUM))) {
 			$moduleName = "$parentModule:$moduleName";
 		}
 		return $moduleName;
@@ -682,7 +682,7 @@ class Request
 	public function validateReadAccess()
 	{
 		// Referer check if present - to over come && Check for user post authentication.
-		if (isset($_SERVER['HTTP_REFERER']) && \App\User::getCurrentUserId() && 'Install' !== $this->get('module')) {
+		if (\Config\Security::$verifyRefererHeader && isset($_SERVER['HTTP_REFERER']) && \App\User::getCurrentUserId() && 'Install' !== $this->get('module')) {
 			$allowed = array_merge(\Config\Security::$allowedFrameDomains, \Config\Security::$allowedFormDomains);
 			$allowed[] = \App\Config::main('site_URL');
 			$throw = true;
@@ -707,11 +707,11 @@ class Request
 	public function validateWriteAccess($skipRequestTypeCheck = false)
 	{
 		if (!$skipRequestTypeCheck && 'POST' !== $_SERVER['REQUEST_METHOD']) {
-			throw new \App\Exceptions\Csrf('Invalid request - validate Write Access');
+			throw new \App\Exceptions\Csrf('Invalid request - validate Write Access', 403);
 		}
 		$this->validateReadAccess();
-		if (class_exists('CSRFConfig') && !\CsrfMagic\Csrf::check(false)) {
-			throw new \App\Exceptions\Csrf('Unsupported request');
+		if (\App\Config::security('csrfActive')) {
+			\CsrfMagic\Csrf::check();
 		}
 	}
 

@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Tomasz Kur <t.kur@yetiforce.com>
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -56,10 +56,6 @@ use OpenApi\Annotations as OA;
  *		description="Access to user methods"
  *	)
  *	@OA\Tag(
- *		name="Products",
- *		description="Products methods"
- * )
- *	@OA\Tag(
  *		name="Users",
  *		description="Access to user methods"
  *	)
@@ -74,6 +70,8 @@ class Files extends \Api\Core\BaseAction
 
 	/**
 	 * Put method.
+	 *
+	 * @api
 	 *
 	 * @throws \Api\Core\Exception
 	 *

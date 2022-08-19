@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -509,7 +509,6 @@ class CustomView_Record_Model extends \App\Base
 	public function getRecordIds($skipRecords = false, $module = false, $lockRecords = false)
 	{
 		$queryGenerator = $this->getRecordsListQuery($skipRecords, $module, $lockRecords)->setFields(['id']);
-
 		return $queryGenerator->createQuery()->column();
 	}
 
@@ -539,6 +538,9 @@ class CustomView_Record_Model extends \App\Base
 		$searchValue = $this->get('search_value');
 		if (!empty($searchValue) && ($operator = $this->get('operator'))) {
 			$queryGenerator->addCondition($searchKey, $searchValue, $operator);
+		}
+		if ($advancedConditions = $this->get('advancedConditions')) {
+			$queryGenerator->setAdvancedConditions($advancedConditions);
 		}
 		$searchParams = $this->getArray('search_params');
 		if (empty($searchParams)) {
@@ -678,12 +680,16 @@ class CustomView_Record_Model extends \App\Base
 	 */
 	public function delete()
 	{
-		$db = App\Db::getInstance();
+		$dbCommand = App\Db::getInstance()->createCommand();
 		$cvId = $this->getId();
-		$db->createCommand()->delete('vtiger_customview', ['cvid' => $cvId])->execute();
-		$db->createCommand()->delete('vtiger_user_module_preferences', ['default_cvid' => $cvId])->execute();
-		// To Delete the mini list widget associated with the filter
-		$db->createCommand()->delete('vtiger_module_dashboard', ['filterid' => $cvId])->execute();
+		$dbCommand->delete('vtiger_customview', ['cvid' => $cvId])->execute();
+		$dbCommand->delete('vtiger_user_module_preferences', ['default_cvid' => $cvId])->execute();
+		$dbCommand->delete('vtiger_module_dashboard', ['filterid' => $cvId])->execute();
+		$result = $dbCommand->delete('yetiforce_menu', ['dataurl' => $cvId, 'type' => array_search('CustomFilter', \App\Menu::TYPES)])->execute();
+		if ($result) {
+			(new \App\BatchMethod(['method' => '\App\Menu::reloadMenu', 'params' => []]))->save();
+		}
+		\App\CustomView::clearCacheById($cvId);
 		App\Cache::clear();
 	}
 
@@ -702,19 +708,27 @@ class CustomView_Record_Model extends \App\Base
 	 */
 	public function getConditions(): array
 	{
-		return \App\CustomView::getConditions($this->getId());
+		return $this->getId() ? \App\CustomView::getConditions($this->getId()) : [];
 	}
 
 	/**
 	 * Return list of field to detect duplicates.
-	 *
-	 * @throws \App\Db\Exception
 	 *
 	 * @return array
 	 */
 	public function getDuplicateFields(): array
 	{
 		return (new \App\Db\Query())->select(['fieldid', 'ignore'])->from('u_#__cv_duplicates')->where(['cvid' => $this->getId()])->all();
+	}
+
+	/**
+	 * Get custom view advanced conditions.
+	 *
+	 * @return array
+	 */
+	public function getAdvancedConditions(): array
+	{
+		return $this->isEmpty('advanced_conditions') ? [] : \App\Json::decode($this->get('advanced_conditions'));
 	}
 
 	/**
@@ -734,7 +748,8 @@ class CustomView_Record_Model extends \App\Base
 		[$fieldName, $fieldModuleName, $sourceFieldName] = array_pad(explode(':', $rule['fieldname']), 3, false);
 		$operator = $rule['operator'];
 		$value = $rule['value'] ?? '';
-		if (!$this->get('advfilterlistDbFormat') && !\in_array($operator, App\Condition::OPERATORS_WITHOUT_VALUES + array_keys(App\Condition::DATE_OPERATORS))) {
+
+		if (!$this->get('advfilterlistDbFormat') && !\in_array($operator, array_merge(\App\Condition::OPERATORS_WITHOUT_VALUES, \App\Condition::FIELD_COMPARISON_OPERATORS, array_keys(App\Condition::DATE_OPERATORS)))) {
 			$value = Vtiger_Module_Model::getInstance($fieldModuleName)->getFieldByName($fieldName)
 				->getUITypeModel()
 				->getDbConditionBuilderValue($value, $operator);
@@ -801,13 +816,14 @@ class CustomView_Record_Model extends \App\Base
 		$db = App\Db::getInstance();
 		$cvId = $this->getId();
 		foreach ($this->get('columnslist') as $index => $columnInfo) {
-			$columnInfo = explode(':', $columnInfo);
+			$columnInfoExploded = explode(':', $columnInfo);
 			$db->createCommand()->insert('vtiger_cvcolumnlist', [
 				'cvid' => $cvId,
 				'columnindex' => $index,
-				'field_name' => $columnInfo[0],
-				'module_name' => $columnInfo[1],
-				'source_field_name' => $columnInfo[2] ?? null,
+				'field_name' => $columnInfoExploded[0],
+				'module_name' => $columnInfoExploded[1],
+				'source_field_name' => $columnInfoExploded[2] ?? null,
+				'label' => $this->get('customFieldNames')[$columnInfo] ?? ''
 			])->execute();
 		}
 	}
@@ -831,6 +847,7 @@ class CustomView_Record_Model extends \App\Base
 			'featured' => null,
 			'color' => $this->get('color'),
 			'description' => $this->get('description'),
+			'advanced_conditions' => $this->get('advanced_conditions'),
 		])->execute();
 		$this->set('cvid', (int) $db->getLastInsertID('vtiger_customview_cvid_seq'));
 		$this->setColumnlist();
@@ -866,6 +883,7 @@ class CustomView_Record_Model extends \App\Base
 			'status' => $this->get('status'),
 			'color' => $this->get('color'),
 			'description' => $this->get('description'),
+			'advanced_conditions' => $this->get('advanced_conditions'),
 		], ['cvid' => $cvId]
 		)->execute();
 		$dbCommand->delete('vtiger_cvcolumnlist', ['cvid' => $cvId])->execute();
@@ -913,14 +931,18 @@ class CustomView_Record_Model extends \App\Base
 			'vtiger_cvcolumnlist.field_name',
 			'vtiger_cvcolumnlist.module_name',
 			'vtiger_cvcolumnlist.source_field_name',
+			'vtiger_cvcolumnlist.label',
 		])
 			->from('vtiger_cvcolumnlist')
 			->innerJoin('vtiger_customview', 'vtiger_cvcolumnlist.cvid = vtiger_customview.cvid')
 			->where(['vtiger_customview.cvid' => $cvId])->orderBy('vtiger_cvcolumnlist.columnindex')
 			->createCommand()->queryAllByGroup(1);
-		return array_map(function ($item) {
-			return "{$item['field_name']}:{$item['module_name']}" . ($item['source_field_name'] ? ":{$item['source_field_name']}" : '');
-		}, $selectedFields);
+		$result = [];
+		foreach ($selectedFields as $item) {
+			$key = "{$item['field_name']}:{$item['module_name']}" . ($item['source_field_name'] ? ":{$item['source_field_name']}" : '');
+			$result[$key] = $item['label'];
+		}
+		return $result;
 	}
 
 	/**

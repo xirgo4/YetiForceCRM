@@ -7,7 +7,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -15,6 +15,9 @@
  */
 class Calendar_Module_Model extends Vtiger_Module_Model
 {
+	/** {@inheritdoc} */
+	public $allowTypeChange = false;
+
 	/**
 	 * Function returns the default view for the Calendar module.
 	 *
@@ -22,21 +25,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 	 */
 	public function getDefaultViewName()
 	{
-		return $this->getCalendarViewName();
-	}
-
-	/**
-	 * Function returns the calendar view name.
-	 *
-	 * @return string
-	 */
-	public function getCalendarViewName()
-	{
-		$returnView = 'Calendar';
-		if ('Standard' !== $calendarView = App\Config::module('Calendar', 'CALENDAR_VIEW')) {
-			$returnView .= $calendarView;
-		}
-		return $returnView;
+		return 'Calendar';
 	}
 
 	/**
@@ -46,7 +35,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 	 */
 	public function getCalendarViewUrl()
 	{
-		return 'index.php?module=' . $this->get('name') . '&view=' . $this->getCalendarViewName();
+		return 'index.php?module=' . $this->get('name') . '&view=' . $this->getDefaultViewName();
 	}
 
 	/**
@@ -59,9 +48,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		return false;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getSideBarLinks($linkParams)
 	{
 		$links = Vtiger_Link_Model::getAllByType($this->getId(), ['SIDEBARLINK', 'SIDEBARWIDGET'], $linkParams);
@@ -81,7 +68,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 			$links['SIDEBARLINK'][] = Vtiger_Link_Model::getInstanceFromValues([
 				'linktype' => 'SIDEBARLINK',
 				'linklabel' => 'LBL_CALENDAR_LIST',
-				'linkurl' => 'javascript:Calendar_Calendar_Js.getInstanceByView().goToRecordsList("' . $this->getListViewUrl() . '&viewname=All");',
+				'linkurl' => 'javascript:Calendar_Calendar_Js.goToRecordsList("' . $this->getListViewUrl() . '");',
 				'linkicon' => 'far fa-calendar-minus',
 			]);
 		}
@@ -211,9 +198,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		return $recordModels;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getFieldsByType($type, bool $active = false): array
 	{
 		$restrictedField = ['picklist' => ['activitystatus', 'visibility', 'duration_minutes']];
@@ -235,9 +220,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		return $fieldList;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getSettingLinks(): array
 	{
 		$currentUserModel = Users_Record_Model::getCurrentUserModel();
@@ -399,9 +382,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		return ['events' => $totalCount[$eventModule] - $skipCount[$eventModule], 'skipped_events' => $skipCount[$eventModule], 'task' => $totalCount[$todoModule] - $skipCount[$todoModule], 'skipped_task' => $skipCount[$todoModule]];
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getLayoutTypeForQuickCreate(): string
 	{
 		return 'standard';

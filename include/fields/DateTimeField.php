@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 require_once 'include/utils/CommonUtils.php';
 require_once 'include/fields/DateTimeField.php';
@@ -38,7 +38,7 @@ class DateTimeField
 		$this->datetime = $value;
 	}
 
-	/** Function to set date values compatible to database (YY_MM_DD)
+	/** Function to set date values compatible to database (YY_MM_DD).
 	 * @param $user -- value :: Type Users
 	 * @returns $insert_date -- insert_date :: Type string
 	 */
@@ -70,6 +70,18 @@ class DateTimeField
 	{
 		\App\Log::trace(__METHOD__);
 		return $this->getDisplayDate($user) . ' ' . $this->getDisplayTime($user);
+	}
+
+	/**
+	 * Get full datetime value (with seconds).
+	 *
+	 * @param App\User|null $user
+	 *
+	 * @return string
+	 */
+	public function getDisplayFullDateTimeValue($user = null): string
+	{
+		return $this->getDisplayDate($user) . ' ' . $this->getDisplayTime($user, true, true);
 	}
 
 	public function getFullcalenderDateTimevalue($user = null)
@@ -125,11 +137,13 @@ class DateTimeField
 	 */
 	public static function convertToUserFormat($date)
 	{
-		$format = \App\User::getCurrentUserModel()->getDetail('date_format');
-		if (empty($format)) {
-			$format = 'yyyy-mm-dd';
+		$userDate = '';
+		if (!empty($date)) {
+			$format = \App\User::getCurrentUserModel()->getDetail('date_format') ?: 'yyyy-mm-dd';
+			$userDate = self::__convertToUserFormat($date, $format);
 		}
-		return self::__convertToUserFormat($date, $format);
+
+		return $userDate;
 	}
 
 	/**
@@ -299,23 +313,23 @@ class DateTimeField
 	 *
 	 * @param \App\User|null $user
 	 * @param bool           $convertTimeZone
+	 * @param bool           $fullTime        (with seconds)
 	 *
 	 * @return string
 	 */
-	public function getDisplayTime($user = null, bool $convertTimeZone = true): string
+	public function getDisplayTime($user = null, bool $convertTimeZone = true, bool $fullTime = false): string
 	{
-		\App\Log::trace('Start ' . __METHOD__ . '(' . $this->datetime . ')');
 		if ($convertTimeZone) {
 			$date = self::convertToUserTimeZone($this->datetime, $user);
 		} else {
 			$date = new DateTime($this->datetime);
 		}
-		$time = $date->format('H:i');
+		$time = $fullTime ? $date->format('H:i:s') : $date->format('H:i');
 		//Convert time to user preferred value
 		if ('12' === \App\User::getCurrentUserModel()->getDetail('hour_format')) {
 			$time = Vtiger_Time_UIType::getTimeValueInAMorPM($time);
 		}
-		\App\Log::trace('End ' . __METHOD__);
+
 		return $time;
 	}
 

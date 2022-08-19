@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-Detail-Widget-EmailList -->
 	{assign var=WIDGET_UID value="id-{\App\Layout::getUniqueId($WIDGET['id']|cat:_)}"}
@@ -33,8 +33,8 @@
 									<span class="body-icon fas fa-search"
 										title="{\App\Language::translate('LBL_SHOW_PREVIEW_EMAILS','OSSMailView')}"></span>
 								</button>
-								{if App\Config::main('isActiveSendingMails') && \App\Privilege::isPermitted('OSSMail')}
-									{if $USER_MODEL->get('internal_mailer') == 1}
+								{if \App\Mail::checkMailClient()}
+									{if \App\Mail::checkInternalMailClient()}
 										{assign var=URLDATA value=OSSMail_Module_Model::getComposeUrl($MODULE_NAME, $RECORD->getId(), 'Detail', 'new')}
 										<button type="button" class="btn btn-sm btn-light sendMailBtn" data-url="{$URLDATA}"
 											data-module="{$MODULE_NAME}" data-record="{$RECORD->getId()}" data-popup="{$CONFIG['popup']}"

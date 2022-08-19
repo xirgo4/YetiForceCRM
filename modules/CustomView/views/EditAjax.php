@@ -6,35 +6,31 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class CustomView_EditAjax_View extends Vtiger_IndexAjax_View
 {
-	/**
-	 * Function to check permission.
-	 *
-	 * @param \App\Request $request
-	 *
-	 * @throws \App\Exceptions\NoPermitted
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
-		if (\App\User::getCurrentUserModel()->isAdmin()) {
-			return;
+		$sourceModuel = $request->getByType('source_module', \App\Purifier::ALNUM);
+		$permissions = false;
+		if ($request->getBoolean('duplicate') || $request->isEmpty('record')) {
+			$permissions = \App\Privilege::isPermitted($sourceModuel, 'CreateCustomFilter');
+		} else {
+			$permissions = CustomView_Record_Model::getInstanceById($request->getInteger('record'))->isEditable();
 		}
-		if (!$request->getBoolean('duplicate') && !$request->isEmpty('record') && !CustomView_Record_Model::getInstanceById($request->getInteger('record'))->isEditable()) {
+		if (!$permissions) {
 			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED', 406);
 		}
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$viewer = $this->getViewer($request);
-		$sourceModuleName = $request->getByType('source_module', 2);
+		$sourceModuleName = $request->getByType('source_module', \App\Purifier::ALNUM);
 		$moduleName = $request->getModule();
 		$record = $request->getInteger('record');
 		if (is_numeric($sourceModuleName)) {
@@ -79,6 +75,8 @@ class CustomView_EditAjax_View extends Vtiger_IndexAjax_View
 		$viewer->assign('CV_PUBLIC_VALUE', App\CustomView::CV_STATUS_PUBLIC);
 		$viewer->assign('MODULE_MODEL', $sourceModuleModel);
 		$viewer->assign('MID', $request->has('mid') ? $request->getInteger('mid') : null);
+		$viewer->assign('RELATIONS', $sourceModuleModel->getRelations());
+		$viewer->assign('ADVANCED_CONDITIONS', \App\Condition::validAdvancedConditions($customViewModel->getAdvancedConditions()));
 		$viewer->view('EditView.tpl', $moduleName);
 	}
 }

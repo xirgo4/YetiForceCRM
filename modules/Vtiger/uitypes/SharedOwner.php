@@ -5,8 +5,8 @@
  *
  * @package   UIType
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -71,10 +71,10 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 			return '';
 		}
 		if (!\is_array($value)) {
-			$values = explode(',', $value);
+			$value = explode(',', $value);
 		}
 		$displayValue = [];
-		foreach ($values as $shownerid) {
+		foreach ($value as $shownerid) {
 			$ownerName = rtrim(\App\Fields\Owner::getLabel($shownerid));
 			if (!$isAdmin || $rawText) {
 				$displayValue[] = $ownerName;
@@ -158,7 +158,7 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 			}
 		}
 		$display = implode(', ', $display);
-		$display = explode(', ', \App\TextParser::textTruncate($display, $maxLengthText));
+		$display = explode(', ', \App\TextUtils::textTruncate($display, $maxLengthText));
 		foreach ($display as $key => &$shownerName) {
 			if (isset($shownerData[$key]['inactive'])) {
 				$shownerName = '<span class="redColor"><s>' . $shownerName . '</s></span>';
@@ -263,7 +263,7 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'y', 'ny', 'om', 'ogr'];
+		return ['e', 'n', 'y', 'ny', 'om', 'ogr', 'ogu'];
 	}
 
 	/** {@inheritdoc} */

@@ -7,8 +7,8 @@ namespace App\TextParser;
  *
  * @package TextParser
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Arkadiusz Sołek <a.solek@yetiforce.com>
  */
 class ProductsTableLongVersion extends Base
@@ -40,8 +40,9 @@ class ProductsTableLongVersion extends Base
 			} else {
 				$currency = $baseCurrency['id'];
 			}
-			$currencyData = \App\Fields\Currency::getById($currency);
-			$currencySymbol = $currencyData['currency_symbol'];
+			$currencySymbol = \App\Fields\Currency::getById($currency)['currency_symbol'];
+		} else {
+			$currencySymbol = \App\Fields\Currency::getDefault()['currency_symbol'];
 		}
 		$headerStyle = 'font-size:9px;padding:0px 4px;text-align:center;';
 		$bodyStyle = 'font-size:8px;border:1px solid #ddd;padding:0px 4px;';

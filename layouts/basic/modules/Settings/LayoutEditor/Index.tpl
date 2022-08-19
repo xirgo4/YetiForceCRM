@@ -6,7 +6,7 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-* Contributor(s): YetiForce.com
+* Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
@@ -18,23 +18,25 @@
 			<div class="col-md-6">
 				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $QUALIFIED_MODULE)}
 			</div>
-			<div class="float-right col-md-6 form-inline">
-				<div class="form-group float-right col-md-6">
+			<div class="float-right col-md-6 m-auto">
+				<div class="float-right col-md-6">
 					<select class="select2 form-control" name="layoutEditorModules">
 						{foreach item=MODULE_NAME from=$SUPPORTED_MODULES}
 							<option value="{$MODULE_NAME}" {if $MODULE_NAME eq $SELECTED_MODULE_NAME} selected {/if}>{App\Language::translate($MODULE_NAME, $MODULE_NAME)}</option>
 						{/foreach}
 					</select>
 				</div>
-				<div class="form-group float-right">
-					<div class="btn-group">
-						<button class="js-switch--inventory btn btn-outline-primary{if !$IS_INVENTORY} active{/if}" type="button" data-js="click" {if $CHANGE_MODULE_TYPE_DISABLED}disabled="disabled" {/if} data-value="{Vtiger_Module_Model::STANDARD_TYPE}" autocomplete="off">
-							{App\Language::translate('LBL_BASIC_MODULE',$QUALIFIED_MODULE)}
-						</button>
-						<button class="js-switch--inventory btn btn-outline-primary{if $IS_INVENTORY} active{/if}" type="button" data-js="click" {if $CHANGE_MODULE_TYPE_DISABLED}disabled="disabled" {/if} data-value="{Vtiger_Module_Model::ADVANCED_TYPE}" autocomplete="off">
-							{App\Language::translate('LBL_ADVANCED_MODULE',$QUALIFIED_MODULE)}</button>
+				{if $SELECTED_MODULE_MODEL->isTypeChangeAllowed()}
+					<div class="float-right">
+						<div class="btn-group">
+							<button class="btn btn-outline-primary{if !$IS_INVENTORY} active{else} js-switch--inventory{/if}" type="button" data-js="click" {if $CHANGE_MODULE_TYPE_DISABLED}disabled="disabled" {/if} data-value="{Vtiger_Module_Model::STANDARD_TYPE}" autocomplete="off">
+								{App\Language::translate('LBL_BASIC_MODULE',$QUALIFIED_MODULE)}
+							</button>
+							<button class="btn btn-outline-primary{if $IS_INVENTORY} active{else} js-switch--inventory{/if}" type="button" data-js="click" {if $CHANGE_MODULE_TYPE_DISABLED}disabled="disabled" {/if} data-value="{Vtiger_Module_Model::ADVANCED_TYPE}" autocomplete="off">
+								{App\Language::translate('LBL_ADVANCED_MODULE',$QUALIFIED_MODULE)}</button>
+						</div>
 					</div>
-				</div>
+				{/if}
 			</div>
 		</div>
 		<hr>
@@ -60,7 +62,7 @@
 					{if $SERVER['type'] === 'WebservicePremium'}
 						<li class="nav-item">
 							<a class="nav-link {if $ACTIVE_TAB === "webserviceApps{$SERVER_ID}" }active{/if}" id="webserviceAppsTab{$SERVER_ID}" data-toggle="tab" role="tab" href="#webserviceApps{$SERVER_ID}" aria-selected="{if $ACTIVE_TAB === "webserviceApps{$SERVER_ID}" }true{else}false{/if}">
-								<strong>{\App\Purifier::encodeHTML($SERVER['name'])} ({\App\Language::translate($SERVER['type'], 'Settings.WebserviceApps')})</strong>
+								<strong>{\App\Purifier::encodeHTML($SERVER['name'])} ({\App\Language::translate($SERVER['type'], 'Settings:WebserviceApps')})</strong>
 							</a>
 						</li>
 					{/if}

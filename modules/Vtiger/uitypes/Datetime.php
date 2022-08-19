@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -58,7 +58,7 @@ class Vtiger_Datetime_UIType extends Vtiger_Date_UIType
 		if (80 === $this->getFieldModel()->getUIType()) {
 			return $rawText ? \App\Fields\DateTime::formatToViewDate($value) : '<span title="' . App\Fields\DateTime::formatToDisplay($value) . '">' . \App\Fields\DateTime::formatToViewDate($value) . '</span>';
 		}
-		return \App\TextParser::textTruncate($this->getDisplayValue($value, $record, $recordModel, $rawText), $this->getFieldModel()->get('maxlengthtext'));
+		return \App\TextUtils::textTruncate($this->getDisplayValue($value, $record, $recordModel, $rawText), $this->getFieldModel()->get('maxlengthtext'));
 	}
 
 	/** {@inheritdoc} */
@@ -123,7 +123,7 @@ class Vtiger_Datetime_UIType extends Vtiger_Date_UIType
 	}
 
 	/** {@inheritdoc} */
-	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel)
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
 	{
 		$value = \App\Purifier::decodeHtml($this->getDisplayValue($value, $recordModel->getId(), $recordModel, true, false));
 		if (80 === $this->getFieldModel()->getUIType()) {

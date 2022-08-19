@@ -5,8 +5,8 @@
  *
  * @package   InventoryField
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -104,7 +104,7 @@ class Vtiger_Basic_InventoryField extends \App\Base
 	/**
 	 * Getting onlyOne field.
 	 *
-	 * @return true/false
+	 * @return bool
 	 */
 	public function isOnlyOne()
 	{
@@ -310,7 +310,7 @@ class Vtiger_Basic_InventoryField extends \App\Base
 	/**
 	 * Getting value to display.
 	 *
-	 * @param type $value
+	 * @param mixed $value
 	 *
 	 * @return string
 	 */
@@ -463,7 +463,7 @@ class Vtiger_Basic_InventoryField extends \App\Base
 		if (!is_numeric($value) && (\is_string($value) && $value !== strip_tags($value))) {
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . ($columnName ?? $this->getColumnName()) . '||' . $this->getModuleName() . '||' . $value, 406);
 		}
-		if (App\TextParser::getTextLength($value) > $this->maximumLength) {
+		if (App\TextUtils::getTextLength($value) > $this->maximumLength) {
 			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $columnName ?? $this->getColumnName() . '||' . $this->getModuleName() . '||' . $value, 406);
 		}
 	}
@@ -530,5 +530,17 @@ class Vtiger_Basic_InventoryField extends \App\Base
 	public function getPurifyType()
 	{
 		return [$this->getColumnName() => $this->purifyType] + $this->customPurifyType;
+	}
+
+	/**
+	 * Get information about field.
+	 *
+	 * @return array
+	 */
+	public function getFieldInfo(): array
+	{
+		return [
+			'maximumlength' => $this->maximumLength
+		];
 	}
 }

@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Date_UIType extends Vtiger_Base_UIType
@@ -87,13 +87,7 @@ class Vtiger_Date_UIType extends Vtiger_Base_UIType
 	public function getEditViewDisplayValue($value, $recordModel = false)
 	{
 		if (empty($value) || ' ' === $value) {
-			$value = trim($value);
-			$fieldName = $this->getFieldModel()->getFieldName();
-			$moduleName = $this->getFieldModel()->getModule()->getName();
-			//Restricted Fields for to show Default Value
-			if (('birthday' === $fieldName && 'Contacts' === $moduleName) || 'Products' === $moduleName) {
-				return \App\Purifier::encodeHtml($value);
-			}
+			$value = '';
 		} else {
 			$value = DateTimeField::convertToUserFormat($value);
 		}
@@ -166,7 +160,7 @@ class Vtiger_Date_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return array_merge(['e', 'n', 'bw', 'b', 'a', 'y', 'ny'], array_keys(App\Condition::DATE_OPERATORS));
+		return array_merge(['e', 'n', 'bw', 'b', 'a', 'y', 'ny'], \App\Condition::FIELD_COMPARISON_OPERATORS, array_keys(App\Condition::DATE_OPERATORS));
 	}
 
 	/**

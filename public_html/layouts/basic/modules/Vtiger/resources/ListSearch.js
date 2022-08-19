@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 jQuery.Class(
@@ -86,7 +86,8 @@ jQuery.Class(
 					search_params: [],
 					search_key: '',
 					search_value: '',
-					operator: ''
+					operator: '',
+					lockedEmptyFields: []
 				});
 			});
 			this.registerListSearchEmptyValue();
@@ -100,7 +101,7 @@ jQuery.Class(
 			let listViewContainer = this.getContainer();
 			let lockedEmptyFields = [];
 			let lockedInput = listViewContainer.find('.js-empty-fields').val();
-			if (!lockedInput) {
+			if (!!lockedInput) {
 				lockedEmptyFields = JSON.parse(lockedInput);
 			}
 			listViewContainer.find('.js-empty-value').each(function () {
@@ -386,21 +387,22 @@ jQuery.Class(
 			} else if (viewName === 'Detail') {
 				instance = Vtiger_Detail_Js.getInstance();
 				instance.reloadFunctionName = 'loadRelatedList';
-			} else if (viewName == 'List') {
+			} else if (viewName === 'List' || viewName === 'Tiles') {
 				instance = new Vtiger_List_Js();
 				instance.reloadFunctionName = 'getListViewRecords';
 				instance.execute = ['updatePagination'];
-			} else if (viewName == 'ListPreview') {
+			} else if (viewName === 'ListPreview') {
 				instance = window.pageController;
 				instance.reloadFunctionName = 'getListViewRecords';
 				instance.execute = ['updatePagination'];
 			}
+
 			return instance;
 		},
 		reloadList: function (params) {
 			let thisInstance = this;
 			if (params == undefined) {
-				params = { page: 1 };
+				params = { page: 1, totalCount: 0 };
 			}
 			let instance = this.getInstanceByView();
 			if (instance) {

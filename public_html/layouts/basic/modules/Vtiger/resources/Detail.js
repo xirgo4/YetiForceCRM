@@ -5,7 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  *************************************************************************************/
 'use strict';
 
@@ -55,12 +55,11 @@ jQuery.Class(
 				})
 				.fail(function (error, err) {});
 		},
-		/*
-		 * function to trigger send Sms
-		 * @params: send sms url , module name.
+		/**
+		 * Function to trigger SMS quick view actions
 		 */
-		triggerSendSms: function (detailActionUrl, module) {
-			Vtiger_Detail_Js.triggerDetailViewAction(detailActionUrl);
+		triggerSMSmodal: () => {
+			App.Components.QuickCreate.createRecord('SMSNotifier', { noCache: true });
 		},
 		triggerTransferOwnership: function (massActionUrl) {
 			let thisInstance = this;
@@ -74,7 +73,7 @@ jQuery.Class(
 			AppConnector.request(actionParams).done(function (data) {
 				if (data) {
 					let callback = function (data) {
-						let params = app.validationEngineOptions;
+						let params = { ...app.validationEngineOptions };
 						params.onValidationComplete = function (form, valid) {
 							if (valid) {
 								if (form.attr('name') == 'changeOwner') {
@@ -83,7 +82,7 @@ jQuery.Class(
 							}
 							return false;
 						};
-						jQuery('#changeOwner').validationEngine(app.validationEngineOptions);
+						jQuery('#changeOwner').validationEngine(params);
 					};
 					app.showModalWindow(data, function (data) {
 						let selectElement = thisInstance.getRelatedModuleContainer();
@@ -114,13 +113,13 @@ jQuery.Class(
 						text: app.vtranslate('JS_RECORDS_TRANSFERRED_SUCCESSFULLY'),
 						type: 'info'
 					};
-					let oldvalue = jQuery('.assigned_user_id').val();
+					let oldValue = jQuery('.assigned_user_id').val();
 					let element = jQuery('.assigned_user_id ');
 
-					element.find('option[value="' + oldvalue + '"]').removeAttr('selected');
+					element.find('option[value="' + oldValue + '"]').removeAttr('selected');
 					element.find('option[value="' + transferOwner + '"]').attr('selected', 'selected');
 					element.trigger('liszt:updated');
-					let Fieldname = element.find('option[value="' + transferOwner + '"]').data('picklistvalue');
+					let fieldName = element.find('option[value="' + transferOwner + '"]').data('picklistvalue');
 					element
 						.closest('.row-fluid')
 						.find('.value')
@@ -128,7 +127,7 @@ jQuery.Class(
 							'<a href="index.php?module=Users&amp;parent=Settings&amp;view=Detail&amp;record=' +
 								transferOwner +
 								'">' +
-								Fieldname +
+								fieldName +
 								'</a>'
 						);
 
@@ -403,7 +402,7 @@ jQuery.Class(
 						for (let i in data) {
 							params.recordsToAdd.push(i);
 						}
-						AppConnector.request(params).done(function (res) {
+						AppConnector.request(params).done(function () {
 							thisInstance.reloadTabContent();
 						});
 					});
@@ -756,9 +755,7 @@ jQuery.Class(
 				.find('.commentcontenthidden')
 				.removeClass('commentcontenthidden')
 				.addClass('js-comment-content');
-			new App.Fields.Text.Completions(clonedCommentBlock.find('.js-completions'), {
-				emojiPanel: false
-			});
+			new App.Fields.Text.Completions(clonedCommentBlock.find('.js-completions'));
 			return clonedCommentBlock;
 		},
 		/*
@@ -1081,6 +1078,7 @@ jQuery.Class(
 					}
 					if (
 						element.closest('.fieldValue').is(currentTdElement) ||
+						element.closest('.pnotify-modal').length ||
 						element.hasClass('select2-selection__choice__remove') ||
 						element.closest('.select2-container--open').length ||
 						element.parents('.clockpicker-popover').length
@@ -1231,10 +1229,7 @@ jQuery.Class(
 									let detailContentsHolder = thisInstance.getContentHolder();
 									thisInstance.reloadTabContent();
 									thisInstance.registerSummaryViewContainerEvents(detailContentsHolder);
-									thisInstance.registerEventForPicklistDependencySetup(thisInstance.getForm());
 									thisInstance.registerEventForRelatedList();
-								} else if (selectedTabElement.data('linkKey') == thisInstance.detailViewDetailsTabLabel) {
-									thisInstance.registerEventForPicklistDependencySetup(thisInstance.getForm());
 								}
 								thisInstance.updateRecordsPDFTemplateBtn(thisInstance.getForm());
 							})
@@ -1305,61 +1300,6 @@ jQuery.Class(
 				App.Components.QuickCreate.createRecord(referenceModuleName, QuickCreateParams);
 			});
 		},
-		getEndDate: function (startDate) {
-			let dateTab = startDate.split('-');
-			let date = new Date(dateTab[0], dateTab[1], dateTab[2]);
-			let newDate = new Date();
-
-			newDate.setDate(date.getDate() + 2);
-			return app.getStringDate(newDate);
-		},
-		getSingleEventType: function (modDay, id, type) {
-			let dateStartEl = jQuery('[name="date_start"]');
-			let dateStartVal = jQuery(dateStartEl).val();
-			let dateStartFormat = jQuery(dateStartEl).data('date-format');
-			let validDateFromat = Vtiger_Helper_Js.convertToDateString(dateStartVal, dateStartFormat, modDay, type);
-			let map = jQuery.extend({}, ['#b6a996,black']);
-
-			let params = {
-				module: 'Calendar',
-				action: 'Feed',
-				start: validDateFromat,
-				end: this.getEndDate(validDateFromat),
-				type: type,
-				mapping: map
-			};
-
-			AppConnector.request(params).done(function (events) {
-				let testDate = Vtiger_Helper_Js.convertToDateString(dateStartVal, dateStartFormat, modDay);
-				if (!jQuery.isEmptyObject(events)) {
-					if (events[0]['activitytype'] === 'Task') {
-						for (let ev in events) {
-							if (events[ev]['start'].indexOf(testDate) > -1) {
-								jQuery('#' + id + ' .table').append(
-									'<tr><td><a target="_blank" href="' +
-										events[ev]['url'] +
-										'">' +
-										events[ev]['title'] +
-										'</a></td></tr>'
-								);
-							}
-						}
-					} else {
-						for (let i = 0; i < events[0].length; i++) {
-							if (events[0][i]['start'].indexOf(testDate) > -1) {
-								jQuery('#' + id + ' .table').append(
-									'<tr><td><a target="_blank" href="' +
-										events[0][i]['url'] +
-										'">' +
-										events[0][i]['title'] +
-										'</a></td></tr>'
-								);
-							}
-						}
-					}
-				}
-			});
-		},
 		/**
 		 * Function to add module related record from summary widget
 		 */
@@ -1427,13 +1367,13 @@ jQuery.Class(
 						params['search_key'] = restrictionsField.key;
 						params['search_value'] = restrictionsField.name;
 					}
-					app.showRecordsList(params, (modal, instance) => {
+					app.showRecordsList(params, (_modal, instance) => {
 						instance.setSelectEvent((responseData) => {
 							thisInstance
 								.addRelationBetweenRecords(referenceModuleName, Object.keys(responseData), null, {
 									relationId: params.relationId
 								})
-								.done(function (data) {
+								.done(function () {
 									thisInstance.loadWidget(summaryWidgetContainer.find('.widgetContentBlock'));
 								});
 						});
@@ -1459,17 +1399,18 @@ jQuery.Class(
 			this.getContentHolder()
 				.find('.resetRelationsEmail')
 				.on('click', function (e) {
-					Vtiger_Helper_Js.showConfirmationBox({
-						message: app.vtranslate('JS_EMAIL_RESET_RELATIONS_CONFIRMATION')
-					}).done(function (data) {
-						AppConnector.request({
-							module: 'OSSMailView',
-							action: 'Relation',
-							moduleName: app.getModuleName(),
-							record: app.getRecordId()
-						}).done(function (d) {
-							Vtiger_Helper_Js.showMessage({ text: d.result });
-						});
+					app.showConfirmModal({
+						title: app.vtranslate('JS_EMAIL_RESET_RELATIONS_CONFIRMATION'),
+						confirmedCallback: () => {
+							AppConnector.request({
+								module: 'OSSMailView',
+								action: 'Relation',
+								moduleName: app.getModuleName(),
+								record: app.getRecordId()
+							}).done(function (d) {
+								Vtiger_Helper_Js.showMessage({ text: d.result });
+							});
+						}
 					});
 				});
 		},
@@ -1700,42 +1641,11 @@ jQuery.Class(
 			 * to add record from widget
 			 */
 
-			jQuery('.changeDetailViewMode').on('click', function (e) {
+			$('.changeDetailViewMode').on('click', function (e) {
 				thisInstance
 					.getTabs()
 					.filter('[data-link-key="' + thisInstance.detailViewDetailsTabLabel + '"]:not(.d-none)')
 					.trigger('click');
-			});
-
-			/*
-			 * Register click event for add button in Related widgets
-			 * to add record from widget
-			 */
-			jQuery('.createRecord').on('click', function (e) {
-				let currentElement = jQuery(e.currentTarget);
-				let summaryWidgetContainer = currentElement.closest('.js-detail-widget');
-				let widgetHeaderContainer = summaryWidgetContainer.find('.js-detail-widget-header');
-				let referenceModuleName = widgetHeaderContainer.find('[name="relatedModule"]').val();
-				let recordId = thisInstance.getRecordId();
-				let module = app.getModuleName();
-				let customParams = {};
-				customParams['sourceModule'] = module;
-				customParams['sourceRecord'] = recordId;
-
-				let postQuickCreateSave = function (data) {
-					thisInstance.postSummaryWidgetAddRecord(data, currentElement);
-				};
-
-				let goToFullFormcallback = function (data) {
-					thisInstance.addElementsToQuickCreateForCreatingRelation(data, customParams);
-				};
-
-				let QuickCreateParams = {};
-				QuickCreateParams['callbackFunction'] = postQuickCreateSave;
-				QuickCreateParams['goToFullFormcallback'] = goToFullFormcallback;
-				QuickCreateParams['data'] = customParams;
-				QuickCreateParams['noCache'] = false;
-				App.Components.QuickCreate.createRecord(referenceModuleName, QuickCreateParams);
 			});
 			this.registerFastEditingFields();
 		},
@@ -1778,22 +1688,16 @@ jQuery.Class(
 		 * summary view widget
 		 */
 		postSummaryWidgetAddRecord: function (data, currentElement) {
-			let thisInstance = this;
 			let summaryWidgetContainer = currentElement.closest('.js-detail-widget');
 			let widgetContainer = summaryWidgetContainer.find('[class^="widgetContainer_"]');
-			let widgetHeaderContainer = summaryWidgetContainer.find('.js-detail-widget-header');
-			let referenceModuleName = widgetHeaderContainer.find('[name="relatedModule"]').val();
-			let idList = [];
-			idList.push(data.result._recordId);
-			let params = {};
-			if (summaryWidgetContainer.data('relationId')) {
-				params.relationId = summaryWidgetContainer.data('relationId');
+
+			this.loadWidget(widgetContainer);
+			let updatesWidget = this.getContentHolder().find("[data-type='Updates']");
+			if (updatesWidget.length > 0) {
+				let params = this.getFiltersData(updatesWidget);
+				updatesWidget.find('.btnChangesReviewedOn').parent().remove();
+				this.loadWidget(updatesWidget, params['params']);
 			}
-			this.addRelationBetweenRecords(referenceModuleName, idList, null, params, widgetContainer.data('url')).done(
-				function (data) {
-					thisInstance.loadWidget(widgetContainer);
-				}
-			);
 		},
 		registerChangeEventForModulesList: function () {
 			jQuery('#tagSearchModulesList').on('change', function (e) {
@@ -1855,90 +1759,6 @@ jQuery.Class(
 						});
 				}
 			});
-		},
-		/**
-		 * Function to register event for setting up picklistdependency
-		 * for a module if exist on change of picklist value
-		 */
-		registerEventForPicklistDependencySetup: function (container) {
-			let thisInstance = this;
-			let picklistDependcyElemnt = jQuery('[name="picklistDependency"]', container);
-			if (picklistDependcyElemnt.length <= 0) {
-				return;
-			}
-			let picklistDependencyMapping = JSON.parse(picklistDependcyElemnt.val());
-			let sourcePicklists = Object.keys(picklistDependencyMapping);
-			if (sourcePicklists.length <= 0) {
-				return;
-			}
-
-			let sourcePickListNames = [];
-			for (let i = 0; i < sourcePicklists.length; i++) {
-				sourcePickListNames.push('[name="' + sourcePicklists[i] + '"]');
-			}
-			sourcePickListNames = sourcePickListNames.join(',');
-			let sourcePickListElements = container.find(sourcePickListNames);
-			sourcePickListElements.on('change', function (e) {
-				let currentElement = jQuery(e.currentTarget);
-				let sourcePicklistname = currentElement.attr('name');
-
-				let configuredDependencyObject = picklistDependencyMapping[sourcePicklistname];
-				let selectedValue = currentElement.val();
-				let targetObjectForSelectedSourceValue = configuredDependencyObject[selectedValue];
-				let picklistmap = configuredDependencyObject['__DEFAULT__'];
-
-				if (typeof targetObjectForSelectedSourceValue === 'undefined') {
-					targetObjectForSelectedSourceValue = picklistmap;
-				}
-				jQuery.each(picklistmap, function (targetPickListName, targetPickListValues) {
-					let targetPickListMap = targetObjectForSelectedSourceValue[targetPickListName];
-					if (typeof targetPickListMap === 'undefined') {
-						targetPickListMap = targetPickListValues;
-					}
-					let targetPickList = jQuery('[name="' + targetPickListName + '"]', container);
-					if (targetPickList.length <= 0) {
-						return;
-					}
-
-					//On change of SourceField value, If TargetField value is not there in mapping, make user to select the new target value also.
-					let selectedValue = targetPickList.data('selectedValue');
-					if (jQuery.inArray(selectedValue, targetPickListMap) == -1) {
-						thisInstance.targetPicklistChange = true;
-						thisInstance.targetPicklist = targetPickList.closest('td');
-					} else {
-						thisInstance.targetPicklistChange = false;
-						thisInstance.targetPicklist = false;
-					}
-
-					let listOfAvailableOptions = targetPickList.data('availableOptions');
-					if (typeof listOfAvailableOptions === 'undefined') {
-						listOfAvailableOptions = jQuery('option', targetPickList);
-						targetPickList.data('available-options', listOfAvailableOptions);
-					}
-
-					let targetOptions = new jQuery();
-					let optionSelector = [];
-					optionSelector.push('');
-					for (let i = 0; i < targetPickListMap.length; i++) {
-						optionSelector.push(targetPickListMap[i]);
-					}
-
-					jQuery.each(listOfAvailableOptions, function (i, e) {
-						let picklistValue = jQuery(e).val();
-						if (jQuery.inArray(picklistValue, optionSelector) != -1) {
-							targetOptions = targetOptions.add(jQuery(e));
-						}
-					});
-					let targetPickListSelectedValue = '';
-					targetPickListSelectedValue = targetOptions.filter('[selected]').val();
-					if (targetPickListMap.length == 1) {
-						targetPickListSelectedValue = targetPickListMap[0]; // to automatically select picklist if only one picklistmap is present.
-					}
-					targetPickList.html(targetOptions).val(targetPickListSelectedValue).trigger('change');
-				});
-			});
-			//To Trigger the change on load
-			sourcePickListElements.trigger('change');
 		},
 		/**
 		 * Function to get child comments
@@ -2348,7 +2168,7 @@ jQuery.Class(
 		 * @param {jQuery} widgetContainer
 		 */
 		registerCommentEventsInDetail(widgetContainer) {
-			new App.Fields.Text.Completions($('.js-completions').eq(0), { emojiPanel: false });
+			new App.Fields.Text.Completions($('.js-completions').eq(0));
 			widgetContainer.on('change', '.js-hierarchy-comments', function (e) {
 				let hierarchy = [];
 				widgetContainer.find('.js-hierarchy-comments').each(function () {
@@ -2483,20 +2303,23 @@ jQuery.Class(
 		 */
 		showProgressConfirmation(element, picklistName) {
 			const picklistValue = $(element).data('picklistValue');
-			Vtiger_Helper_Js.showConfirmationBox({
+			app.showConfirmModal({
 				title: $(element).data('picklistLabel'),
-				message: app.vtranslate('JS_CHANGE_VALUE_CONFIRMATION')
-			}).done(() => {
-				Vtiger_Edit_Js.saveAjax({
-					value: picklistValue,
-					field: picklistName
-				})
-					.done(() => {
-						window.location.reload();
+				text: app.vtranslate('JS_CHANGE_VALUE_CONFIRMATION'),
+				confirmedCallback: () => {
+					Vtiger_Edit_Js.saveAjax({
+						value: picklistValue,
+						field: picklistName
 					})
-					.fail(function (error, err) {
-						app.errorLog(error, err);
-					});
+						.done((response) => {
+							if (!response || response.success !== false) {
+								window.location.reload();
+							}
+						})
+						.fail(function (error, err) {
+							app.errorLog(error, err);
+						});
+				}
 			});
 		},
 		/**
@@ -2543,9 +2366,7 @@ jQuery.Class(
 			//register all the events for summary view container
 
 			if (this.getSelectedTab().data('labelKey') === 'ModComments') {
-				new App.Fields.Text.Completions(detailContentsHolder.find('.js-completions'), {
-					emojiPanel: false
-				});
+				new App.Fields.Text.Completions(detailContentsHolder.find('.js-completions'));
 			}
 			app.registerBlockAnimationEvent(this.getForm());
 			thisInstance.registerSummaryViewContainerEvents(detailContentsHolder);
@@ -2558,6 +2379,7 @@ jQuery.Class(
 			App.Fields.DateTime.register(detailContentsHolder);
 			App.Fields.MultiImage.register(detailContentsHolder);
 			App.Fields.Password.register(detailContentsHolder);
+			App.Fields.MultiAttachment.register(detailContentsHolder);
 			//Attach time picker event to time fields
 			app.registerEventForClockPicker();
 			this.registerHelpInfo(detailContentsHolder);
@@ -3002,13 +2824,13 @@ jQuery.Class(
 		 */
 		registerKeyboardShortcutsEvent: function (container) {
 			document.addEventListener('keydown', (event) => {
-				if (event.altKey && event.code === 'KeyD') {
+				if (event.shiftKey && event.ctrlKey && event.code === 'KeyD') {
 					container.find('.js-duplicate-btn').trigger('click');
 				}
-				if (event.altKey && event.code === 'KeyE' && container.find('.js-edit-btn').length) {
+				if (event.shiftKey && event.ctrlKey && event.code === 'KeyE' && container.find('.js-edit-btn').length) {
 					container.find('.js-edit-btn').trigger('click');
 				}
-				if (event.altKey && event.code === 'KeyW' && container.find('.js-edit-btn').length) {
+				if (event.shiftKey && event.ctrlKey && event.code === 'KeyW' && container.find('.js-edit-btn').length) {
 					App.Components.QuickEdit.showModal({
 						module: app.getModuleName(),
 						record: app.getRecordId(),
@@ -3034,7 +2856,6 @@ jQuery.Class(
 			}
 			this.registerWidgetProductAndServices();
 			this.registerSetReadRecord(detailViewContainer);
-			this.registerEventForPicklistDependencySetup(this.getForm());
 			this.getForm().validationEngine(app.validationEngineOptionsForRecord);
 			this.loadWidgetsEvents();
 			this.loadWidgets();
@@ -3044,6 +2865,7 @@ jQuery.Class(
 			this.registerChat(detailViewContainer);
 			this.registerSendPdfFromPdfViewer(detailViewContainer);
 			this.registerKeyboardShortcutsEvent(detailViewContainer);
+			App.Components.ActivityNotifier.register(detailViewContainer);
 		}
 	}
 );

@@ -4,8 +4,8 @@
  *
  * @package   Settings.Action
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 /**
  * Record numbering basic action class.
@@ -14,9 +14,7 @@ class Settings_RecordNumbering_SaveAjax_Action extends Settings_Vtiger_Index_Act
 {
 	use \App\Controller\ExposeMethod;
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function __construct()
 	{
 		parent::__construct();
@@ -25,9 +23,7 @@ class Settings_RecordNumbering_SaveAjax_Action extends Settings_Vtiger_Index_Act
 		$this->exposeMethod('updateRecordsWithSequenceNumber');
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
 		parent::checkPermission($request);

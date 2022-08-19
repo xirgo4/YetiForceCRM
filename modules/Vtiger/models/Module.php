@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -26,6 +26,8 @@ class Vtiger_Module_Model extends \vtlib\Module
 	protected $relations;
 	protected $moduleType = '0';
 	protected $entityInstance;
+	/** @var bool */
+	public $allowTypeChange = true;
 
 	/**
 	 * Function to get the Module/Tab id.
@@ -170,7 +172,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 	 *
 	 * @param int|string $mixed id or name of the module
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public static function getInstance($mixed)
 	{
@@ -194,7 +196,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 	 *
 	 * @param vtlib\Module $moduleObj
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public static function getInstanceFromModuleObject(vtlib\Module $moduleObj)
 	{
@@ -212,14 +214,13 @@ class Vtiger_Module_Model extends \vtlib\Module
 	 *
 	 * @param array $valueArray
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public static function getInstanceFromArray($valueArray)
 	{
 		$modelClassName = Vtiger_Loader::getComponentClassName('Model', 'Module', $valueArray['name']);
 		$instance = new $modelClassName();
 		$instance->initialize($valueArray);
-
 		return $instance;
 	}
 
@@ -372,26 +373,15 @@ class Vtiger_Module_Model extends \vtlib\Module
 	/**
 	 * Function to get a Vtiger Record Model instance from an array of key-value mapping.
 	 *
-	 * @param <Array> $valueArray
-	 * @param mixed   $rawData
+	 * @param array $valueArray
 	 *
-	 * @return Vtiger_Record_Model or Module Specific Record Model instance
+	 * @return \Vtiger_Record_Model Record Model instance
 	 */
-	public function getRecordFromArray($valueArray, $rawData = false)
+	public function getRecordFromArray(array $valueArray): Vtiger_Record_Model
 	{
 		$modelClassName = Vtiger_Loader::getComponentClassName('Model', 'Record', $this->getName());
 		$recordInstance = new $modelClassName();
-		if (false !== $rawData) {
-			foreach ($this->getFields() as $field) {
-				$column = $field->get('column');
-				if (isset($rawData[$column])) {
-					$rawData[$field->getName()] = $rawData[$column];
-					unset($rawData[$column]);
-				}
-			}
-		}
-		$recordInstance->setFullForm(false);
-		return $recordInstance->setData($valueArray)->setModuleFromInstance($this)->setRawData($rawData);
+		return $recordInstance->setData($valueArray)->setModuleFromInstance($this);
 	}
 
 	/**
@@ -823,99 +813,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 	}
 
 	/**
-	 * Function to get the list of all accessible modules for Quick Create.
-	 *
-	 * @param bool $restrictList
-	 * @param bool $tree
-	 *
-	 * @return <Array> - List of Vtiger_Record_Model or Module Specific Record Model instances
-	 */
-	public static function getQuickCreateModules($restrictList = false, $tree = false)
-	{
-		$restrictListString = $restrictList ? 1 : 0;
-		if ($tree) {
-			$userModel = App\User::getCurrentUserModel();
-			$quickCreateModulesTreeCache = App\Cache::get('getQuickCreateModules', 'tree' . $restrictListString . $userModel->getDetail('roleid'));
-			if (false !== $quickCreateModulesTreeCache) {
-				return $quickCreateModulesTreeCache;
-			}
-		} else {
-			$quickCreateModules = App\Cache::get('getQuickCreateModules', $restrictListString);
-			if (false !== $quickCreateModules) {
-				return $quickCreateModules;
-			}
-		}
-
-		$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
-
-		$query = new \App\Db\Query();
-		$query->select(['vtiger_tab.*'])->from('vtiger_field')
-			->innerJoin('vtiger_tab', 'vtiger_tab.tabid = vtiger_field.tabid')
-			->where(['<>', 'vtiger_tab.presence', 1]);
-		if ($tree) {
-			$query->andWhere(['<>', 'vtiger_tab.name', 'Users']);
-		} else {
-			$query->andWhere(['or', 'quickcreate = 0', 'quickcreate = 2'])
-				->andWhere(['<>', 'vtiger_tab.type', 1])->distinct();
-		}
-		if ($restrictList) {
-			$query->andWhere(['not in', 'vtiger_tab.name', ['ModComments', 'PriceBooks', 'CallHistory', 'OSSMailView', 'SMSNotifier']]);
-		}
-		$quickCreateModules = [];
-		$dataReader = $query->createCommand()->query();
-		while ($row = $dataReader->read()) {
-			if ($userPrivModel->hasModuleActionPermission($row['tabid'], 'CreateView')) {
-				$moduleModel = self::getInstanceFromArray($row);
-				$quickCreateModules[$row['name']] = $moduleModel;
-			}
-		}
-		if ($tree) {
-			$menu = Vtiger_Menu_Model::getAll();
-			$quickCreateModulesTree = [];
-			foreach ($menu as $parent) {
-				if (!empty($parent['childs'])) {
-					$items = [];
-					foreach ($parent['childs'] as $child) {
-						if (isset($quickCreateModules[$child['mod']])) {
-							$items[$quickCreateModules[$child['mod']]->name] = $quickCreateModules[$child['mod']];
-							unset($quickCreateModules[$child['mod']]);
-						}
-					}
-					if (!empty($items)) {
-						$quickCreateModulesTree[] = ['name' => $parent['name'], 'icon' => $parent['icon'], 'modules' => $items];
-					}
-				}
-			}
-			if (!empty($quickCreateModules)) {
-				$quickCreateModulesTree[] = ['name' => 'LBL_OTHER', 'icon' => 'yfm-Other', 'modules' => $quickCreateModules];
-			}
-			App\Cache::save('getQuickCreateModules', 'tree' . $restrictListString . $userPrivModel->get('roleid'), $quickCreateModulesTree);
-			return $quickCreateModulesTree;
-		}
-		App\Cache::save('getQuickCreateModules', $restrictListString, $quickCreateModules);
-		return $quickCreateModules;
-	}
-
-	/**
-	 * Get modules with picklists.
-	 *
-	 * @return \self[]
-	 */
-	public static function getPicklistSupportedModules()
-	{
-		$modules = App\Fields\Picklist::getModules();
-		$modulesModelsList = [];
-		foreach ($modules as $moduleData) {
-			$instance = new self();
-			$instance->name = $moduleData['tablabel'];
-			$instance->label = $moduleData['tabname'];
-			$modulesModelsList[] = $instance;
-		}
-		return $modulesModelsList;
-	}
-
-	/**
-	 * Undocumented function.
+	 * Get model instance for given module.
 	 *
 	 * @param string $moduleName
 	 *
@@ -957,7 +855,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 			'linkurl' => "index.php?module={$this->getName()}&view=ListPreview{$menuUrl}",
 			'linkicon' => 'far fa-list-alt',
 		]);
-		if ($userPrivilegesModel->hasModulePermission('Dashboard') && $userPrivilegesModel->hasModuleActionPermission($this->getId(), 'Dashboard')) {
+		if ($userPrivilegesModel->hasModuleActionPermission($this->getId(), 'Dashboard')) {
 			$links['SIDEBARLINK'][] = Vtiger_Link_Model::getInstanceFromValues([
 				'linktype' => 'SIDEBARLINK',
 				'linklabel' => 'LBL_DASHBOARD',
@@ -971,7 +869,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 				'linktype' => 'SIDEBARLINK',
 				'linklabel' => $treeViewModel->getName(),
 				'linkurl' => $treeViewModel->getTreeViewUrl() . $menuUrl,
-				'linkicon' => 'fas fa-tree',
+				'linkicon' => 'yfi-tree-records',
 			]);
 		}
 		if ($this->isPermitted('Kanban') && \App\Utils\Kanban::getBoards($this->getName(), true)) {
@@ -980,6 +878,14 @@ class Vtiger_Module_Model extends \vtlib\Module
 				'linklabel' => 'LBL_VIEW_KANBAN',
 				'linkurl' => 'index.php?module=' . $this->getName() . '&view=Kanban' . $menuUrl,
 				'linkicon' => 'yfi yfi-kanban',
+			]);
+		}
+		if ($this->isPermitted('TilesView')) {
+			$links['SIDEBARLINK'][] = Vtiger_Link_Model::getInstanceFromValues([
+				'linktype' => 'SIDEBARLINK',
+				'linklabel' => 'LBL_TILES_VIEW',
+				'linkurl' => "index.php?module={$this->getName()}&view=Tiles{$menuUrl}",
+				'linkicon' => 'far fa-list-alt',
 			]);
 		}
 		return $links;
@@ -1076,9 +982,16 @@ class Vtiger_Module_Model extends \vtlib\Module
 		return false;
 	}
 
-	public function getWidgets($module)
+	/**
+	 * Getting Widgets.
+	 *
+	 * @param string|null $module
+	 *
+	 * @return array
+	 */
+	public function getWidgets(?string $module = null): array
 	{
-		return Settings_Widgets_Module_Model::getWidgets($module);
+		return Settings_Widgets_Module_Model::getWidgets($module ?? $this->getName());
 	}
 
 	/**
@@ -1152,7 +1065,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_PICKLIST_DEPENDENCY',
-			'linkurl' => 'index.php?parent=Settings&module=PickListDependency&view=List&formodule=' . $this->getName(),
+			'linkurl' => 'index.php?parent=Settings&module=PickListDependency&view=List&forModule=' . $this->getName(),
 			'linkicon' => 'adminIcon-fields-picklists-relations',
 		];
 		foreach ($settingsLinks as $key => $data) {
@@ -1282,18 +1195,32 @@ class Vtiger_Module_Model extends \vtlib\Module
 
 	/**
 	 * Function to identify if the module supports quick search or not.
+	 *
+	 * @return bool
 	 */
-	public function isQuickSearchEnabled()
+	public function isQuickSearchEnabled(): bool
 	{
 		return true;
 	}
 
 	/**
 	 * Function to identify if the module supports sort or not.
+	 *
+	 * @return bool
 	 */
-	public function isAdvSortEnabled()
+	public function isAdvSortEnabled(): bool
 	{
 		return true;
+	}
+
+	/**
+	 * The function determines whether the module custom view supports advanced conditions.
+	 *
+	 * @return bool
+	 */
+	public function isCustomViewAdvCondEnabled(): bool
+	{
+		return $this->isPermitted('CustomViewAdvCond');
 	}
 
 	/**
@@ -1416,7 +1343,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 	public function changeType(int $type): bool
 	{
 		$result = false;
-		if ($type !== $this->getModuleType() && \in_array($type, [static::ADVANCED_TYPE, static::STANDARD_TYPE])) {
+		if ($this->isTypeChangeAllowed() && $type !== $this->getModuleType() && \in_array($type, [static::ADVANCED_TYPE, static::STANDARD_TYPE])) {
 			$result = \App\Db::getInstance()->createCommand()->update('vtiger_tab', ['type' => $type], ['name' => $this->getName()])->execute();
 			if ($result && $type === static::ADVANCED_TYPE) {
 				Vtiger_Inventory_Model::getInstance($this->getName())->createInventoryTables();
@@ -1430,6 +1357,16 @@ class Vtiger_Module_Model extends \vtlib\Module
 			$this->type = $type;
 		}
 		return $result;
+	}
+
+	/**
+	 * Check if change module type is supported.
+	 *
+	 * @return bool
+	 */
+	public function isTypeChangeAllowed(): bool
+	{
+		return $this->allowTypeChange || static::ADVANCED_TYPE === $this->getModuleType();
 	}
 
 	/**
@@ -1450,5 +1387,18 @@ class Vtiger_Module_Model extends \vtlib\Module
 	public function clearCache(): void
 	{
 		$this->fields = null;
+	}
+
+	/**
+	 * Get custom link label.
+	 *
+	 * @param int    $id
+	 * @param string $label
+	 *
+	 * @return string
+	 */
+	public function getCustomLinkLabel(int $id, string $label): string
+	{
+		return \App\Purifier::encodeHtml($label);
 	}
 }

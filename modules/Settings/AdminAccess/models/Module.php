@@ -5,8 +5,8 @@
  *
  * @package Settings.Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 /**
@@ -14,33 +14,23 @@
  */
 class Settings_AdminAccess_Module_Model extends Settings_Vtiger_Module_Model
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public $name = 'AdminAccess';
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public $baseTable = 'a_#__settings_modules';
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public $baseIndex = 'id';
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public $listFields = [
 		'name' => 'FL_MODULE_NAME',
 		'user' => 'FL_USER',
 		'status' => 'FL_ACTIVE'
 	];
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getListFields(): array
 	{
 		$fields = [];

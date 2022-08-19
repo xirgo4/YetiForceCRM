@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -39,6 +39,8 @@ class RecordsList extends \Api\Core\BaseAction
 
 	/**
 	 * Get record list method.
+	 *
+	 * @api
 	 *
 	 * @return array
 	 *
@@ -175,7 +177,7 @@ class RecordsList extends \Api\Core\BaseAction
 			}
 			$this->queryGenerator->initForCustomViewById($cvId);
 		} else {
-			$this->queryGenerator->initForDefaultCustomView();
+			$this->queryGenerator->initForDefaultCustomView(false, true);
 		}
 
 		$limit = 100;
@@ -188,7 +190,7 @@ class RecordsList extends \Api\Core\BaseAction
 		}
 		$this->queryGenerator->setLimit($limit);
 		$this->queryGenerator->setOffset($offset);
-		\Api\WebserviceStandard\Fields::loadWebserviceFields($this->queryGenerator->getModuleModel()->getFields(), $this);
+		\Api\WebserviceStandard\Fields::loadWebserviceFields($this->queryGenerator->getModuleModel(), $this);
 		if ($requestFields = $this->controller->request->getHeader('x-fields')) {
 			if (!\App\Json::isJson($requestFields)) {
 				throw new \Api\Core\Exception('Incorrect json syntax: x-fields', 400);
@@ -291,10 +293,17 @@ class RecordsList extends \Api\Core\BaseAction
 	protected function getColumnNames(): array
 	{
 		$headers = [];
+		$selectedColumnsList = [];
+		if ($cvId = $this->controller->request->getHeader('x-cv-id')) {
+			$customViewModel = \CustomView_Record_Model::getInstanceById($cvId);
+			$selectedColumnsList = $customViewModel->getSelectedFields();
+		}
 		if ($this->fields) {
 			foreach ($this->fields as $fieldName => $fieldModel) {
 				if ($fieldModel->isViewable()) {
-					$headers[$fieldName] = \App\Language::translate($fieldModel->getFieldLabel(), $fieldModel->getModuleName());
+					$moduleName = $fieldModel->getModuleName();
+					$fieldLabel = empty($selectedColumnsList[$fieldName . ':' . $moduleName]) ? $fieldModel->getFieldLabel() : $selectedColumnsList[$fieldName . ':' . $moduleName];
+					$headers[$fieldName] = \App\Language::translate($fieldLabel, $moduleName);
 				}
 			}
 		}
@@ -304,7 +313,9 @@ class RecordsList extends \Api\Core\BaseAction
 					foreach ($field as $relatedFieldName) {
 						$fieldModel = \Vtiger_Module_Model::getInstance($relatedModuleName)->getFieldByName($relatedFieldName);
 						if ($fieldModel->isViewable()) {
-							$headers[$sourceField . $relatedModuleName . $relatedFieldName] = \App\Language::translate($fieldModel->getFieldLabel(), $relatedModuleName);
+							$selectedColumnKey = $relatedFieldName . ':' . $relatedModuleName . ':' . $sourceField;
+							$fieldLabel = empty($selectedColumnsList[$selectedColumnKey]) ? $fieldModel->getFieldLabel() : $selectedColumnsList[$selectedColumnKey];
+							$headers[$sourceField . $relatedModuleName . $relatedFieldName] = \App\Language::translate($fieldLabel, $relatedModuleName);
 						}
 					}
 				}
@@ -322,6 +333,25 @@ class RecordsList extends \Api\Core\BaseAction
 	 */
 	protected function getRawDataFromRow(array $row): array
 	{
+		foreach ($this->fields as $fieldName => $fieldModel) {
+			if (\array_key_exists($fieldName, $row)) {
+				$row[$fieldName] = $fieldModel->getUITypeModel()->getRawValue($row[$fieldName]);
+			}
+		}
+		if ($this->relatedFields) {
+			foreach ($this->relatedFields as $relatedModuleName => $fields) {
+				foreach ($fields as $sourceField => $field) {
+					foreach ($field as $relatedFieldName) {
+						$key = $sourceField . $relatedModuleName . $relatedFieldName;
+						if (\array_key_exists($key, $row)) {
+							$fieldModel = \Vtiger_Module_Model::getInstance($relatedModuleName)->getFieldByName($relatedFieldName);
+							$row[$key] = $fieldModel->getUITypeModel()->getRawValue($row[$key]);
+						}
+					}
+				}
+			}
+		}
+
 		return $row;
 	}
 }

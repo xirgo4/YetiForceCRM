@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-List-Field-MultiReference -->
 	{assign var=FIELD_INFO value=\App\Json::encode($FIELD_MODEL->getFieldInfo())}
@@ -21,7 +21,7 @@
 			{foreach from=$SEARCH_VALUES item=ID}
 				{assign var="RECORD_NAME" value=\App\Record::getLabel($ID)}
 				<option value="{$ID}" title="{\App\Purifier::encodeHtml($RECORD_NAME)}"
-					selected="selected">{\App\Purifier::encodeHtml(\App\TextParser::textTruncate($RECORD_NAME, 30))}</option>
+					selected="selected">{\App\Purifier::encodeHtml(\App\TextUtils::textTruncate($RECORD_NAME, 30))}</option>
 			{/foreach}
 		</select>
 	</div>

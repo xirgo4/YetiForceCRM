@@ -2,8 +2,8 @@
 /*
  * Settings List View Model Class
  * @package YetiForce.Settings.Model
- * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -31,12 +31,8 @@ class Settings_AutomaticAssignment_ListView_Model extends Settings_Vtiger_ListVi
 		return $basicLinks;
 	}
 
-	/**
-	 * Function creates preliminary database query.
-	 *
-	 * @return App\Db\Query()
-	 */
-	public function getBasicListQuery()
+	/** {@inheritdoc} */
+	public function getBasicListQuery(): App\Db\Query
 	{
 		$module = $this->getModule();
 		$query = (new App\Db\Query())->from($module->getBaseTable());

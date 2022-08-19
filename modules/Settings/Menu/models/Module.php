@@ -3,8 +3,8 @@
 /**
  * Settings menu module model class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 class Settings_Menu_Module_Model
 {
@@ -15,18 +15,7 @@ class Settings_Menu_Module_Model
 	 */
 	protected $editFields = [
 		'id', 'role', 'parentid', 'type', 'sequence', 'module', 'label', 'newwindow',
-		'dataurl', 'showicon', 'icon', 'sizeicon', 'hotkey', 'filters', 'edit', 'source',
-	];
-	const TYPES = [
-		0 => 'Module',
-		1 => 'Shortcut',
-		2 => 'Label',
-		3 => 'Separator',
-		5 => 'QuickCreate',
-		6 => 'HomeIcon',
-		7 => 'CustomFilter',
-		8 => 'Profile',
-		9 => 'RecycleBin',
+		'dataurl', 'showicon', 'icon', 'sizeicon', 'hotkey', 'filters', 'edit', 'source', 'countentries',
 	];
 
 	/**
@@ -54,14 +43,14 @@ class Settings_Menu_Module_Model
 	public function getMenuTypes($key = false)
 	{
 		if (false === $key) {
-			return self::TYPES;
+			return \App\Menu::TYPES;
 		}
-		return self::TYPES[$key];
+		return \App\Menu::TYPES[$key];
 	}
 
 	public function getMenuTypeKey($val)
 	{
-		return array_search($val, self::TYPES);
+		return array_search($val, \App\Menu::TYPES);
 	}
 
 	public function getMenuUrl($row)
@@ -92,14 +81,31 @@ class Settings_Menu_Module_Model
 	 *
 	 * @return array
 	 */
-	public function getModulesList()
+	public function getModulesList(): array
 	{
 		return (new \App\Db\Query())->select(['tabid', 'name'])->from('vtiger_tab')
 			->where(['not in', 'name', ['Users', 'ModComments']])
-			->andWhere(['or', ['isentitytype' => 1], ['name' => ['Home', 'OSSMail', 'Portal', 'Rss']]])
+			->andWhere(['or', ['isentitytype' => 1], ['name' => ['OSSMail', 'Rss']]])
 			->andWhere(['presence' => 0])
 			->orderBy('tabsequence')
 			->all();
+	}
+
+	/**
+	 * Get a list of modules with quick create support.
+	 *
+	 * @return array
+	 */
+	public function getQuickCreateModuleList(): array
+	{
+		$modules = $this->getModulesList();
+		foreach ($modules as $key => $module) {
+			if (!Vtiger_Module_Model::getInstance($module['name'])->isQuickCreateSupported()) {
+				unset($modules[$key]);
+			}
+		}
+
+		return $modules;
 	}
 
 	public static function getLastId()

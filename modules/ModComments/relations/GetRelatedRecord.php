@@ -4,23 +4,16 @@
  *
  * @package   Relation
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-use App\Relation\RelationInterface;
 
 /**
  * ModTracker_GetRelatedRecord_Relation class.
  */
-class ModComments_GetRelatedRecord_Relation implements RelationInterface
+class ModComments_GetRelatedRecord_Relation extends \App\Relation\RelationAbstraction
 {
-	/** {@inheritdoc} */
-	public function getRelationType(): int
-	{
-		return Vtiger_Relation_Model::RELATION_O2M;
-	}
-
 	/**
 	 * Field custom list.
 	 *
@@ -29,16 +22,24 @@ class ModComments_GetRelatedRecord_Relation implements RelationInterface
 	public $customFields = [
 		'children_count' => [
 			'label' => 'LBL_CHILDREN_COUNT',
-			'uitype' => 7
-		]
+			'uitype' => 7,
+		],
 	];
+
+	/** {@inheritdoc} */
+	public function getRelationType(): int
+	{
+		return Vtiger_Relation_Model::RELATION_O2M;
+	}
 
 	/**
 	 * Field list.
 	 *
+	 * @param bool $editable
+	 *
 	 * @return array
 	 */
-	public function getFields()
+	public function getFields(bool $editable = false)
 	{
 		$fields = [];
 		$sourceModule = $this->relationModel->getParentModuleModel();
@@ -51,7 +52,9 @@ class ModComments_GetRelatedRecord_Relation implements RelationInterface
 			foreach ($data as $key => $value) {
 				$field->set($key, $value);
 			}
-			$fields[$fieldName] = $field;
+			if (!$editable || !$field->isEditableReadOnly()) {
+				$fields[$fieldName] = $field;
+			}
 		}
 		return $fields;
 	}

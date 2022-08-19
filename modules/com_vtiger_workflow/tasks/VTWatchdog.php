@@ -2,8 +2,8 @@
 /**
  * Watchdog Task Class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -48,6 +48,9 @@ class VTWatchdog extends VTTask
 				break;
 			case 'owner_and_showner':
 				$users = array_merge([$recordModel->get('assigned_user_id')], explode(',', $recordModel->get('shownerid')));
+				break;
+			case 'showner':
+				$users = explode(',', $recordModel->get('shownerid'));
 				break;
 			default:
 				$users = \App\PrivilegeUtil::getUserByMember($this->recipients);

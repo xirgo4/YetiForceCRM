@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 Vtiger_Edit_Js(
@@ -91,6 +91,7 @@ Vtiger_Edit_Js(
 		/**
 		 * Add time control when closed ticket
 		 * @param {array} params
+		 * @returns {Promise}
 		 */
 		addTimeControl: function (params) {
 			let aDeferred = jQuery.Deferred();

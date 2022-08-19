@@ -4,16 +4,14 @@
  *
  * @package   Action
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Rafal Pospiech <r.pospiech@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class ServiceContracts_PolicyTemplatesAjax_Action extends \App\Controller\Action
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
 		$record = Vtiger_DetailView_Model::getInstance($request->getModule(), $request->getInteger('record'));
@@ -22,9 +20,7 @@ class ServiceContracts_PolicyTemplatesAjax_Action extends \App\Controller\Action
 		}
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$sla = \App\Utils\ServiceContracts::getSlaPolicyForServiceContracts($request->getInteger('record'));

@@ -2,10 +2,10 @@
 /**
  * System cli file.
  *
- * @package App
+ * @package Cli
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -168,7 +168,7 @@ class System extends Base
 			if ($packageInstance->_errorText) {
 				$this->climate->lightRed($packageInstance->_errorText);
 			} else {
-				echo $response;
+				echo $response . PHP_EOL;
 			}
 		} catch (\Throwable $th) {
 			$this->climate->lightRed($th->__toString());
@@ -183,8 +183,8 @@ class System extends Base
 	 */
 	public function checkRegStatus(): void
 	{
-		$status = \App\YetiForce\Register::check(true);
-		$this->climate->bold('Status: ' . \App\Language::translate(\App\YetiForce\Register::STATUS_MESSAGES[$status], 'Settings::Companies'));
+		\App\YetiForce\Register::check(true);
+		$this->climate->bold('Status: ' . \App\Language::translate(\App\YetiForce\Register::STATUS_MESSAGES[\App\YetiForce\Register::getStatus()], 'Settings::Companies'));
 		$this->climate->border('─', 200);
 		$this->climate->bold('APP ID: ' . \App\YetiForce\Register::getInstanceKey());
 		$this->climate->border('─', 200);

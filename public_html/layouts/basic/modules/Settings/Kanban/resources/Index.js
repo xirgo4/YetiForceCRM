@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 Settings_Vtiger_Index_Js(
@@ -102,10 +102,9 @@ Settings_Vtiger_Index_Js(
 						app.showNotify(data.result.message);
 					}
 				})
-				.fail(function (error) {
+				.fail(function () {
 					app.showNotify({
-						title: app.vtranslate('JS_UNEXPECTED_ERROR'),
-						text: error,
+						text: app.vtranslate('JS_UNEXPECTED_ERROR'),
 						type: 'error'
 					});
 				});
@@ -131,10 +130,9 @@ Settings_Vtiger_Index_Js(
 						app.showNotify(data.result.message);
 					}
 				})
-				.fail(function (error) {
+				.fail(function () {
 					app.showNotify({
-						title: app.vtranslate('JS_UNEXPECTED_ERROR'),
-						text: error,
+						text: app.vtranslate('JS_UNEXPECTED_ERROR'),
 						type: 'error'
 					});
 				});

@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Util_Helper
@@ -164,17 +164,6 @@ class Vtiger_Util_Helper
 	public static function getBaseCurrency()
 	{
 		return (new \App\Db\Query())->from('vtiger_currency_info')->where(['<', 'defaultid', '0'])->one();
-	}
-
-	/**
-	 * Function to get maximum upload size.
-	 *
-	 * @return float maximum upload size
-	 */
-	public static function getMaxUploadSize()
-	{
-		$upload_maxsize = \App\Config::main('upload_maxsize');
-		return ceil($upload_maxsize / (1024 * 1024));
 	}
 
 	/**

@@ -4,8 +4,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  *
  * @codeCoverageIgnore
@@ -66,6 +66,9 @@ $id = (new \App\Db\Query())->select(['id'])->from('vtiger_users')->where(['user_
 \App\Cron::$registerIsActive = false;
 \App\Cron::$watchdogIsActive = false;
 \App\Cron::$shopIsActive = false;
+
+\App\RequestHttp::$connectTimeout = 5;
+\App\RequestHttp::$timeout = 10;
 
 if (\extension_loaded('pcov') && ini_get('pcov.enabled')) {
 	echo 'Coverage driver: PCOV - ' . phpversion('pcov') . PHP_EOL;

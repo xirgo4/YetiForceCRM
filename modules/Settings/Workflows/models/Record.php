@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 // Workflow Record Model Class
 require_once 'modules/com_vtiger_workflow/include.php';
@@ -193,7 +193,9 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 		$wf->schannualdates = $this->get('schannualdates');
 		$wf->nexttrigger_time = $this->get('nexttrigger_time');
 		$wf->params = $this->get('params');
-
+		if (!isset($wf->id)) {
+			$wf->sequence = $this->getNextSequenceNumber($this->get('module_name'));
+		}
 		$wm->save($wf);
 
 		$this->set('workflow_id', $wf->id);
@@ -218,12 +220,8 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 		return (new VTEntityMethodManager())->methodsForModule($this->get('module_name'));
 	}
 
-	/**
-	 * Function to get the list view actions for the record.
-	 *
-	 * @return Vtiger_Link_Model[]
-	 */
-	public function getRecordLinks()
+	/** {@inheritdoc} */
+	public function getRecordLinks(): array
 	{
 		$links = [];
 
@@ -430,24 +428,6 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 		$this->set('conditions', $wfCondition);
 	}
 
-	/**
-	 * Function returns all the related modules for workflows create entity task.
-	 *
-	 * @return JSON
-	 */
-	public function getDependentModules()
-	{
-		$dependentFields = [];
-		$filterModules = ['Calendar', 'Accounts', 'Notification'];
-		foreach (\App\Field::getRelatedFieldForModule(false, $this->getModule()->getName()) as $module => $value) {
-			if (\in_array($module, $filterModules)) {
-				continue;
-			}
-			$dependentFields[$module] = ['fieldname' => $value['fieldname'], 'modulelabel' => \App\Language::translate($module, $module)];
-		}
-		return $dependentFields;
-	}
-
 	public function updateNextTriggerTime()
 	{
 		$wm = new VTWorkflowManager();
@@ -473,5 +453,42 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 	public static function getAllAmountWorkflowsAmount()
 	{
 		return (new App\Db\Query())->from('com_vtiger_workflows')->count();
+	}
+
+	/**
+	 * Get next workflow action sequence number.
+	 *
+	 * @param string $moduleName
+	 *
+	 * @return int
+	 */
+	public function getNextSequenceNumber(string $moduleName): int
+	{
+		return (new \App\Db\Query())
+			->from('com_vtiger_workflows')
+			->where(['module_name' => $moduleName])
+			->max('sequence') + 1;
+	}
+
+	/**
+	 * Get module relations by type.
+	 *
+	 * @return array
+	 */
+	public function getModuleRelationsByType(): array
+	{
+		$moduleRelations = App\Relation::getByModule($this->getModule()->getName());
+		$moduleRelationsByType = [];
+		foreach ($moduleRelations as $relationId => $relationInfo) {
+			$relationType = \Vtiger_Relation_Model::getInstanceById($relationId)->getRelationType();
+			if (\Vtiger_Relation_Model::RELATION_O2M === $relationType) {
+				$moduleRelationsByType['LBL_ONE_TO_MANY_RELATIONS'][] = $relationInfo;
+			} elseif (\Vtiger_Relation_Model::RELATION_M2M === $relationType) {
+				$moduleRelationsByType['LBL_MANY_TO_MANY_RELATIONS'][] = $relationInfo;
+			} else {
+				$moduleRelationsByType['LBL_WORKFLOW_CUSTOM_RELATIONS'][] = $relationInfo;
+			}
+		}
+		return $moduleRelationsByType;
 	}
 }

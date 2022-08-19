@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 namespace vtlib;
@@ -50,7 +50,6 @@ class Deprecated
 		if (\count($accessibleFieldNames) > 0) {
 			return implode(' ', $accessibleFieldNames);
 		}
-
 		return '';
 	}
 

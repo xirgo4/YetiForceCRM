@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -45,10 +45,8 @@ class CreatedHelpDesk extends Base
 		$recordModel->set('assigned_user_id', $scanner->getUserId());
 		$recordModel->set('created_user_id', $scanner->getUserId());
 		$recordModel->set('createdtime', $scanner->get('date'));
-		$titleMaxLength = $recordModel->getField('ticket_title')->get('maximumlength');
-		$recordModel->setFromUserValue('ticket_title', $titleMaxLength ? \App\TextParser::textTruncate($scanner->get('subject'), $titleMaxLength, false) : $scanner->get('subject'));
-		$descriptionMaxLength = $recordModel->getField('description')->get('maximumlength');
-		$recordModel->set('description', $descriptionMaxLength ? \App\TextParser::htmlTruncate($scanner->get('body'), $descriptionMaxLength, false) : $scanner->get('body'));
+		$recordModel->setFromUserValue('ticket_title', \App\TextUtils::textTruncate($scanner->get('subject'), $recordModel->getField('ticket_title')->getMaxValue(), false));
+		$recordModel->set('description', \App\TextUtils::htmlTruncate($scanner->get('body'), $recordModel->getField('description')->getMaxValue()));
 		$recordModel->set('ticketstatus', \Config\Modules\OSSMailScanner::$helpdeskCreateDefaultStatus);
 		if ($contactId) {
 			$recordModel->ext['relations'][] = [

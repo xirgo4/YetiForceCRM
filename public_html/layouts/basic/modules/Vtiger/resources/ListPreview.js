@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 Vtiger_List_Js(
@@ -37,6 +37,7 @@ Vtiger_List_Js(
 				if ($(e.target).closest('div').hasClass('actions')) return;
 				if ($(e.target).is('button') || $(e.target).parent().is('button')) return;
 				if ($(e.target).closest('a').hasClass('noLinkBtn')) return;
+				if ($(e.target).is('a')) return;
 				if ($(e.target, $(e.currentTarget)).is('td:first-child')) return;
 				if ($(e.target).is('input[type="checkbox"]')) return;
 				if ($.contains($(e.currentTarget).find('td:last-child').get(0), e.target)) return;

@@ -7,8 +7,8 @@ namespace App\Conditions\RecordFields;
  *
  * @package UIType
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class OwnerField extends BaseField
@@ -21,6 +21,26 @@ class OwnerField extends BaseField
 	public function operatorWr()
 	{
 		return \Vtiger_Watchdog_Model::getInstanceById($this->recordModel->getId(), $this->recordModel->getModuleName())->isWatchingRecord();
+	}
+
+	/**
+	 * Users who belong to the same group as the currently logged in user.
+	 *
+	 * @return bool
+	 */
+	public function operatorOgu(): bool
+	{
+		$result = false;
+		$groups = \App\User::getCurrentUserModel()->getGroups();
+		if ($groups) {
+			foreach (array_keys($groups) as $groupId) {
+				if (\in_array($this->getValue(), \App\PrivilegeUtil::getUsersByGroup((int) $groupId))) {
+					$result = true;
+					break;
+				}
+			}
+		}
+		return $result;
 	}
 
 	/**

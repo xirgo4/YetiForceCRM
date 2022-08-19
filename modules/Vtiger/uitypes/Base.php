@@ -6,16 +6,24 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Base_UIType extends \App\Base
 {
-	/**
-	 * Verify the value.
-	 *
-	 * @var mixed[]
-	 */
+	/** @var bool Search allowed */
+	protected $search = true;
+
+	/** @var bool Sorting allowed */
+	protected $sortable = true;
+
+	/** @var bool Field is editable from Detail View */
+	protected $ajaxEditable = true;
+
+	/** @var bool Field is writable */
+	protected $writable = true;
+
+	/** @var mixed[] Verify the value. */
 	protected $validate = [];
 
 	/**
@@ -72,11 +80,10 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function setValueFromRequest(App\Request $request, Vtiger_Record_Model $recordModel, $requestFieldName = false)
 	{
-		$fieldName = $this->getFieldModel()->getFieldName();
+		$fieldName = $this->getFieldModel()->getName();
 		if (!$requestFieldName) {
 			$requestFieldName = $fieldName;
 		}
-
 		$value = $request->getByType($requestFieldName, 'Text');
 		$this->validate($value, true);
 		$recordModel->set($fieldName, $this->getDBValue($value, $recordModel));
@@ -119,7 +126,7 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function validate($value, $isUserFormat = false)
 	{
-		if (empty($value) || isset($this->validate[$value])) {
+		if (empty($value) || isset($this->validate["{$value}"])) {
 			return;
 		}
 		if ($isUserFormat) {
@@ -129,10 +136,10 @@ class Vtiger_Base_UIType extends \App\Base
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
 		$maximumLength = $this->getFieldModel()->get('maximumlength');
-		if ($maximumLength && App\TextParser::getTextLength($value) > $maximumLength) {
+		if ($maximumLength && App\TextUtils::getTextLength($value) > $maximumLength) {
 			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
-		$this->validate[$value] = true;
+		$this->validate["{$value}"] = true;
 	}
 
 	/**
@@ -171,11 +178,11 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function getDisplayValue($value, $record = false, $recordModel = false, $rawText = false, $length = false)
 	{
-		if ($rawText) {
-			return $value;
+		if ($rawText || !$value) {
+			return $value ?? '';
 		}
 		if (\is_int($length)) {
-			$value = \App\TextParser::textTruncate($value, $length);
+			$value = \App\TextUtils::textTruncate($value, $length);
 		}
 		return \App\Purifier::encodeHtml($value);
 	}
@@ -190,7 +197,7 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function getEditViewDisplayValue($value, $recordModel = false)
 	{
-		return \App\Purifier::encodeHtml($value);
+		return null !== $value ? \App\Purifier::encodeHtml($value) : '';
 	}
 
 	/**
@@ -219,6 +226,21 @@ class Vtiger_Base_UIType extends \App\Base
 	public function getListViewDisplayValue($value, $record = false, $recordModel = false, $rawText = false)
 	{
 		return $this->getDisplayValue($value, $record, $recordModel, $rawText, $this->getFieldModel()->get('maxlengthtext'));
+	}
+
+	/**
+	 * Function to get the tile value in display view.
+	 *
+	 * @param mixed                    $value
+	 * @param bool|int                 $record
+	 * @param bool|Vtiger_Record_Model $recordModel
+	 * @param bool                     $rawText
+	 *
+	 * @return string
+	 */
+	public function getTilesDisplayValue($value, $record = false, $recordModel = false, $rawText = false)
+	{
+		return $this->getListViewDisplayValue($value, $record, $recordModel, $rawText);
 	}
 
 	/**
@@ -286,10 +308,11 @@ class Vtiger_Base_UIType extends \App\Base
 	 *
 	 * @param                      $value
 	 * @param \Vtiger_Record_Model $recordModel
+	 * @param array                $params
 	 *
 	 * @return mixed
 	 */
-	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel)
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
 	{
 		return \App\Purifier::decodeHtml($this->getDisplayValue($value, $recordModel->getId(), $recordModel, true, false));
 	}
@@ -307,6 +330,18 @@ class Vtiger_Base_UIType extends \App\Base
 			'value' => \App\Purifier::decodeHtml($this->getEditViewDisplayValue($value)),
 			'raw' => $value,
 		];
+	}
+
+	/**
+	 * Function to get raw data value.
+	 *
+	 * @param mixed $value
+	 *
+	 * @return mixed
+	 */
+	public function getRawValue($value)
+	{
+		return $value;
 	}
 
 	/**
@@ -391,14 +426,24 @@ class Vtiger_Base_UIType extends \App\Base
 		return $this->get('field');
 	}
 
+	/**
+	 * The function determines whether sorting on this field is allowed.
+	 *
+	 * @return bool
+	 */
 	public function isActiveSearchView()
 	{
-		return true;
+		return $this->search;
 	}
 
+	/**
+	 * The function determines whether quick field editing is allowed (Detail View).
+	 *
+	 * @return bool
+	 */
 	public function isAjaxEditable()
 	{
-		return true;
+		return $this->ajaxEditable;
 	}
 
 	/**
@@ -406,7 +451,7 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function isListviewSortable()
 	{
-		return true;
+		return $this->sortable;
 	}
 
 	/**
@@ -416,7 +461,17 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function isWritable(): bool
 	{
-		return true;
+		return $this->writable;
+	}
+
+	/**
+	 * Function determines whether the field value can be duplicated.
+	 *
+	 * @return bool
+	 */
+	public function isDuplicable(): bool
+	{
+		return $this->getFieldModel()->isActiveField();
 	}
 
 	/**
@@ -446,7 +501,7 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/**
@@ -504,5 +559,15 @@ class Vtiger_Base_UIType extends \App\Base
 	 */
 	public function delete()
 	{
+	}
+
+	/**
+	 * Function to get the field details.
+	 *
+	 * @return array
+	 */
+	public function getFieldInfo(): array
+	{
+		return $this->getFieldModel()->loadFieldInfo();
 	}
 }

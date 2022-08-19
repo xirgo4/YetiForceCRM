@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 jQuery.Class(
@@ -16,7 +16,7 @@ jQuery.Class(
 				} else {
 					let isReminder = currentTarget.closest('#calendar-reminder-modal').length;
 					if (app.getModuleName() === 'Calendar' && viewName === 'CalendarExtended' && !isReminder) {
-						let calendarInstance = new Calendar_CalendarExtended_Js();
+						let calendarInstance = new Calendar_Calendar_Js();
 						calendarInstance.getCalendarSidebarData({
 							module: 'Calendar',
 							view: 'EventForm',
@@ -98,7 +98,7 @@ jQuery.Class(
 						listinstance.getListViewRecords();
 					}
 					if (viewName === 'DashBoard') {
-						new Vtiger_DashBoard_Js().getContainer().find('a[name="drefresh"]').trigger('click');
+						new Vtiger_DashBoard_Js().getContainer().find('.js-widget-refresh').trigger('click');
 					}
 					if (app.getModuleName() === 'Calendar' && (viewName === 'Calendar' || viewName === 'CalendarExtended')) {
 						const calendarInstance = new window[`Calendar_${viewName}_Js`]();

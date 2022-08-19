@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -51,7 +51,7 @@ class ServiceContracts
 		}
 		while ($date <= $end) {
 			$datesEnd = (clone $date)->setTime(23, 59, 59);
-			if (isset($days[$date->format('N')]) || ($holidays && isset($holidaysDates[$date->format('Y-m-d')]))) {
+			if (isset($days[$date->format('N')]) && (!$holidays || ($holidays && !isset($holidaysDates[$date->format('Y-m-d')])))) {
 				$dates[] = [
 					'start' => clone $date,
 					'end' => clone ($end < $datesEnd ? $end : $datesEnd),
@@ -181,15 +181,20 @@ class ServiceContracts
 	/**
 	 * Delete sla policy for service contracts.
 	 *
-	 * @param int $crmId
-	 * @param int $sourceModuleId
+	 * @param int      $crmId
+	 * @param int      $sourceModuleId
+	 * @param int|null $rowId
 	 *
 	 * @return void
 	 */
-	public static function deleteSlaPolicy(int $crmId, int $sourceModuleId)
+	public static function deleteSlaPolicy(int $crmId, int $sourceModuleId, ?int $rowId = null)
 	{
+		$where = ['crmid' => $crmId, 'tabid' => $sourceModuleId];
+		if ($rowId) {
+			$where['id'] = $rowId;
+		}
 		\App\Db::getInstance()->createCommand()
-			->delete('u_#__servicecontracts_sla_policy', ['crmid' => $crmId, 'tabid' => $sourceModuleId])->execute();
+			->delete('u_#__servicecontracts_sla_policy', $where)->execute();
 		\App\Cache::delete('UtilsServiceContracts::getSlaPolicyForServiceContracts', $crmId);
 	}
 
@@ -287,8 +292,8 @@ class ServiceContracts
 						'resolve_time' => $row['resolve_time'],
 					];
 				}
+				break;
 			}
-			break;
 		}
 		if ($businessHours) {
 			$result = [];
@@ -399,7 +404,7 @@ class ServiceContracts
 		if ($fieldModel && ($value = $recordModel->get($fieldModel->getName()))) {
 			return self::getDiffFromServiceContracts($start, $end, $value, $recordModel);
 		}
-		if ($diff = self::getDiffFromSlaPolicy($start, $end, $recordModel)) {
+		if (\is_int($diff = self::getDiffFromSlaPolicy($start, $end, $recordModel))) {
 			return $diff;
 		}
 		if (!($diff = self::getDiffFromDefaultBusinessHours($start, $end))) {

@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Settings_LayoutEditor_Index_View extends Settings_Vtiger_Index_View
@@ -50,7 +50,18 @@ class Settings_LayoutEditor_Index_View extends Settings_Vtiger_Index_View
 		$blockIdFieldMap = [];
 		$inactiveFields = [];
 		foreach ($fieldModels as $fieldModel) {
-			$blockIdFieldMap[$fieldModel->getBlockId()][$fieldModel->getName()] = $fieldModel;
+			$fieldName = $fieldModel->getName();
+			$lastItem = strrchr($fieldName, '_');
+			$firstItem = '';
+			if($lastItem === '_extra'){
+				$firstItem = str_replace($lastItem, '', $fieldName);
+			}
+			if((!empty($firstItem) && !empty($firstItemModuleModal = \Vtiger_Field_Model::getInstance($firstItem, \Vtiger_Module_Model::getInstance($sourceModule))) && $firstItemModuleModal->isActiveField() && $fieldModel->isActiveField()) && ($firstItemModuleModal->getUIType() == 11) && ($fieldModel->getUIType() == 1)){
+				unset($fieldName);
+			}
+			if(isset($fieldName)){
+				$blockIdFieldMap[$fieldModel->getBlockId()][$fieldName] = $fieldModel;
+			}
 			if (!$fieldModel->isActiveField()) {
 				$inactiveFields[$fieldModel->getBlockId()][$fieldModel->getId()] = \App\Language::translate($fieldModel->get('label'), $sourceModule);
 			}

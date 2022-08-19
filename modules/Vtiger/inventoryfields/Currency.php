@@ -5,8 +5,8 @@
  *
  * @package   InventoryField
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -84,7 +84,7 @@ class Vtiger_Currency_InventoryField extends Vtiger_Basic_InventoryField
 			if (!is_numeric($value) || !isset(\App\Fields\Currency::getAll()[$value])) {
 				throw new \App\Exceptions\Security("ERR_ILLEGAL_FIELD_VALUE||$columnName||" . print_r($value, true), 406);
 			}
-		} elseif (!\is_array($value) && \App\TextParser::getTextLength($value) > $this->customMaximumLength[$columnName]) {
+		} elseif (!\is_array($value) && \App\TextUtils::getTextLength($value) > $this->customMaximumLength[$columnName]) {
 			throw new \App\Exceptions\Security("ERR_VALUE_IS_TOO_LONG||$columnName||" . print_r($value, true), 406);
 		}
 	}

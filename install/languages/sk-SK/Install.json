@@ -34,7 +34,7 @@
     "LBL_MANDATORY": "Povinné",
     "LBL_PARAMETER": "Parameter",
     "LBL_INSTALLED": "Nainštalované",
-    "LBL_NEXT": "Next",
+    "LBL_NEXT": "Ďalej",
     "LBL_ONE_LAST_THING": "One last thing...",
     "LBL_PASSWORD_MISMATCH": "Please re-enter passwords.  The \\\"Password\\\" and \\\"Re-type password\\\" values do not match.",
     "LBL_PHP_CONFIGURATION": "PHP configuration",
@@ -112,7 +112,7 @@
     "LBL_SESSION_ERROR_TITLE": "Neplatné Session ID",
     "LBL_SESSION_ERROR_DESC": "Sent session ID does not match the one received from the server. We recommend clearing your browser cache, and if that does not fix the problem, we recommend correcting your server configuration.",
     "LBL_NAME": "Company name or first and last name",
-    "LBL_INDUSTRY": "Industry",
+    "LBL_INDUSTRY": "Odvetvie",
     "LBL_CITY": "Mesto",
     "LBL_COUNTRY": "Krajina",
     "LBL_COMPANYSIZE": "The number of employees employed by the entity",
@@ -155,6 +155,6 @@
     "JS_SEARCH": "Hľadať:",
     "JS_S_INFO": "Zobrazovanie _START_ až _END_ z _TOTAL_ záznamov",
     "JS_S_PREVIOUS": "Posledný",
-    "JS_S_NEXT": "Next"
+    "JS_S_NEXT": "Ďalšie"
   }
 }

@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-inventoryfields-EditViewName -->
 	{if $REFERENCE_MODULE}
@@ -20,7 +20,7 @@
 					data-fieldinfo="{$FIELD_INFO}"
 					{if $FIELD->isReadOnly()} readonly="readonly" {else} placeholder="{\App\Language::translate('LBL_TYPE_SEARCH',$MODULE_NAME)}" {/if} />
 				<input name="{$FIELD_NAME}" type="hidden" value="{$ITEM_VALUE}" title="{$ITEM_VALUE}"
-					class="sourceField js-{$FIELD->getColumnName()}" data-type="inventory" data-displayvalue='{$FIELD->getEditValue($ITEM_VALUE)}'
+					class="sourceField js-{$FIELD->getColumnName()}" data-type="inventory"
 					data-fieldinfo='{$FIELD_INFO}' data-columnname="{$FIELD->getColumnName()}"
 					{if $FIELD->isReadOnly()}readonly="readonly" {/if} />
 				<div class="input-group-append">

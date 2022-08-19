@@ -5,8 +5,8 @@
  *
  * @package UIType
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -27,14 +27,17 @@ class Vtiger_MultiReference_UIType extends Vtiger_Base_UIType
 		if (empty($value) || isset($this->validate[$value])) {
 			return;
 		}
-		$valueArr = explode(self::COMMA, $value);
-		foreach ($valueArr as $recordId) {
+		$ids = $this->getArrayValues($value);
+		if (\count($ids) > $this->getSelectionLimit()) {
+			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
+		}
+		foreach ($ids as $recordId) {
 			if (!is_numeric($recordId)) {
 				throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $recordId, 406);
 			}
 		}
 		$maximumLength = $this->getFieldModel()->get('maximumlength');
-		if ($maximumLength && App\TextParser::getTextLength($value) > $maximumLength) {
+		if ($maximumLength && App\TextUtils::getTextLength($value) > $maximumLength) {
 			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
 		$this->validate[$value] = true;
@@ -73,89 +76,27 @@ class Vtiger_MultiReference_UIType extends Vtiger_Base_UIType
 			return '';
 		}
 		$displayValue = [];
-		$values = explode(self::COMMA, $value);
-		$maxLength = \is_int($length) ? $length : \App\Config::main('href_max_length');
-		foreach ($values as $recordId) {
+		foreach ($this->getArrayValues($value) as $recordId) {
 			$recordId = (int) $recordId;
-			if ($name = App\Record::getLabel($recordId)) {
-				$name = $rawText ? $name : \App\TextParser::textTruncate($name, $maxLength);
-				if (!$rawText && \App\Privilege::isPermitted($referenceModuleName, 'DetailView', $recordId)) {
-					if ('Active' !== \App\Record::getState($recordId)) {
-						$name = '<s>' . $name . '</s>';
-					}
-					$url = "index.php?module={$referenceModuleName}&view={$referenceModule->getDetailViewName()}&record={$recordId}";
-					if (!empty($this->fullUrl)) {
-						$url = Config\Main::$site_URL . $url;
-					}
-					$name = "<a class='modCT_{$referenceModuleName} showReferenceTooltip js-popover-tooltip--record' href='{$url}' title='" . App\Language::translateSingularModuleName($referenceModuleName) . "'>{$name}</a>";
-				}
-				$displayValue[$recordId] = $name;
+			if ($rawText) {
+				$displayValue[] = App\Record::getLabel($recordId);
+			} else {
+				$displayValue[] = \App\Record::getHtmlLink($recordId, $referenceModuleName, null, !empty($this->fullUrl));
 			}
 		}
-
-		return implode(', <br>', $displayValue);
-	}
-
-	/**
-	 * Gets reference module name.
-	 *
-	 * @return array
-	 */
-	public function getReferenceList(): array
-	{
-		$referenceList = $this->getFieldModel()->getFieldParams()['module'] ?? [];
-		return (array) $referenceList;
+		$maxLength = (int) ($this->getFieldModel()->getFieldParams()['displayLength'] ?? (\is_int($length) ? $length : \App\Config::main('href_max_length')));
+		return \App\Layout::truncateHtml(implode(', <br>', $displayValue), 'miniHtml', $maxLength);
 	}
 
 	/** {@inheritdoc} */
-	public function getListViewDisplayValue($value, $record = false, $recordModel = false, $rawText = false)
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
 	{
 		$referenceModuleName = current($this->getReferenceList());
 		if (empty($value) || !$referenceModuleName || !($referenceModule = \Vtiger_Module_Model::getInstance($referenceModuleName)) || !$referenceModule->isActive()) {
 			return '';
 		}
-		$displayValueRaw = [];
-		$values = explode(self::COMMA, $value);
-		$length = $this->getFieldModel()->get('maxlengthtext');
-		$maxLength = empty($length) ? \App\Config::main('href_max_length') : $length;
-		$break = false;
-		foreach ($values as $recordId) {
-			$recordId = (int) $recordId;
-			if ($name = App\Record::getLabel($recordId)) {
-				$displayValueRaw[$recordId] = $name;
-				if (!$rawText) {
-					$names[$recordId] = $name;
-					if (($maxLengthPart = \App\TextParser::getTextLength(implode(', ', $names))) > $maxLength) {
-						$partLength = \count($names) > 1 ? ($maxLengthPart - $maxLength) + 1 : $maxLength;
-						$name = \App\TextParser::textTruncate($name, $partLength);
-						$break = true;
-					}
-					if ('Active' !== \App\Record::getState($recordId)) {
-						$name = '<s>' . $name . '</s>';
-					}
-					$displayValueRaw[$recordId] = $name;
-					if (\App\Privilege::isPermitted($referenceModuleName, 'DetailView', $recordId)) {
-						$displayValueRaw[$recordId] = "<a class='modCT_{$referenceModuleName} showReferenceTooltip js-popover-tooltip--record' href='index.php?module={$referenceModuleName}&view=" . $referenceModule->getDetailViewName() . "&record={$recordId}' title='" . App\Language::translateSingularModuleName($referenceModuleName) . "'>{$name}</a>";
-					}
-					if ($break) {
-						break;
-					}
-				}
-			}
-		}
-		return implode(', ', $displayValueRaw);
-	}
-
-	/** {@inheritdoc} */
-	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel)
-	{
-		$referenceModuleName = current($this->getReferenceList());
-		if (empty($value) || !$referenceModuleName || !($referenceModule = \Vtiger_Module_Model::getInstance($referenceModuleName)) || !$referenceModule->isActive()) {
-			return '';
-		}
-
 		$result = [];
-		foreach (explode(self::COMMA, $value) as $recordId) {
+		foreach ($this->getArrayValues($value) as $recordId) {
 			if (\App\Record::isExists($recordId)) {
 				$result[$recordId] = [
 					'value' => \App\Record::getLabel($recordId, true),
@@ -170,28 +111,50 @@ class Vtiger_MultiReference_UIType extends Vtiger_Base_UIType
 	}
 
 	/**
+	 * Gets reference module name.
+	 *
+	 * @return array
+	 */
+	public function getReferenceList(): array
+	{
+		return (array) $this->getFieldModel()->getFieldParams()['module'] ?? [];
+	}
+
+	/**
+	 * Gets selection limit.
+	 *
+	 * @return int
+	 */
+	public function getSelectionLimit(): int
+	{
+		return (int) ($this->getFieldModel()->getFieldParams()['limit'] ?? 50);
+	}
+
+	/**
 	 * Gets an array values.
 	 *
-	 * @param string|null $value
+	 * @param string|array|null $value
 	 *
 	 * @return int[]
 	 */
-	public function getArrayValues(?string $value): array
+	public function getArrayValues($value): array
 	{
-		return $value ? explode(self::COMMA, $value) : [];
+		if ($value) {
+			return \is_array($value) ? $value : explode(self::COMMA, $value);
+		}
+		return [];
 	}
 
 	/** {@inheritdoc} */
 	public function getEditViewDisplayValue($value, $recordModel = false)
 	{
 		$displayValue = [];
-		$valueArr = explode(self::COMMA, $value);
-		foreach ($valueArr as $recordId) {
+		foreach ($this->getArrayValues($value) as $recordId) {
 			if (is_numeric($recordId) && \App\Record::isExists($recordId)) {
-				$displayValue[] = \App\Record::getLabel($recordId);
+				$displayValue[$recordId] = \App\Record::getLabel($recordId);
 			}
 		}
-		return \App\Purifier::encodeHtml(implode(', ', $displayValue));
+		return $displayValue;
 	}
 
 	/** {@inheritdoc} */

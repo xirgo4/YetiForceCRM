@@ -1,5 +1,5 @@
 {strip}
-	{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+	{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 	<!-- tpl-Base-BodyHeader -->
 	{assign var='count' value=0}
 	<header class="navbar navbar-expand-md navbar-dark fixed-top px-2 js-header c-header" data-js="height">
@@ -130,7 +130,7 @@
 			{/if}
 			{assign var=VERIFY value=\App\YetiForce\Shop::verify()}
 			{if $VERIFY}
-				<a class="d-flex align-items-center text-warning mr-2 js-popover-tooltip" role="button" data-content="{$VERIFY}" title="{\App\Purifier::encodeHtml('<span class="yfi yfi-shop-alert mr-1"></span>')}{\App\Language::translate('LBL_YETIFORCE_SHOP')}"
+				<a class="d-flex align-items-center text-warning mr-2 js-popover-tooltip" data-content="{$VERIFY}" aria-label="{\App\Language::translate('LBL_YETIFORCE_SHOP')}"
 					{if $USER_MODEL->isAdminUser()} href="index.php?module=YetiForce&parent=Settings&view=Shop" {else} href="#" {/if}>
 					<span class="yfi yfi-shop-alert fa-2x"></span>
 				</a>
@@ -162,9 +162,9 @@
 			</div>
 		{/if}
 		<div class="o-navbar__right ml-auto d-inline-flex flex-sm-nowrap">
-			{if !Settings_ModuleManager_Library_Model::checkLibrary('roundcube')}
+			{if \App\Mail::checkMailClient() && !Settings_ModuleManager_Library_Model::checkLibrary('roundcube')}
 				{assign var=CONFIG value=Settings_Mail_Config_Model::getConfig('mailIcon')}
-				{if $CONFIG['showMailIcon']=='true' && App\Privilege::isPermitted('OSSMail')}
+				{if $CONFIG['showMailIcon']=='true'}
 					{assign var=AUTOLOGINUSERS value=OSSMail_Autologin_Model::getAutologinUsers()}
 					{if count($AUTOLOGINUSERS) > 0}
 						{assign var=MAIN_MAIL value=OSSMail_Module_Model::getDefaultMailAccount($AUTOLOGINUSERS)}
@@ -242,13 +242,13 @@
 							</a>
 						</div>
 						<div class="o-action-menu__item ml-md-2">
-							<a class="btn btn-light c-header__btn d-block" title="YetiForceCRM" role="button" href="#" data-toggle="modal" data-target="#yetiforceDetails">
+							<a class="btn btn-light c-header__btn d-block js-show-modal" title="YetiForceCRM" role="button" data-url="index.php?module=AppComponents&view=YetiForceDetailModal" data-js="click">
 								<span class="fas fa-info-circle fa-fw"></span>
 								<span class="c-header__label--sm-down ml-1">YetiForceCRM</span>
 							</a>
 						</div>
 					{/if}
-					{assign var=QUICKCREATE_MODULES_PARENT value=Vtiger_Module_Model::getQuickCreateModules(true, true)}
+					{assign var=QUICKCREATE_MODULES_PARENT value=\App\Module::getQuickCreateModules(true, true)}
 					{if \App\Config::main('isActiveRecordTemplate')}
 						{assign var=LIST_TEMPLATES value=\App\RecordAddsTemplates::getTemplatesList()}
 						{if count($LIST_TEMPLATES) > 1}
@@ -367,7 +367,7 @@
 								{assign var="HREF" value=$LINK}
 							{/if}
 							<div class="o-action-menu__item">
-								<a class="c-header__btn ml-2 btn btn js-popover-tooltip {if $obj->getClassName()|strrpos:"btn-" === false}btn-light {$obj->getClassName()}{else}{$obj->getClassName()}{/if} {if !empty($CHILD_LINKS)}dropdownMenu{/if}" href="{$HREF}" data-placement="bottom"
+								<a class="c-header__btn ml-2 btn btn js-popover-tooltip {if $obj->getClassName() && strrpos($obj->getClassName(),"btn-") !== false}{$obj->getClassName()}{else}btn-light {$obj->getClassName()}{/if} {if !empty($CHILD_LINKS)}dropdownMenu{/if}" href="{$HREF}" data-placement="bottom"
 									role="button" data-js="popover" data-content="{\App\Language::translate($TITLE)}"
 									{if isset($obj->linkdata) && $obj->linkdata && is_array($obj->linkdata)}
 										{foreach item=DATA_VALUE key=DATA_NAME from=$obj->linkdata}

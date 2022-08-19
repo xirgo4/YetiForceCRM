@@ -5,8 +5,8 @@
  *
  * @package Action
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -30,8 +30,8 @@ class Vtiger_Inventory_Action extends \App\Controller\Action
 	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
-		$currentUserPriviligesModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
-		if (!$currentUserPriviligesModel->hasModulePermission($request->getModule())) {
+		$userPrivilegesModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
+		if (!$userPrivilegesModel->hasModulePermission($request->getModule())) {
 			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED', 406);
 		}
 	}
@@ -142,17 +142,6 @@ class Vtiger_Inventory_Action extends \App\Controller\Action
 			'name' => App\Purifier::decodeHtml($recordModel->getName()),
 			'description' => $recordModel->get('description'),
 		];
-		if (\in_array($recordModuleName, ['Products', 'Services'])) {
-			$currencyId = empty($currencyId) ? \App\Fields\Currency::getDefault()['id'] : $currencyId;
-			$info['qtyPerUnit'] = $recordModel->getDisplayValue('qty_per_unit');
-			if (($fieldModel = $recordModel->getField('unit_price')) && $fieldModel->isActiveField()) {
-				$info['unitPriceValues'] = $fieldModel->getUITypeModel()->getEditViewFormatData($recordModel->get($fieldModel->getName()))['currencies'] ?? [];
-				$info['price'] = $fieldModel->getUITypeModel()->getValueForCurrency($recordModel->get($fieldModel->getName()), $currencyId);
-			}
-			if (($fieldModel = $recordModel->getField('purchase')) && $fieldModel->isActiveField()) {
-				$info['purchase'] = $fieldModel->getUITypeModel()->getValueForCurrency($recordModel->get($fieldModel->getName()), $currencyId);
-			}
-		}
 		$autoFields = [];
 		$inventory = Vtiger_Inventory_Model::getInstance($moduleName);
 		if ($autoCompleteField = ($inventory->getAutoCompleteFields()[$recordModuleName] ?? [])) {
@@ -174,9 +163,20 @@ class Vtiger_Inventory_Action extends \App\Controller\Action
 			}
 			$info['taxes'] = [
 				'type' => 'group',
-				'value' => $taxModel->get('value')
+				'value' => $taxModel->get('value'),
 			];
 		}
+		$eventHandler = new App\EventHandler();
+		$eventHandler->setRecordModel($recordModel);
+		$eventHandler->setModuleName($recordModuleName);
+		$eventHandler->setParams([
+			'currencyId' => $currencyId,
+			'moduleName' => $moduleName,
+			'fieldName' => $fieldName,
+			'info' => $info,
+		]);
+		$eventHandler->trigger('InventoryRecordDetails');
+		$info = $eventHandler->getParam('info');
 		return [$recordId => array_merge($info, $inventory->getCustomAutoComplete($fieldName, $recordModel))];
 	}
 

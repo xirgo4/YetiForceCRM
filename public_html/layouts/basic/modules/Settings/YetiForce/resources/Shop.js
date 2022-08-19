@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 /**
@@ -79,10 +79,9 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 			let isChecked = currentTarget.is(':checked');
 			let confirm = currentTarget.data('confirm');
 			if (confirm) {
-				Vtiger_Helper_Js.showConfirmationBox({
-					message: confirm
-				})
-					.done((_) => {
+				app.showConfirmModal({
+					title: confirm,
+					confirmedCallback: () => {
 						let url = isChecked ? currentTarget.data('url-on') : currentTarget.data('url-off');
 						if (url) {
 							$.progressIndicator({ blockInfo: { enabled: true } });
@@ -90,10 +89,11 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 								window.location.reload();
 							});
 						}
-					})
-					.fail((_) => {
+					},
+					rejectedCallback: () => {
 						currentTarget.prop('checked', !isChecked);
-					});
+					}
+				});
 			}
 		});
 	}

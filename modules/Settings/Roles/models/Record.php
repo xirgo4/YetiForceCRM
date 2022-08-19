@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -384,7 +384,9 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 		\App\Cache::delete(__CLASS__, $roleId);
 		\App\Cache::delete('RoleDetail', $roleId);
 		\App\Cache::delete('getUsersByCompany', '');
-		\App\Cache::delete('getUsersByCompany', $this->get('company'));
+		if ($this->get('company')) {
+			\App\Cache::delete('getUsersByCompany', $this->get('company'));
+		}
 		\App\Cache::delete('getCompanyRoles', '');
 		if (isset($rolePreviousData['company'])) {
 			\App\Cache::delete('getUsersByCompany', $rolePreviousData['company']);
@@ -429,12 +431,8 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 		}
 	}
 
-	/**
-	 * Function to get the list view actions for the record.
-	 *
-	 * @return <Array> - Associate array of Vtiger_Link_Model instances
-	 */
-	public function getRecordLinks()
+	/** {@inheritdoc} */
+	public function getRecordLinks(): array
 	{
 		$links = [];
 		if ($this->getParent()) {
@@ -442,7 +440,7 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 				[
 					'linktype' => 'LISTVIEWRECORD',
 					'linklabel' => 'LBL_EDIT_RECORD',
-					'linkurl' => $this->getListViewEditUrl(),
+					'linkurl' => $this->getEditViewUrl(),
 					'linkicon' => 'yfi yfi-full-editing-view',
 				],
 				[

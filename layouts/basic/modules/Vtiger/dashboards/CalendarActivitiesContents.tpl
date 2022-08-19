@@ -11,7 +11,7 @@
 -->*}
 {strip}
 	<style type="text/css">
-		small.small-a{
+		small.small-a {
 			font-size: 75%;
 		}
 	</style>
@@ -45,11 +45,11 @@
 						{assign var=SUBPROCESS value=$ACTIVITY->get('subprocess')}
 						{assign var=CONTRACTOR value=$ACTIVITY->get('contractor')}
 						<div class="w-100 mx-1">
-							{\App\TextParser::textTruncate($ACTIVITY->getDisplayName(), $NAMELENGTH)}
+							{\App\TextUtils::textTruncate($ACTIVITY->getDisplayName(), $NAMELENGTH)}
 							{if $CONTRACTOR}
-								<br /><small class="small-a">{\App\Language::translate('LBL_FOR')}&nbsp;<strong>{$ACTIVITY->getDisplayValue('contractor')}</strong></small>, <strong><small class='small-a'><a href="{$CONTRACTOR->getDetailViewUrl()}">{\App\TextParser::textTruncate($CONTRACTOR->getDisplayName(), $HREFNAMELENGTH)}</a></small></strong>
-									{/if}
-									{if $LINK}
+								<br /><small class="small-a">{\App\Language::translate('LBL_FOR')}&nbsp;<strong>{$ACTIVITY->getDisplayValue('contractor')}</strong></small>, <strong><small class='small-a'><a href="{$CONTRACTOR->getDetailViewUrl()}">{\App\TextUtils::textTruncate($CONTRACTOR->getDisplayName(), $HREFNAMELENGTH)}</a></small></strong>
+							{/if}
+							{if $LINK}
 								<br /><small class="small-a">{\App\Language::translate('LBL_FOR')}&nbsp;<strong>{$ACTIVITY->getDisplayValue('link')}</strong></small>
 							{/if}
 							{if $PROCESS}
@@ -59,8 +59,11 @@
 								<br /><small class="small-a">{\App\Language::translate('LBL_FOR')}&nbsp;<strong>{$ACTIVITY->getDisplayValue('subprocess')}</strong></small>
 							{/if}
 						</div>
+						<div>
+							{$ACTIVITY->getDisplayValue('taskpriority')}
+						</div>
 						{if $ACTIVITY->get('location') neq '' }
-							<div>
+							<div class="ml-1">
 								<a target="_blank" rel="noreferrer noopener" href="https://www.google.com/maps/search/{urlencode ($ACTIVITY->getDisplayValue('location'))}" class="float-right" title="{\App\Language::translate('Location', 'Calendar')}: {$ACTIVITY->getDisplayValue('location')}">
 									<span class="fas fa-globe"></span>
 								</a>

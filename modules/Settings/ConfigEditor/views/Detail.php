@@ -4,22 +4,31 @@
  *
  * @package   Settings.View
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 /**
  * Config editor detail view class.
  */
 class Settings_ConfigEditor_Detail_View extends Settings_Vtiger_Index_View
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	protected $pageTitle = 'LBL_CONFIG_EDITOR';
 
+	/** @var array config names */
+	protected $configNames = ['Relation', 'Performance'];
+
 	/**
-	 * {@inheritdoc}
+	 * Get config names.
+	 *
+	 * @return array
 	 */
+	public function getConfigNames(): array
+	{
+		return $this->configNames;
+	}
+
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$qualifiedName = $request->getModule(false);
@@ -32,6 +41,7 @@ class Settings_ConfigEditor_Detail_View extends Settings_Vtiger_Index_View
 		$viewer = $this->getViewer($request);
 		$viewer->assign('MODEL', $moduleModel);
 		$viewer->assign('ACTIVE_TAB', $activeTab);
+		$viewer->assign('CONFIG_NAMES', $this->getConfigNames());
 		$viewer->view('Detail.tpl', $qualifiedName);
 	}
 }

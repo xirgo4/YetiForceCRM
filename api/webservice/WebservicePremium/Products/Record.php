@@ -2,10 +2,10 @@
 /**
  * Webservice premium container - Loads the details of a product file.
  *
- * @package Api
+ * @package API
  *
- * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Arkadiusz Adach <a.adach@yetiforce.com>
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -89,11 +89,13 @@ class Record extends \Api\WebservicePremium\BaseModule\Record
 	 *		schema="Products_Get_Record_Response",
 	 *		title="Base module - Response body for Record",
 	 *		type="object",
+	 *		required={"status", "result"},
 	 *		@OA\Property(property="status", type="integer", enum={0, 1}, description="A numeric value of 0 or 1 that indicates whether the communication is valid. 1 - success , 0 - error"),
 	 *		@OA\Property(
 	 *			property="result",
-	 *			description="Record data",
+	 *			title="Record data",
 	 *			type="object",
+	 *			required={"name", "id", "fields", "data"},
 	 *			@OA\Property(property="name", description="Record name", type="string", example="Driving school"),
 	 *			@OA\Property(property="id", description="Record Id", type="integer", example=152),
 	 *			@OA\Property(property="fields", type="object", title="System field names and field labels", example={"field_name_1" : "Field label 1", "field_name_2" : "Field label 2", "assigned_user_id" : "Assigned user", "createdtime" : "Created time"},
@@ -107,8 +109,9 @@ class Record extends \Api\WebservicePremium\BaseModule\Record
 	 *			),
 	 *			@OA\Property(
 	 *				property="privileges",
-	 *				description="Parameters determining checking of editing rights and moving to the trash",
+	 *				title="Parameters determining checking of editing rights and moving to the trash",
 	 * 				type="object",
+	 * 				required={"isEditable", "moveToTrash"},
 	 *				@OA\Property(property="isEditable", description="Check if record is editable", type="boolean", example=true),
 	 *				@OA\Property(property="moveToTrash", description="Permission to delete", type="boolean", example=false),
 	 *			),
@@ -215,7 +218,7 @@ class Record extends \Api\WebservicePremium\BaseModule\Record
 		$productRelationModel = \Vtiger_Relation_Model::getInstance($this->recordModel->getModule(), $this->recordModel->getModule());
 		$productRelationModel->set('parentRecord', $this->recordModel);
 		$queryGenerator = $productRelationModel->getQuery();
-		$queryGenerator->setField(['ean', 'taxes', 'imagename']);
+		$queryGenerator->setField('ean')->setField('taxes')->setField('imagename');
 		if ($this->isUserPermissions) {
 			$availableTaxes = 'LBL_GROUP_TAX';
 			$regionalTaxes = '';

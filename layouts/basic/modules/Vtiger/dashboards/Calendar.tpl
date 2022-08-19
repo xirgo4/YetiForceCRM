@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	{assign var=ACCESSIBLE_USERS value=\App\Fields\Owner::getInstance()->getAccessibleUsers()}
 	{assign var=ACCESSIBLE_GROUPS value=\App\Fields\Owner::getInstance()->getAccessibleGroups()}
@@ -59,7 +59,7 @@
 							   off"> {\App\Language::translate('History')}
 							</label>
 						</div>
-						<input type="hidden" value="current" data-current="{implode(',',$CURRENT_STATUS)}"
+						<input type="hidden" value="current" data-current="{implode('##',$CURRENT_STATUS)}"
 							data-history="{implode(',',$HISTORY_STATUS)}" class="widgetFilterSwitch" {if !empty($WIDGET_DATA['defaultFilter'])} data-default-filter="{$WIDGET_DATA['defaultFilter']}" {/if}>
 					{/if}
 				</div>

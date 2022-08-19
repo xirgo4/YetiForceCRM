@@ -5,17 +5,16 @@
  *
  * @package   View
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Arkadiusz Dudek <a.dudek@yetiforce.com>
  * @author    Arkadiusz Adach <a.adach@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Calendar_EventForm_View extends Vtiger_QuickCreateAjax_View
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
 		$moduleName = $request->getModule();
@@ -31,9 +30,7 @@ class Calendar_EventForm_View extends Vtiger_QuickCreateAjax_View
 		}
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$moduleName = $request->getModule();
@@ -46,7 +43,6 @@ class Calendar_EventForm_View extends Vtiger_QuickCreateAjax_View
 			$this->recordStructure = $recordStructureInstance->getStructure();
 			$fieldValues = $this->loadFieldValuesFromSource($request);
 			$viewer->assign('QUICKCREATE_LINKS', Vtiger_QuickCreateView_Model::getInstance($moduleName)->getLinks([]));
-			$viewer->assign('PICKIST_DEPENDENCY_DATASOURCE', \App\Json::encode(\App\Fields\Picklist::getPicklistDependencyDatasource($moduleName)));
 			$viewer->assign('MAPPING_RELATED_FIELD', \App\Json::encode(\App\ModuleHierarchy::getRelationFieldByHierarchy($moduleName)));
 			$viewer->assign('LIST_FILTER_FIELDS', \App\Json::encode(\App\ModuleHierarchy::getFieldsForListFilter($moduleName)));
 			$viewer->assign('RECORD_STRUCTURE_MODEL', $recordStructureInstance);
@@ -65,24 +61,20 @@ class Calendar_EventForm_View extends Vtiger_QuickCreateAjax_View
 		}
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function postProcessAjax(App\Request $request)
 	{
 		$viewer = $this->getViewer($request);
-		$viewer->view('Extended/EventForm.tpl', $request->getModule());
+		$viewer->view('Calendar/EventForm.tpl', $request->getModule());
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getFooterScripts(App\Request $request)
 	{
 		$jsFiles = parent::getFooterScripts($request);
 		if (!empty(App\Config::module('Calendar', 'SHOW_ACTIVITY_BUTTONS_IN_EDIT_FORM'))) {
 			$jsFiles = array_merge($jsFiles, $this->checkAndConvertJsScripts([
-				'modules.Calendar.resources.ActivityStateModal'
+				'modules.Calendar.resources.ActivityStateModal',
 			]));
 		}
 		return $jsFiles;

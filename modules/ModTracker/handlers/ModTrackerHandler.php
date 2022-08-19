@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 require_once __DIR__ . '/../ModTracker.php';
 
@@ -62,7 +62,7 @@ class ModTracker_ModTrackerHandler_Handler
 			'whodid' => App\User::getCurrentUserRealId(),
 			'changedon' => $recordModel->get('modifiedtime'),
 			'status' => $status,
-			'last_reviewed_users' => '#' . App\User::getCurrentUserRealId() . '#'
+			'last_reviewed_users' => '#' . App\User::getCurrentUserRealId() . '#',
 		])->execute();
 		$id = $db->getLastInsertID('vtiger_modtracker_basic_id_seq');
 		if (!$recordModel->isNew()) {
@@ -96,8 +96,8 @@ class ModTracker_ModTrackerHandler_Handler
 			if (!$fieldModel) {
 				\App\Log::warning($fieldName . ' field does not exist in the module ' . $eventHandler->getModuleName(), __METHOD__);
 			} elseif ('text' === $fieldModel->getFieldDataType()) {
-				$preValue = empty($preValue) ? $preValue : \App\TextParser::textTruncate($preValue, 65532);
-				$newValue = empty($newValue) ? $newValue : \App\TextParser::textTruncate($newValue, 65532);
+				$preValue = empty($preValue) ? $preValue : \App\TextUtils::textTruncate($preValue, 65532);
+				$newValue = empty($newValue) ? $newValue : \App\TextUtils::textTruncate($newValue, 65532);
 			}
 			if ($fieldModel && \in_array(\App\Anonymization::MODTRACKER_DB, $fieldModel->getAnonymizationTarget())) {
 				$preValue = $newValue = '****';
@@ -149,7 +149,7 @@ class ModTracker_ModTrackerHandler_Handler
 			ModTracker::unLinkRelation($params['destinationModule'], $params['destinationRecordId'], $params['sourceModule'], $params['sourceRecordId']);
 		}
 		if (App\Config::module('ModTracker', 'WATCHDOG')) {
-			$watchdogTitle = 'LBL_REMOVED';
+			$watchdogTitle = 'LBL_UNLINK';
 			$watchdogMessage = '<a href="index.php?module=' . $params['sourceModule'] . '&view=Detail&record=' . $params['sourceRecordId'] . '">' . vtlib\Functions::getCRMRecordLabel($params['sourceRecordId']) . '</a>';
 			$watchdogMessage .= ' $(translate : LBL_WITH)$ ';
 			$watchdogMessage .= '<a href="index.php?module=' . $params['destinationModule'] . '&view=Detail&record=' . $params['destinationRecordId'] . '">$(record : RecordLabel)$</a>';
@@ -197,9 +197,8 @@ class ModTracker_ModTrackerHandler_Handler
 		if (!ModTracker::isTrackingEnabledForModule($eventHandler->getModuleName())) {
 			return false;
 		}
-		$recordModel = $eventHandler->getRecordModel();
 		\App\Db::getInstance()->createCommand()->insert('vtiger_modtracker_basic', [
-			'crmid' => $recordModel->getId(),
+			'crmid' => $eventHandler->getRecordModel()->getId(),
 			'module' => $eventHandler->getModuleName(),
 			'whodid' => \App\User::getCurrentUserRealId(),
 			'changedon' => date('Y-m-d H:i:s'),
@@ -244,7 +243,7 @@ class ModTracker_ModTrackerHandler_Handler
 			'whodid' => \App\User::getCurrentUserRealId(),
 			'changedon' => date('Y-m-d H:i:s'),
 			'status' => $status,
-			'last_reviewed_users' => '#' . \App\User::getCurrentUserRealId() . '#'
+			'last_reviewed_users' => '#' . \App\User::getCurrentUserRealId() . '#',
 		])->execute();
 		$id = $db->getLastInsertID('vtiger_modtracker_basic_id_seq');
 		ModTracker_Record_Model::unsetReviewed($recordId, \App\User::getCurrentUserRealId(), $id);
@@ -253,6 +252,25 @@ class ModTracker_ModTrackerHandler_Handler
 			$db->createCommand()->update('vtiger_crmentity', ['was_read' => 0], ['crmid' => $recordId])->execute();
 		}
 		$this->addNotification($eventHandler->getModuleName(), $recordId, ModTracker_Record_Model::$statusLabel[$status]);
+	}
+
+	/**
+	 * EntityAfterDelete handler function.
+	 *
+	 * @param \App\EventHandler $eventHandler
+	 */
+	public function entityAfterDelete(App\EventHandler $eventHandler)
+	{
+		if (!ModTracker::isTrackingEnabledForModule($eventHandler->getModuleName())) {
+			return false;
+		}
+		\App\Db::getInstance()->createCommand()->insert('vtiger_modtracker_basic', [
+			'crmid' => $eventHandler->getRecordModel()->getId(),
+			'module' => $eventHandler->getModuleName(),
+			'whodid' => \App\User::getCurrentUserRealId(),
+			'changedon' => date('Y-m-d H:i:s'),
+			'status' => ModTracker::$DELETED,
+		])->execute();
 	}
 
 	/**

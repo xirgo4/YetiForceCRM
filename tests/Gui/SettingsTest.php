@@ -5,12 +5,10 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
-
-namespace Tests\Init;
 
 use Facebook\WebDriver\WebDriverBy;
 
@@ -18,7 +16,7 @@ use Facebook\WebDriver\WebDriverBy;
  * @internal
  * @coversNothing
  */
-final class SettingsTest extends \Tests\GuiBase
+final class Gui_SettingsTest extends \Tests\GuiBase
 {
 	/**
 	 * Testing marketplace view.

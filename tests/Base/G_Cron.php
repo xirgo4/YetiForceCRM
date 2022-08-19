@@ -5,8 +5,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -26,10 +26,10 @@ class G_Cron extends \Tests\Base
 			$db = \App\Db::getInstance();
 			$db->createCommand()
 				->insert('roundcube_users', [
-					'username' => 'yetiforcegitdevelopery@gmail.com',
-					'mail_host' => 'imap.gmail.com',
+					'username' => 'yetiforcetests@yahoo.com',
+					'mail_host' => 'imap.mail.yahoo.com',
 					'language' => 'en_US',
-					'preferences' => 'a:1:{s:11:"client_hash";s:16:"UmfW5Tgq7vMU35P0";}',
+					'preferences' => '',
 					'password' => $_SERVER['YETI_MAIL_PASS'],
 					'crm_user_id' => '1',
 					'actions' => 'CreatedEmail,CreatedHelpDesk,BindAccounts,BindContacts,BindLeads,BindHelpDesk,BindSSalesProcesses,BindCampaigns,BindCompetition,BindOSSEmployees,BindPartners,BindProject,BindServiceContracts,BindVendors',
@@ -65,6 +65,7 @@ class G_Cron extends \Tests\Base
 		\App\Cron::updateStatus(\App\Cron::STATUS_DISABLED, 'LBL_UPDATER_RECORDS_COORDINATES');
 		\App\Cron::updateStatus(\App\Cron::STATUS_DISABLED, 'LBL_UPDATER_COORDINATES');
 		\App\Cron::updateStatus(\App\Cron::STATUS_DISABLED, 'LBK_SYSTEM_WARNINGS');
+		\App\Cron::updateStatus(\App\Cron::STATUS_DISABLED, 'LBL_MAIL_SCANNER_ACTION');
 		require_once 'cron.php';
 		$rows = (new \App\Db\Query())->select(['modue' => 'setype', 'rows' => 'count(*)'])->from('vtiger_crmentity')->groupBy('setype')->orderBy(['rows' => SORT_DESC])->all();
 		$c = '';

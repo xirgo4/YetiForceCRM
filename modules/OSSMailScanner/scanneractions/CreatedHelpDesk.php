@@ -2,8 +2,8 @@
 /**
  * Mail scanner action creating HelpDesk.
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -79,12 +79,8 @@ class OSSMailScanner_CreatedHelpDesk_ScannerAction extends OSSMailScanner_BindHe
 		}
 		$accountOwner = $this->mail->getAccountOwner();
 		$record->set('assigned_user_id', $accountOwner);
-		$maxLengthSubject = $record->getField('ticket_title')->get('maximumlength');
-		$subject = \App\Purifier::purify($this->mail->get('subject'));
-		$record->setFromUserValue('ticket_title', $maxLengthSubject ? \App\TextParser::textTruncate($subject, $maxLengthSubject, false) : $subject);
-		$maxLengthDescription = $record->getField('description')->get('maximumlength');
-		$description = $this->mail->getContent();
-		$record->set('description', $maxLengthDescription ? \App\TextParser::htmlTruncate($description, $maxLengthDescription, false) : $description);
+		$record->setFromUserValue('ticket_title', \App\TextUtils::textTruncate($this->mail->get('subject'), $record->getField('ticket_title')->getMaxValue()));
+		$record->set('description', \App\TextUtils::htmlTruncate($this->mail->getContent(), $record->getField('description')->getMaxValue()));
 		if (!empty(\Config\Modules\OSSMailScanner::$helpdeskCreateDefaultStatus)) {
 			$record->set('ticketstatus', \Config\Modules\OSSMailScanner::$helpdeskCreateDefaultStatus);
 		}

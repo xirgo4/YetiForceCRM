@@ -1,16 +1,19 @@
 <?php
+/**
+ * Text parser file.
+ *
+ * @package App
+ *
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ */
 
 namespace App;
 
 /**
  * Text parser class.
- *
- * @package App
- *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
- * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class TextParser
 {
@@ -219,7 +222,7 @@ class TextParser
 	 *
 	 * @var string
 	 */
-	public const VARIABLE_REGEX = '/\$\((\w+) : ([,"\+\#\%\.\=\-\[\]\&\w\s\|\)\(\:]+)\)\$/u';
+	public const VARIABLE_REGEX = '/\$\((\w+) : ([,"\+\#\%\.\:\;\=\-\[\]\&\w\s\|\)\(\:]+)\)\$/u';
 
 	/** @var bool Permissions condition */
 	protected $permissions = true;
@@ -235,13 +238,13 @@ class TextParser
 	 *
 	 * @return \self
 	 */
-	public static function getInstanceById($record, $moduleName)
+	public static function getInstanceById(int $record, ?string $moduleName = null)
 	{
 		$class = static::class;
 		$instance = new $class();
 		$instance->record = $record;
-		$instance->moduleName = $moduleName;
 		$instance->recordModel = \Vtiger_Record_Model::getInstanceById($record, $moduleName);
+		$instance->moduleName = $instance->recordModel->getModuleName();
 		return $instance;
 	}
 
@@ -461,9 +464,7 @@ class TextParser
 	public function parseData(string $content)
 	{
 		if ($this->useExtension) {
-			$content = preg_replace_callback('/<!--[\s]+({% [\s\S]+? %})[\s]+-->/u', function ($matches) {
-				return $matches[1] ?? '';
-			}, $content);
+			$content = preg_replace_callback('/<!--[\s]+({% [\s\S]+? %})[\s]+-->/u', fn ($matches) => $matches[1] ?? '', $content);
 			$twig = new \Twig\Environment(new \Twig\Loader\ArrayLoader(['index' => $content]));
 			$sandbox = new \Twig\Extension\SandboxExtension(\App\Extension\Twig\SecurityPolicy::getPolicy(), true);
 			$twig->addExtension($sandbox);
@@ -560,20 +561,19 @@ class TextParser
 		} else {
 			[$id, $fieldName, $params] = array_pad(explode('|', $params, 3), 3, false);
 		}
-		if (!Record::isExists($id, 'MultiCompany')) {
-			return '';
-		}
-		$recordModel = \Vtiger_Record_Model::getInstanceById($id, 'MultiCompany');
-		if ($recordModel->has($fieldName)) {
-			$value = $recordModel->get($fieldName);
-			$fieldModel = $recordModel->getModule()->getFieldByName($fieldName);
-			if ('' === $value || !$fieldModel || !$this->useValue($fieldModel, 'MultiCompany')) {
-				return '';
-			}
-			if ($this->withoutTranslations) {
-				$returnVal = $this->getDisplayValueByType($value, $recordModel, $fieldModel, $params);
-			} else {
-				$returnVal = $fieldModel->getUITypeModel()->getTextParserDisplayValue($value, $recordModel, $params);
+		if (Record::isExists($id, 'MultiCompany')) {
+			$companyRecordModel = \Vtiger_Record_Model::getInstanceById($id, 'MultiCompany');
+			if ($companyRecordModel->has($fieldName)) {
+				$value = $companyRecordModel->get($fieldName);
+				$fieldModel = $companyRecordModel->getModule()->getFieldByName($fieldName);
+				if ('' === $value || !$fieldModel || !$this->useValue($fieldModel, 'MultiCompany')) {
+					return '';
+				}
+				if ($this->withoutTranslations) {
+					$returnVal = $this->getDisplayValueByType($value, $companyRecordModel, $fieldModel, $params);
+				} else {
+					$returnVal = $fieldModel->getUITypeModel()->getTextParserDisplayValue($value, $companyRecordModel, $params);
+				}
 			}
 		}
 		return $returnVal;
@@ -628,7 +628,7 @@ class TextParser
 				return (new \DateTimeField(null))->getDisplayDate();
 			case 'CurrentTime':
 				return \Vtiger_Util_Helper::convertTimeIntoUsersDisplayFormat(date('H:i:s'));
-	  case 'CurrentDateTime':
+			case 'CurrentDateTime':
 				return Fields\DateTime::formatToDisplay('now');
 			case 'SiteUrl':
 				return Config::main('site_URL');
@@ -755,7 +755,11 @@ class TextParser
 	 */
 	protected function relatedRecord($params)
 	{
-		[$fieldName, $relatedField, $relatedModule] = array_pad(explode('|', $params, 3), 3, '');
+		$params = explode('|', $params);
+		$fieldName = array_shift($params);
+		$relatedField = array_shift($params);
+		$relatedModule = array_shift($params);
+		$value = $params ? $relatedField . '|' . implode('|', $params) : $relatedField;
 		if (
 			!isset($this->recordModel)
 			|| ($this->permissions && !Privilege::isPermitted($this->moduleName, 'DetailView', $this->record))
@@ -782,7 +786,7 @@ class TextParser
 								$instance->{$key} = $this->{$key};
 							}
 						}
-						$return[] = $instance->record($relatedField, false);
+						$return[] = $instance->record($value, false);
 					}
 					continue;
 				}
@@ -795,7 +799,7 @@ class TextParser
 								$instance->{$key} = $this->{$key};
 							}
 						}
-						$return[] = $instance->record($relatedField, false);
+						$return[] = $instance->record($value, false);
 					}
 				}
 			}
@@ -815,7 +819,7 @@ class TextParser
 				$instance->{$key} = $this->{$key};
 			}
 		}
-		return $instance->record($relatedField);
+		return $instance->record($value);
 	}
 
 	/**
@@ -925,6 +929,9 @@ class TextParser
 		}
 		if ($columns) {
 			$relationListView->setFields($columns);
+		} else {
+			$fields = array_filter($relationListView->getHeaders(), fn ($fieldModel) => !$fieldModel->get('fromOutsideList'));
+			$relationListView->setFields(array_keys($fields));
 		}
 		if ($conditions) {
 			$transformedSearchParams = $relationListView->getQueryGenerator()->parseBaseSearchParamsToCondition(Json::decode($conditions));
@@ -946,9 +953,9 @@ class TextParser
 	{
 		$relatedModuleName = $relationListView->getRelationModel()->getRelationModuleName();
 		$rows = $headers = '';
-		$fields = $relationListView->getHeaders();
+		$fields = $relationListView->getRelationModel()->getQueryFields();
 		foreach ($fields as $fieldModel) {
-			if ($fieldModel->isViewable()) {
+			if ($fieldModel->isViewable() || $fieldModel->get('fromOutsideList')) {
 				if ($this->withoutTranslations) {
 					$headers .= "<th class=\"col-type-{$fieldModel->getFieldType()}\">$(translate : {$fieldModel->getFieldLabel()}|$relatedModuleName)$</th>";
 				} else {
@@ -964,7 +971,7 @@ class TextParser
 				$value = $this->getDisplayValueByField($fieldModel, $relatedRecordModel);
 				if (false !== $value) {
 					if ($maxLength) {
-						$value = $this->textTruncate($value, $maxLength);
+						$value = TextUtils::textTruncate($value, $maxLength);
 					}
 					$rows .= "<td class=\"col-type-{$fieldModel->getFieldType()}\">{$value}</td>";
 				}
@@ -1022,13 +1029,22 @@ class TextParser
 			$transformedSearchParams = $listView->getQueryGenerator()->parseBaseSearchParamsToCondition(Json::decode($conditions));
 			$listView->set('search_params', $transformedSearchParams);
 		}
-		$rows = $headers = '';
+		if (($pdf = $this->getParam('pdf')) && $pdf->get('module_name') === $moduleName && ($ids = $pdf->getVariable('recordsId'))) {
+			$listView->getQueryGenerator()->addCondition('id', $ids, 'e', 1);
+		}
+		$rows = $headers = $headerStyle = $borderStyle = '';
 		$fields = $listView->getListViewHeaders();
+		if (isset($paramsArray['headerStyle']) && 'background' === $paramsArray['headerStyle']) {
+			$headerStyle = 'background-color:#ddd;';
+		}
+		if (isset($paramsArray['table']) && 'border' === $paramsArray['table']) {
+			$borderStyle = 'border:1px solid  #ddd;';
+		}
 		foreach ($fields as $fieldModel) {
 			if ($this->withoutTranslations) {
-				$headers .= "<th class=\"col-type-{$fieldModel->getFieldType()}\">$(translate : {$fieldModel->getFieldLabel()}|$moduleName)$</th>";
+				$headers .= "<th class=\"col-type-{$fieldModel->getFieldType()}\" style=\"{$headerStyle}\">$(translate : {$fieldModel->getFieldLabel()}|$moduleName)$</th>";
 			} else {
-				$headers .= "<th class=\"col-type-{$fieldModel->getFieldType()}\">" . Language::translate($fieldModel->getFieldLabel(), $moduleName) . '</th>';
+				$headers .= "<th class=\"col-type-{$fieldModel->getFieldType()}\" style=\"{$headerStyle}\">" . Language::translate($fieldModel->getFieldLabel(), $moduleName) . '</th>';
 			}
 		}
 		$counter = 0;
@@ -1039,9 +1055,9 @@ class TextParser
 				$value = $this->getDisplayValueByField($fieldModel, $relatedRecordModel, $params);
 				if (false !== $value) {
 					if ((int) $maxLength) {
-						$value = $this->textTruncate($value, (int) $maxLength);
+						$value = TextUtils::textTruncate($value, (int) $maxLength);
 					}
-					$rows .= "<td class=\"col-type-{$fieldModel->getFieldType()}\">{$value}</td>";
+					$rows .= "<td class=\"col-type-{$fieldModel->getFieldType()}\" style=\"{$borderStyle}\">{$value}</td>";
 				}
 			}
 			$rows .= '</tr>';
@@ -1050,10 +1066,7 @@ class TextParser
 			return '';
 		}
 		$headers = "<tr>{$headers}</tr>";
-		$table = 'class="records-list" style="border-collapse:collapse;width:100%"';
-		if (isset($paramsArray['table']) && 'border' === $paramsArray['table']) {
-			$table .= 'border="1"';
-		}
+		$table = "class=\"records-list\" style=\"border-collapse:collapse;width:100%;{$borderStyle}\"";
 		if (isset($paramsArray['addCounter']) && '1' === $paramsArray['addCounter']) {
 			$headers = '<tr><th colspan="' . \count($fields) . '">' . Language::translate('LBL_NUMBER_OF_ALL_ENTRIES') . ": $counter</th></th></tr>$headers";
 		}
@@ -1074,13 +1087,13 @@ class TextParser
 		$model = $this->recordModel;
 		if (false === $value) {
 			$value = \App\Utils\Completions::decode($this->recordModel->get($fieldModel->getName()), \App\Utils\Completions::FORMAT_TEXT);
-			if (!$fieldModel->isViewEnabled()) {
+			if (!$fieldModel->isViewEnabled() && !$fieldModel->get('fromOutsideList')) {
 				return '';
 			}
 		} elseif (\is_object($value)) {
 			$model = $value;
 			$value = $value->get($fieldModel->getName());
-			if (!$fieldModel->isViewEnabled()) {
+			if (!$fieldModel->isViewEnabled() && !$fieldModel->get('fromOutsideList')) {
 				return false;
 			}
 		}
@@ -1150,12 +1163,10 @@ class TextParser
 				break;
 			case 'tree':
 				$template = $fieldModel->getFieldParams();
-				$row = Fields\Tree::getValueByTreeId($template, $value);
 				$value = $parentName = '';
-				if ($row) {
+				if ($row = Fields\Tree::getValueByTreeId($template, $value)) {
 					if ($row['depth'] > 0) {
-						$parentTree = $row['parentTree'];
-						$pieces = explode('::', $parentTree);
+						$pieces = explode('::', $row['parentTree']);
 						end($pieces);
 						$parent = prev($pieces);
 						$parentRow = Fields\Tree::getValueByTreeId($template, $parent);
@@ -1213,16 +1224,13 @@ class TextParser
 	/**
 	 * Parsing params.
 	 *
-	 * @param string $params
+	 * @param string $key
 	 *
 	 * @return string
 	 */
-	protected function params($params)
+	protected function params(string $key)
 	{
-		if (isset($this->params[$params])) {
-			return $this->params[$params];
-		}
-		return '';
+		return isset($this->params[$key]) ? \App\Purifier::purifyHtml($this->params[$key]) : '';
 	}
 
 	/**
@@ -1466,9 +1474,7 @@ class TextParser
 	public function getGeneralVariable()
 	{
 		$variables = [
-			'LBL_ENTITY_VARIABLES' => array_map(function ($value) {
-				return Language::translate($value, 'Other.TextParser');
-			}, array_flip(static::$variableGeneral)),
+			'LBL_ENTITY_VARIABLES' => array_map(fn ($value) => Language::translate($value, 'Other.TextParser'), array_flip(static::$variableGeneral)),
 		];
 		$variables['LBL_CUSTOM_VARIABLES'] = array_merge($this->getBaseGeneralVariable(), $this->getModuleGeneralVariable());
 		return $variables;
@@ -1540,7 +1546,7 @@ class TextParser
 				$var = $relation->get('relation_id');
 			}
 			$variables[] = [
-				'key' => "$(relatedRecordsList : $var)$",
+				'key' => "$(relatedRecordsList : $var|__FIELDS_NAME__|__CONDITIONS__|__VIEW_ID_OR_NAME__|__LIMIT__|__MAX_LENGTH__)$",
 				'label' => Language::translate($relation->get('label'), $relation->get('relatedModuleName')),
 			];
 		}
@@ -1562,114 +1568,6 @@ class TextParser
 			];
 		}
 		return $variables;
-	}
-
-	/**
-	 * Truncating HTML.
-	 *
-	 * @param          $html
-	 * @param bool|int $length
-	 * @param bool     $addDots
-	 * @param bool     $isTruncated
-	 *
-	 * @throws \HTMLPurifier_Exception
-	 *
-	 * @return string
-	 */
-	public static function htmlTruncate($html, $length = false, $addDots = true, &$isTruncated = false)
-	{
-		if (!$length) {
-			$length = Config::main('listview_max_textlength');
-		}
-		$encoding = Config::main('default_charset');
-		$config = \HTMLPurifier_Config::create(null);
-		$config->set('Cache.SerializerPath', ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'cache' . \DIRECTORY_SEPARATOR . 'vtlib');
-		$lexer = \HTMLPurifier_Lexer::create($config);
-		$tokens = $lexer->tokenizeHTML($html, $config, new \HTMLPurifier_Context());
-		$truncated = $openTokens = [];
-		$depth = $totalCount = 0;
-		foreach ($tokens as $token) {
-			if ($token instanceof \HTMLPurifier_Token_Start) {
-				$openTokens[$depth] = $token->name;
-				$truncated[] = $token;
-				++$depth;
-			} elseif ($token instanceof \HTMLPurifier_Token_Text && $totalCount <= $length) {
-				if (false === $encoding) {
-					preg_match('/^(\s*)/um', $token->data, $prefixSpace) ?: $prefixSpace = ['', ''];
-					$token->data = $prefixSpace[1] . self::truncateWords(ltrim($token->data), $length - $totalCount, '');
-					$currentCount = self::countWords($token->data);
-				} else {
-					if (mb_strlen($token->data, $encoding) > $length - $totalCount) {
-						$token->data = rtrim(mb_substr($token->data, 0, $length - $totalCount, $encoding));
-					}
-					$currentCount = mb_strlen($token->data, $encoding);
-				}
-				$totalCount += $currentCount;
-				$truncated[] = $token;
-			} elseif ($token instanceof \HTMLPurifier_Token_End) {
-				if ($token->name === $openTokens[$depth - 1]) {
-					--$depth;
-					unset($openTokens[$depth]);
-					$truncated[] = $token;
-				}
-			} elseif ($token instanceof \HTMLPurifier_Token_Empty) {
-				$truncated[] = $token;
-			}
-			if ($totalCount >= $length) {
-				if (0 < \count($openTokens)) {
-					krsort($openTokens);
-					foreach ($openTokens as $name) {
-						$truncated[] = new \HTMLPurifier_Token_End($name);
-					}
-				}
-				break;
-			}
-		}
-		$generator = new \HTMLPurifier_Generator($config, new \HTMLPurifier_Context());
-		$html = preg_replace_callback('/<*([A-Za-z_]\w*)\s\/>/', function ($matches) {
-			if (\in_array($matches[1], ['div'])) {
-				return "<{$matches[1]}></{$matches[1]}>";
-			}
-			return $matches[0];
-		}, $generator->generateFromTokens($truncated));
-		$isTruncated = $totalCount >= $length;
-		return $html . ($isTruncated ? ($addDots ? '...' : '') : '');
-	}
-
-	/**
-	 * Truncating text.
-	 *
-	 * @param string   $text
-	 * @param bool|int $length
-	 * @param bool     $addDots
-	 *
-	 * @return string
-	 */
-	public static function textTruncate($text, $length = false, $addDots = true)
-	{
-		if (!$length) {
-			$length = Config::main('listview_max_textlength');
-		}
-		$textLength = mb_strlen($text);
-		if ((!$addDots && $textLength > $length) || ($addDots && $textLength > $length + 2)) {
-			$text = mb_substr($text, 0, $length, Config::main('default_charset'));
-			if ($addDots) {
-				$text .= '...';
-			}
-		}
-		return $text;
-	}
-
-	/**
-	 * Get text length.
-	 *
-	 * @param string $text
-	 *
-	 * @return int
-	 */
-	public static function getTextLength($text)
-	{
-		return mb_strlen($text);
 	}
 
 	/**
@@ -1824,7 +1722,9 @@ class TextParser
 			$html .= '<table class="inventory-table" style="border-collapse:collapse;width:100%"><thead><tr>';
 			$columns = [];
 			$customFieldClassSeq = 0;
-			foreach ($config['columns'] as $name) {
+			$labels = isset($config['labels']) ? explode(',', $config['labels']) : [];
+			$width = isset($config['width']) ? preg_replace('/[^[:alnum:]]/', '', explode(',', $config['width'])) : [];
+			foreach ($config['columns'] as $key => $name) {
 				if (false !== strpos($name, '||')) {
 					[$title,$value] = explode('||', $name, 2);
 					if ('(' === $title[0] && ')' === substr($title, -1)) {
@@ -1847,7 +1747,7 @@ class TextParser
 				if (!$field->isVisible()) {
 					continue;
 				}
-				$html .= '<th class="col-type-' . $field->getType() . '" style="border:1px solid #ddd">' . Language::translate($field->get('label'), $this->moduleName) . '</th>';
+				$html .= '<th class="col-type-' . $field->getType() . '" style="border:1px solid #ddd ' . (empty($width[$key]) ? '' : ";width: {$width[$key]}") . '">' . (empty($labels[$key]) ? Language::translate($field->get('label'), $this->moduleName) : Purifier::encodeHtml($labels[$key])) . '</th>';
 				$columns[$field->getColumnName()] = $field;
 			}
 			$html .= '</tr></thead><tbody>';

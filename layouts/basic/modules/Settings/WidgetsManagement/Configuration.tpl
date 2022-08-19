@@ -1,4 +1,4 @@
-﻿{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+﻿{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<div class="tpl-Settings-WidgetsManagement-Configuration" id="widgetsManagementEditorContainer">
 		<input id="selectedModuleName" type="hidden" value="{$SELECTED_MODULE_NAME}" />
@@ -84,7 +84,7 @@
 													</button>
 												</div>
 											{/if}
-											{if $SPECIAL_WIDGETS['Mini List']}
+											{if isset($SPECIAL_WIDGETS['Mini List'])}
 												{assign var=MINILISTWIDGET value=$SPECIAL_WIDGETS['Mini List']}
 												<div class="btn-group ml-1">
 													<button class="btn btn-success btn-sm addMiniList" type="button"
@@ -99,7 +99,7 @@
 													</button>
 												</div>
 											{/if}
-											{if $SPECIAL_WIDGETS['ChartFilter']}
+											{if isset($SPECIAL_WIDGETS['ChartFilter'])}
 												{assign var=CHART_FILTER_WIDGET value=$SPECIAL_WIDGETS['ChartFilter']}
 												<div class="btn-group ml-1">
 													<button class="btn btn-success btn-sm js-show-modal" type="button"
@@ -190,8 +190,7 @@
 												<span class="redColor">*</span>
 											</div>
 											<div class="col-sm-6 controls">
-												<select class="authorized form-control validateForm mb-0"
-													name="authorized" data-validation-engine="validate[required]">
+												<select class="authorized form-control validateForm mb-0 js-authorized" name="authorized" data-validation-engine="validate[required]">
 													<optgroup label="{\App\Language::translate('LBL_ROLES', $QUALIFIED_MODULE)}">
 														{foreach from=$ALL_AUTHORIZATION item=AUTHORIZED key=AUTHORIZED_CODE}
 															<option value="{$AUTHORIZED_CODE}"
@@ -199,7 +198,7 @@
 														{/foreach}
 													</optgroup>
 													{if count($ALL_SERVERS)}
-														<optgroup label="{\App\Language::translate('WebserviceApps', 'Settings.WebserviceApps')}">
+														<optgroup label="{\App\Language::translate('WebserviceApps', 'Settings:WebserviceApps')}">
 															{foreach from=$ALL_SERVERS item=SERVER key=ID}
 																<option value="{$ID}">{\App\Purifier::encodeHTML($SERVER['name'])}</option>
 															{/foreach}
@@ -232,7 +231,7 @@
 											<strong>{\App\Language::translate('LBL_ADD_WIDGET', $QUALIFIED_MODULE)}</strong>
 										</button>
 									</div>
-									{if $SPECIAL_WIDGETS['Rss']}
+									{if isset($SPECIAL_WIDGETS['Rss'])}
 										{assign var=RSS_WIDGET value=$SPECIAL_WIDGETS['Rss']}
 										<div class="btn-group">
 											<button class="btn btn-success btn-sm addRss specialWidget" type="button"
@@ -246,7 +245,7 @@
 											</button>
 										</div>
 									{/if}
-									{if $SPECIAL_WIDGETS['Mini List']}
+									{if isset($SPECIAL_WIDGETS['Mini List'])}
 										{assign var=MINILISTWIDGET value=$SPECIAL_WIDGETS['Mini List']}
 										<div class="btn-group">
 											<button class="btn btn-success btn-sm addMiniList specialWidget"
@@ -261,7 +260,7 @@
 											</button>
 										</div>
 									{/if}
-									{if $SPECIAL_WIDGETS['ChartFilter']}
+									{if isset($SPECIAL_WIDGETS['ChartFilter'])}
 										{assign var=CHART_FILTER_WIDGET value=$SPECIAL_WIDGETS['ChartFilter']}
 										<div class="btn-group ml-1">
 											<button class="btn btn-success btn-sm js-show-modal" type="button"
@@ -270,7 +269,6 @@
 												data-name="{$CHART_FILTER_WIDGET->getName()}"
 												data-width="{$CHART_FILTER_WIDGET->getWidth()}"
 												data-height="{$CHART_FILTER_WIDGET->getHeight()}"
-												data-block-id="{$AUTHORIZATION_KEY}"
 												data-module="{$SELECTED_MODULE_NAME}"
 												data-modalId="{\App\Layout::getUniqueId('ChartFilter')}"><span
 													class="fas fa-plus"></span>&nbsp;

@@ -3,8 +3,8 @@
 /**
  * Email Template Task Class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -43,7 +43,10 @@ class VTEmailTemplateTask extends VTTask
 				$mailerContent['to'] = $emailParser->setContent($email)->parse()->getContent(true);
 			}
 			if ($this->address_emails) {
-				$mailerContent['to'][] = $this->address_emails;
+				$emails = $emailParser->setContent($this->address_emails)->getContent(true);
+				foreach ($emails as $email) {
+					$mailerContent['to'][] = $email;
+				}
 			}
 			if ($this->relations_email && '-' !== $this->relations_email) {
 				[$relatedModule,$relatedFieldName,$onlyFirst] = array_pad(explode('::', $this->relations_email), 3, false);

@@ -7,9 +7,10 @@ namespace App;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Mail
 {
@@ -20,13 +21,13 @@ class Mail
 	 *
 	 * @return array
 	 */
-	public static function getSmtpById($smtpId)
+	public static function getSmtpById(int $smtpId): array
 	{
 		if (Cache::has('SmtpServer', $smtpId)) {
 			return Cache::get('SmtpServer', $smtpId);
 		}
 		$servers = static::getAll();
-		$smtp = false;
+		$smtp = [];
 		if (isset($servers[$smtpId])) {
 			$smtp = $servers[$smtpId];
 		}
@@ -194,5 +195,35 @@ class Mail
 		}
 		Cache::save('MailAttachmentsFromDocument', $cacheId, $attachments, Cache::LONG);
 		return $attachments;
+	}
+
+	/**
+	 * Check if the user has access to the mail client.
+	 *
+	 * @return bool
+	 */
+	public static function checkMailClient(): bool
+	{
+		if (Cache::staticHas('MailCheckMailClient')) {
+			return Cache::staticGet('MailCheckMailClient');
+		}
+		$return = \Config\Main::$isActiveSendingMails && \App\Privilege::isPermitted('OSSMail');
+		Cache::staticSave('MailCheckMailClient', '', $return);
+		return $return;
+	}
+
+	/**
+	 * Check if the user has access to the internal mail client.
+	 *
+	 * @return bool
+	 */
+	public static function checkInternalMailClient(): bool
+	{
+		if (Cache::staticHas('MailCheckInternalMailClient')) {
+			return Cache::staticGet('MailCheckInternalMailClient');
+		}
+		$return = self::checkMailClient() && 1 === (int) \App\User::getCurrentUserModel()->getDetail('internal_mailer') && file_exists(ROOT_DIRECTORY . '/public_html/modules/OSSMail/roundcube/');
+		Cache::staticSave('MailCheckInternalMailClient', '', $return);
+		return $return;
 	}
 }

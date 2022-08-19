@@ -1,15 +1,15 @@
 <?php
 /**
- * Actions to widgets.
+ * Actions file to widgets.
  *
  * @package Action
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 
 /**
- * Actions to widgets.
+ * Actions class to widgets.
  */
 class Vtiger_Widget_Action extends \App\Controller\Action
 {
@@ -25,6 +25,8 @@ class Vtiger_Widget_Action extends \App\Controller\Action
 		$this->exposeMethod('remove');
 		$this->exposeMethod('removeWidgetFromList');
 		$this->exposeMethod('updateWidgetConfig');
+		$this->exposeMethod('positions');
+		$this->exposeMethod('clear');
 	}
 
 	/**
@@ -40,21 +42,15 @@ class Vtiger_Widget_Action extends \App\Controller\Action
 		$mode = $request->getMode();
 		if ($request->has('widgetid')) {
 			$widget = Vtiger_Widget_Model::getInstanceWithWidgetId($request->getInteger('widgetid'), \App\User::getCurrentUserId());
-			$label = $widget->get('linklabel');
 		} else {
-			if ('add' === $mode) {
-				$linkDdata = \vtlib\Link::getLinkData($request->getInteger('linkid'));
-				$label = $linkDdata['linklabel'];
-			} else {
+			if ('add' !== $mode) {
 				$widget = Vtiger_Widget_Model::getInstance($request->getInteger('linkid'), \App\User::getCurrentUserId());
-				$label = $widget->get('linklabel');
 			}
 		}
-		if (
-			('updateWidgetConfig' === $mode && $request->has('widgetid') && $widget->get('active'))
+		if (('updateWidgetConfig' === $mode && $request->has('widgetid') && $widget->get('active'))
 			|| ('remove' === $mode && !$widget->isDefault() && \App\Privilege::isPermitted($moduleName))
-			|| ('Mini List' === $label && \App\Privilege::isPermitted($moduleName, 'CreateDashboardFilter'))
-			|| ('ChartFilter' === $label && \App\Privilege::isPermitted($moduleName, 'CreateDashboardChartFilter'))) {
+			|| (('positions' === $mode || 'clear' === $mode) && \App\Privilege::isPermitted($moduleName))
+			|| 'add' === $mode) {
 			return true;
 		}
 		throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED');
@@ -76,12 +72,13 @@ class Vtiger_Widget_Action extends \App\Controller\Action
 			$widget = Vtiger_Widget_Model::getInstance($linkId, \App\User::getCurrentUserId());
 		}
 		$widget->remove('hide');
+
 		$response->setResult(['linkid' => $linkId,
 			'name' => $widget->getName(),
 			'url' => $widget->getUrl(),
 			'title' => \App\Language::translate($widget->getTitle(), $request->getModule()),
 			'id' => $widget->get('id'),
-			'deleteFromList' => $widget->get('deleteFromList'),
+			'deleteFromList' => $widget->isDeletable(),
 		]);
 		$response->emit();
 	}
@@ -122,6 +119,8 @@ class Vtiger_Widget_Action extends \App\Controller\Action
 		]);
 		if (!\is_array($data) || !$data) {
 			$result = ['success' => false, 'message' => \App\Language::translate('LBL_INVALID_DATA', $moduleName)];
+		} elseif (!Vtiger_Widget_Model::getInstanceFromValues(array_merge($data, \vtlib\Link::getLinkData($request->getInteger('linkid'))))->isCreatable()) {
+			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED');
 		} else {
 			$data['linkid'] = $request->getInteger('linkid');
 			$widgetsManagementModel = new Settings_WidgetsManagement_Module_Model();
@@ -165,5 +164,54 @@ class Vtiger_Widget_Action extends \App\Controller\Action
 		$response = new Vtiger_Response();
 		$response->setResult($result);
 		$response->emit();
+	}
+
+	/**
+	 * Save positions.
+	 *
+	 * @param App\Request $request
+	 *
+	 * @return void
+	 */
+	public function positions(App\Request $request): void
+	{
+		$currentUserId = App\User::getCurrentUserId();
+		if ($positionsMap = $request->getMultiDimensionArray('position', [['row' => 'Integer',	'col' => 'Integer']])) {
+			foreach ($positionsMap as $id => $position) {
+				[$linkId, $widgetId] = array_pad(explode('-', $id), 2, false);
+				if ($widgetId) {
+					Vtiger_Widget_Model::updateWidgetPosition($position, null, (int) $widgetId, $currentUserId);
+				} else {
+					Vtiger_Widget_Model::updateWidgetPosition($position, (int) $linkId, null, $currentUserId);
+				}
+			}
+		}
+		if ($sizesMap = $request->getMultiDimensionArray('size', [['width' => 'Integer', 'height' => 'Integer']])) {
+			foreach ($sizesMap as $id => $size) {
+				[$linkId, $widgetId] = array_pad(explode('-', $id), 2, false);
+				if ($widgetId) {
+					Vtiger_Widget_Model::updateWidgetSize($size, null, (int) $widgetId, $currentUserId);
+				} else {
+					Vtiger_Widget_Model::updateWidgetSize($size, (int) $linkId, null, $currentUserId);
+				}
+			}
+		}
+
+		$response = new Vtiger_Response();
+		$response->setResult(true);
+		$response->emit();
+	}
+
+	/**
+	 * Clear configuration of widgets for this device.
+	 *
+	 * @param App\Request $request
+	 *
+	 * @return void
+	 */
+	public function clear(App\Request $request): void
+	{
+		Vtiger_Widget_Model::clearDeviceConf(Vtiger_Widget_Model::getDashboardId($request));
+		header("location: index.php?module={$request->getModule()}&view=DashBoard");
 	}
 }

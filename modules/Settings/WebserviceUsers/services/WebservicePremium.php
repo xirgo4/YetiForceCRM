@@ -5,8 +5,8 @@
  *
  * @package Settings
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  * @author  Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
@@ -119,7 +119,11 @@ class Settings_WebserviceUsers_WebservicePremium_Service extends Settings_Webser
 				];
 				break;
 			case 'password':
-				$params['typeofdata'] = 'P~M';
+				$params['uitype'] = 99;
+				$params['typeApi'] = $this->getModule()->typeApi;
+				$params['fieldparams'] = '{"validate":["pwned","config"],"auto-generate":true,"strengthMeter":true}';
+				$params['maximumlength'] = '100';
+				$params['typeofdata'] = 'V~O';
 				if ($this->has('id')) {
 					$params = null;
 				}

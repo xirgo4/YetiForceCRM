@@ -50,13 +50,15 @@
     "VTIGER_FILES_HANDLER_DESC": "",
     "QUEUE_QUEUE_HANDLER": "Queue updater",
     "QUEUE_QUEUE_HANDLER_DESC": "",
-    "OSSPASSWORDS_SECURE_HANDLER": "Password updater",
-    "OSSPASSWORDS_SECURE_HANDLER_DESC": "Protects your password when displaying in history",
     "ISTORAGES_RECALCULATESTOCKHANDLER_HANDLER": "Recalculate stock",
     "ISTORAGES_RECALCULATESTOCKHANDLER_HANDLER_DESC": "Calculation of stock levels",
     "OPENSTREETMAP_OPENSTREETMAPHANDLER_HANDLER": "Save geographical coordinates",
     "OPENSTREETMAP_OPENSTREETMAPHANDLER_HANDLER_DESC": "",
     "VTIGER_AUTOASSIGN_HANDLER": "Automatic record assignment",
-    "VTIGER_AUTOASSIGN_HANDLER_DESC": "Modifying the owner of a record before its creation"
+    "VTIGER_AUTOASSIGN_HANDLER_DESC": "Modifying the owner of a record before its creation",
+    "APPROVALS_APPROVALS_HANDLER": "Updating consents on contact",
+    "APPROVALS_APPROVALS_HANDLER_DESC": "",
+    "PRODUCTS_INVENTORYRECORDDETAILS_HANDLER": "Details about the product or service",
+    "PRODUCTS_INVENTORYRECORDDETAILS_HANDLER_DESC": ""
   }
 }

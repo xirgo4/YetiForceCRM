@@ -5,7 +5,7 @@
  *
  * @package View
  *
- * @copyright YetiForce Sp. z o.o
+ * @copyright YetiForce S.A.
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Adrian Kon <a.kon@yetiforce.com>
  */
@@ -42,7 +42,7 @@ class Vtiger_ExportRecords_View extends \App\Controller\Modal
 		$moduleName = $request->getModule();
 		$this->moduleModel = Vtiger_Module_Model::getInstance($moduleName);
 		$viewer = $this->getViewer($request);
-		$viewer->assign('EXPORT_TYPE', \App\Export\ExportRecords::getSupportedFileFormats($moduleName));
+		$viewer->assign('EXPORT_TYPE', \App\Export\Records::getSupportedFileFormats($moduleName));
 		$viewer->assign('RECORD_STRUCTURE_RELATED_MODULES', $this->getRecordStructureModuleFields());
 		$viewer->assign('RECORD_STRUCTURE', Vtiger_RecordStructure_Model::getInstanceForModule($this->moduleModel)->getStructure());
 		$viewer->assign('MODULE_NAME', $moduleName);

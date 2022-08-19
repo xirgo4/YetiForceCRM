@@ -4,8 +4,8 @@
  *
  * @package   Model
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Tomasz Kur <t.kur@yetiforce.com>
  */
 
@@ -89,7 +89,7 @@ class Vtiger_RecordPopover_Model extends \App\Base
 					'linkdata' => [
 						'module' => $this->recordModel->getModuleName(),
 						'record' => $this->recordModel->getId(),
-					]
+					],
 				];
 			}
 			$links[] = [

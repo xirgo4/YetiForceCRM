@@ -5,8 +5,8 @@
  *
  * @package   InventoryField
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -84,7 +84,7 @@ class Vtiger_Tax_InventoryField extends Vtiger_Basic_InventoryField
 				throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . ($columnName ?? $this->getColumnName()) . "||{$this->getModuleName()}||$value($originalValue)", 406);
 			}
 		} else {
-			if (App\TextParser::getTextLength($value) > $this->customMaximumLength[$columnName]) {
+			if (App\TextUtils::getTextLength($value) > $this->customMaximumLength[$columnName]) {
 				$module = $this->getModuleName();
 				throw new \App\Exceptions\Security("ERR_VALUE_IS_TOO_LONG||$columnName||$module||$value", 406);
 			}

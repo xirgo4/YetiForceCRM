@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-Detail-Widget-Activities -->
 	{assign var=WIDGET_UID value="id-{\App\Layout::getUniqueId($WIDGET['id']|cat:_)}"}
@@ -12,7 +12,7 @@
 					</div>
 					<div class="c-detail-widget__header__title">
 						<h5 class="mb-0 modCT_Calendar" title="{\App\Language::translate($WIDGET['label'],$MODULE_NAME)}">
-							{if $WIDGET['label'] eq ''}
+							{if empty($WIDGET['label'])}
 								{App\Language::translate('LBL_ACTIVITIES',$MODULE_NAME)}
 							{else}
 								{App\Language::translate($WIDGET['label'],$MODULE_NAME)}

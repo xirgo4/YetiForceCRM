@@ -4,8 +4,8 @@
  *
  * @package Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -392,7 +392,7 @@ class OSSMail_Mail_Model extends \App\Base
 			'folderid' => 'T2',
 		];
 		if ($attachments = $this->get('attachments')) {
-			$maxSize = \App\Config::main('upload_maxsize');
+			$maxSize = \App\Config::getMaxUploadSize();
 			foreach ($attachments as $attachment) {
 				if ($maxSize < ($size = \strlen($attachment['attachment']))) {
 					\App\Log::error("Error - downloaded the file is too big '{$attachment['filename']}', size: {$size}, in mail: {$this->get('date')} | Folder: {$this->getFolder()} | ID: {$this->get('id')}", __CLASS__);
@@ -469,42 +469,9 @@ class OSSMail_Mail_Model extends \App\Base
 		];
 		$files = [];
 		foreach ($doc->getElementsByTagName('img') as $img) {
-			$src = trim($img->getAttribute('src'), '\'');
-			if ('data:' === substr($src, 0, 5)) {
-				if ((\Config\Modules\OSSMailScanner::$attachMailBodyGraphicBase64 ?? true) && ($fileInstance = \App\Fields\File::saveFromString($src, ['validateAllowedFormat' => 'image'])) && ($ids = \App\Fields\File::saveFromContent($fileInstance, $params))) {
-					$img->setAttribute('src', "file.php?module=Documents&action=DownloadFile&record={$ids['crmid']}&fileid={$ids['attachmentsId']}&show=true");
-					$img->setAttribute('alt', '-');
-					$files[] = $ids;
-					continue;
-				}
-			} elseif (filter_var($src, FILTER_VALIDATE_URL)) {
-				$params['param'] = ['validateAllowedFormat' => 'image'];
-				if ((\Config\Modules\OSSMailScanner::$attachMailBodyGraphicUrl ?? true) && ($ids = App\Fields\File::saveFromUrl($src, $params))) {
-					$img->setAttribute('src', "file.php?module=Documents&action=DownloadFile&record={$ids['crmid']}&fileid={$ids['attachmentsId']}&show=true");
-					$img->setAttribute('alt', '-');
-					$files[] = $ids;
-					continue;
-				}
-			} elseif ('cid:' === substr($src, 0, 4)) {
-				$src = substr($src, 4);
-				if (isset($attachments[$src])) {
-					if (\Config\Modules\OSSMailScanner::$attachMailBodyGraphicCid ?? true) {
-						unset($attachments[$src]);
-						continue;
-					}
-					$fileInstance = App\Fields\File::loadFromContent($attachments[$src]['attachment'], $attachments[$src]['filename'], ['validateAllowedFormat' => 'image']);
-					if ($fileInstance && $fileInstance->validateAndSecure() && ($ids = App\Fields\File::saveFromContent($fileInstance, $params))) {
-						$img->setAttribute('src', "file.php?module=Documents&action=DownloadFile&record={$ids['crmid']}&fileid={$ids['attachmentsId']}&show=true");
-						if (!$img->hasAttribute('alt')) {
-							$img->setAttribute('alt', $attachments[$src]['filename']);
-						}
-						$files[] = $ids;
-						unset($attachments[$src]);
-						continue;
-					}
-				}
+			if ($file = $this->getFileFromImage($img, $params, $attachments)) {
+				$files[] = $file;
 			}
-			$img->removeAttribute('src');
 		}
 		$this->set('files', $files);
 		$this->set('attachments', $attachments);
@@ -515,6 +482,73 @@ class OSSMail_Mail_Model extends \App\Base
 		$html = \App\Purifier::purifyHtml(str_replace('<?xml encoding="utf-8"?>', '', $html));
 		$this->set('parsedContent', $html);
 		return $html;
+	}
+
+	/**
+	 * Get file from image.
+	 *
+	 * @param DOMElement $element
+	 * @param array      $params
+	 * @param array      $attachments
+	 *
+	 * @return array
+	 */
+	private function getFileFromImage(DOMElement $element, array $params, array &$attachments): array
+	{
+		$src = trim($element->getAttribute('src'), '\'');
+		$element->removeAttribute('src');
+		$file = [];
+		if ('data:' === substr($src, 0, 5)) {
+			if ($fileInstance = \App\Fields\File::saveFromString($src, ['validateAllowedFormat' => 'image'])) {
+				$params['titlePrefix'] = 'base64_';
+				if ($file = \App\Fields\File::saveFromContent($fileInstance, $params)) {
+					$file['srcType'] = 'base64';
+				}
+			}
+		} elseif (filter_var($src, FILTER_VALIDATE_URL)) {
+			$params['param'] = ['validateAllowedFormat' => 'image'];
+			$params['titlePrefix'] = 'url_';
+			if (\Config\Modules\OSSMailScanner::$attachMailBodyGraphicUrl ?? true) {
+				if ($file = App\Fields\File::saveFromUrl($src, $params)) {
+					$file['srcType'] = 'url';
+				}
+			} else {
+				$file = [
+					'srcType' => 'url',
+					'url' => $src,
+				];
+			}
+		} elseif ('cid:' === substr($src, 0, 4)) {
+			$src = substr($src, 4);
+			if (isset($attachments[$src])) {
+				$fileInstance = App\Fields\File::loadFromContent($attachments[$src]['attachment'], $attachments[$src]['filename'], ['validateAllowedFormat' => 'image']);
+				if ($fileInstance && $fileInstance->validateAndSecure()) {
+					$params['titlePrefix'] = 'content_';
+					if ($file = App\Fields\File::saveFromContent($fileInstance, $params)) {
+						$file['srcType'] = 'cid';
+					}
+					unset($attachments[$src]);
+				}
+			} else {
+				\App\Log::warning("There is no attachment with ID: $src , in mail: {$this->get('date')} | Folder: {$this->getFolder()} | ID: {$this->get('id')}", __CLASS__);
+			}
+		} else {
+			\App\Log::warning("Unsupported photo type, requires verification. ID: $src , in mail: {$this->get('date')} | Folder: {$this->getFolder()} | ID: {$this->get('id')}", __CLASS__);
+		}
+		if ($file) {
+			$yetiforceTag = $element->ownerDocument->createElement('yetiforce');
+			if ('url' === $file['srcType']) {
+				$yetiforceTag->textContent = $file['url'];
+			} else {
+				$yetiforceTag->setAttribute('type', 'Documents');
+				$yetiforceTag->setAttribute('crm-id', $file['crmid']);
+				$yetiforceTag->setAttribute('attachment-id', $file['attachmentsId']);
+			}
+			$element->parentNode->replaceChild($yetiforceTag, $element);
+		} else {
+			$file = [];
+		}
+		return $file;
 	}
 
 	/**

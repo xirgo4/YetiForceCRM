@@ -5,8 +5,8 @@
  *
  * @package Action
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Vtiger_Mail_Action extends \App\Controller\Action
@@ -146,6 +146,9 @@ class Vtiger_Mail_Action extends \App\Controller\Action
 		if (!empty($searchParams) && \is_array($searchParams)) {
 			$transformedSearchParams = $listView->getQueryGenerator()->parseBaseSearchParamsToCondition($searchParams);
 			$listView->set('search_params', $transformedSearchParams);
+		}
+		if ($advancedConditions = $request->has('advancedConditions') ? $request->getArray('advancedConditions') : []) {
+			$listView->set('advancedConditions', \App\Condition::validAdvancedConditions($advancedConditions));
 		}
 		if ($sourceModule) {
 			$queryGenerator = $listView->getRelationQuery(true);

@@ -48,8 +48,6 @@
     "LBL_RESULT": "Result",
     "LBL_SELECT_ACTIVITY_TYPE": "Select activity type",
     "LBL_SELECT_CALENDAR_COLOR": "Select Calendar color",
-    "LBL_SELECT_USER_CALENDAR": "Select User Calendar",
-    "LBL_SELECT_GROUP_CALENDAR": "Select group calendar",
     "LBL_SELECT_USERS": "Select Users",
     "LBL_SHARED_CALENDAR": "Shared Calendar",
     "LBL_STATUS": "Status",
@@ -191,7 +189,8 @@
     "FL_SUBPROCESS_SECOND_LEVEL": "Second level subprocess",
     "LBL_GROUP_NAME": "Group name",
     "FL_MEETING_URL": "Meeting URL",
-    "LBL_SEND_CALENDAR": "Send e-mail notification about Event"
+    "LBL_SEND_CALENDAR": "Send e-mail notification about Event",
+    "LBL_DATES_SELECTED_HOLIDAYS_CONFIRM": "Selected dates include holidays. Do you want to save?"
   },
   "js": {
     "JS_CALENDAR_VIEW_ADDED_SUCCESSFULLY": "Calendar view added successfully",

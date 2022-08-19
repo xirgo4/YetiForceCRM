@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -251,7 +251,7 @@ class CustomView
 		\App\Log::trace(__METHOD__ . ' - ' . $cvId);
 		$columnList = [];
 		if (is_numeric($cvId)) {
-			$dataReader = (new Db\Query())->select(['field_name', 'module_name', 'source_field_name'])
+			$dataReader = (new Db\Query())->select(['field_name', 'module_name', 'source_field_name', 'label'])
 				->from('vtiger_cvcolumnlist')
 				->innerJoin('vtiger_tab', 'vtiger_tab.name=vtiger_cvcolumnlist.module_name')
 				->innerJoin('vtiger_field', 'vtiger_tab.tabid = vtiger_field.tabid AND vtiger_field.fieldname = vtiger_cvcolumnlist.field_name')
@@ -725,7 +725,10 @@ class CustomView
 		if (Cache::has('CustomViewById', $cvId)) {
 			return Cache::get('CustomViewById', $cvId);
 		}
-		$data = (new Db\Query())->from('vtiger_customview')->where(['cvid' => $cvId])->one();
+		$data = (new Db\Query())->from('vtiger_customview')->where(['cvid' => $cvId])->one() ?: [];
+		if (!empty($data['advanced_conditions'])) {
+			$data['advanced_conditions'] = \App\Json::decode($data['advanced_conditions']);
+		}
 		Cache::save('CustomViewById', $cvId, $data);
 		return $data;
 	}
@@ -744,9 +747,9 @@ class CustomView
 			return Cache::get('CustomViewInfo', $cvId);
 		}
 		if (!$moduleName) {
-			$moduleName = self::getCustomViewById($cvId)['entitytype'];
+			$moduleName = self::getCustomViewById($cvId)['entitytype'] ?? '';
 		}
-		return self::getFiltersByModule($moduleName)[$cvId] ?? [];
+		return $moduleName ? (self::getFiltersByModule($moduleName)[$cvId] ?? []) : [];
 	}
 
 	/**
@@ -761,13 +764,14 @@ class CustomView
 	{
 		Cache::delete('CustomViewById', $cvId);
 		Cache::delete('CustomViewInfo', $cvId);
-		Cache::delete('CustomViewInfo', $moduleName);
 		Cache::delete('getAllFilterColors', false);
 		Cache::delete('getAllFilterColors', true);
 		if (null === $moduleName) {
 			foreach (\App\Module::getAllModuleNames() as $moduleName) {
 				Cache::delete('CustomViewInfo', $moduleName);
 			}
+		} else {
+			Cache::delete('CustomViewInfo', $moduleName);
 		}
 	}
 }

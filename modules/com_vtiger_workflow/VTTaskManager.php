@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o.
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 Vtiger_Loader::includeOnce('~modules/com_vtiger_workflow/VTTask.php');
 Vtiger_Loader::includeOnce('~modules/com_vtiger_workflow/VTTaskType.php');
@@ -43,6 +43,7 @@ class VTTaskManager
 			'workflow_id' => $task->workflowId,
 			'summary' => $task->summary,
 			'task' => serialize($task),
+			'sequence' => $task->sequence,
 		])->execute();
 
 		return $db->getLastInsertID();
@@ -110,7 +111,7 @@ class VTTaskManager
 		if (\App\Cache::staticHas('getTasksForWorkflow', $cacheName)) {
 			return \App\Cache::staticGet('getTasksForWorkflow', $cacheName);
 		}
-		$dataReader = (new \App\Db\Query())->select(['task_id', 'workflow_id', 'task'])->from('com_vtiger_workflowtasks')->where(['workflow_id' => $workflowId])->createCommand()->query();
+		$dataReader = (new \App\Db\Query())->select(['task_id', 'workflow_id', 'task'])->from('com_vtiger_workflowtasks')->where(['workflow_id' => $workflowId])->orderBy(['sequence' => SORT_ASC])->createCommand()->query();
 		$tasks = [];
 		while ($row = $dataReader->read()) {
 			$taskType = self::taskName($row['task']);
@@ -158,24 +159,5 @@ class VTTaskManager
 		preg_match('/"([^"]+)"/', $serializedTask, $matches);
 
 		return $matches[1];
-	}
-
-	/**
-	 * Return template path.
-	 *
-	 * @param string     $moduleName
-	 * @param VTTaskType $taskTypeInstance
-	 *
-	 * @return string
-	 */
-	public function retrieveTemplatePath($moduleName, VTTaskType $taskTypeInstance)
-	{
-		$taskTemplatePath = $taskTypeInstance->get('templatepath');
-		if (!empty($taskTemplatePath)) {
-			return $taskTemplatePath;
-		}
-		$taskType = $taskTypeInstance->get('classname');
-
-		return "$moduleName/taskforms/$taskType.tpl";
 	}
 }

@@ -4,8 +4,8 @@
  *
  * @package   Dashboard
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -17,8 +17,8 @@ class FInvoice_SummationByMonthsModel_Dashboard extends Vtiger_Widget_Model
 	/** {@inheritdoc} */
 	public $customFields = [
 		'owners_all' => ['label' => 'LBL_FILTERS_AVAILABLE', 'purifyType' => \App\Purifier::STANDARD],
-		'plotTickSize' => ['label' => 'LBL_TICK_SIZE', 'purifyType' => \App\Purifier::INTEGER],
-		'plotLimit' => ['label' => 'LBL_MAXIMUM_VALUE', 'purifyType' => \App\Purifier::INTEGER]
+		'plotTickSize' => ['label' => 'LBL_TICK_SIZE', 'purifyType' => \App\Purifier::TEXT],
+		'plotLimit' => ['label' => 'LBL_MAXIMUM_VALUE', 'purifyType' => \App\Purifier::TEXT]
 	];
 
 	/** {@inheritdoc} */
@@ -48,11 +48,13 @@ class FInvoice_SummationByMonthsModel_Dashboard extends Vtiger_Widget_Model
 			case 'plotTickSize':
 				$data = $this->get('data') ? \App\Json::decode($this->get('data')) : [];
 				$params['uitype'] = 7;
+				$params['maximumlength'] = '0,99999999999';
 				$params['typeofdata'] = 'I~M';
 				$params['fieldvalue'] = $data[$name] ?? 0;
 				break;
 			case 'owners_all':
 				$params['uitype'] = 33;
+				$params['maximumlength'] = '100';
 				$params['typeofdata'] = 'V~M';
 				$picklistValue = [
 					'mine' => 'LBL_MINE',

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
@@ -13,9 +13,7 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 		return 'Index';
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getSettingLinks(): array
 	{
 		Vtiger_Loader::includeOnce('~~modules/com_vtiger_workflow/VTWorkflowUtils.php');
@@ -107,11 +105,14 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 					$subject = "[$recordNumber] $subject";
 				}
 				if (($templateId = $request->getInteger('template', 0)) && \App\Record::isExists($templateId, 'EmailTemplates')) {
-					$params = $request->getArray('tamplateParams', \App\Purifier::TEXT, [], App\Purifier::ALNUM);
+					$params = $request->getArray('templateParams', \App\Purifier::TEXT, [], App\Purifier::ALNUM);
 					$templateModel = \Vtiger_Record_Model::getInstanceById($templateId, 'EmailTemplates');
 					$textParser = \App\TextParser::getInstanceByModel($recordModel);
 					foreach ($params as $key => $value) {
 						$textParser->setParam($key, $value);
+					}
+					if ('Calendar' === $moduleName && !$recordModel->isEmpty('meeting_url') && !\array_key_exists('meetingUrl', $params) ) {
+						$textParser->setParam('meetingUrl', $recordModel->get('meeting_url'));
 					}
 					$subject = $textParser->setContent($templateModel->get('subject'))->parse()->getContent();
 					$return['html'] = true;
@@ -332,9 +333,7 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 		return $url . '&body=' . rawurlencode($content);
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getModalRecordsListSourceFields(App\QueryGenerator $queryGenerator, Vtiger_Module_Model $baseModule, $popupFields)
 	{
 		foreach ($baseModule->getFieldsByType('email') as $item) {

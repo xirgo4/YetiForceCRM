@@ -4,8 +4,8 @@
  *
  * @package   View
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -15,19 +15,7 @@
  */
 class HelpDesk_Detail_View extends Vtiger_Detail_View
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	public function __construct()
-	{
-		parent::__construct();
-		$this->exposeMethod('showRelatedRecords');
-		$this->exposeMethod('showCharts');
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function loadJsConfig(App\Request $request)
 	{
 		parent::loadJsConfig($request);
@@ -39,22 +27,5 @@ class HelpDesk_Detail_View extends Vtiger_Detail_View
 		] as $key => $value) {
 			\App\Config::setJsEnv($key, $value);
 		}
-	}
-
-	public function showCharts(App\Request $request)
-	{
-		$moduleName = $request->getModule();
-		if (!Users_Privileges_Model::getCurrentUserPrivilegesModel()->hasModulePermission('OSSTimeControl')) {
-			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED', 406);
-		}
-		$data = ['show_chart' => false];
-		$moduleModel = Vtiger_Module_Model::getInstance('OSSTimeControl');
-		if ($moduleModel && $moduleModel->isActive()) {
-			$data = $moduleModel->getTimeUsers($request->getInteger('record'), $moduleName);
-		}
-		$viewer = $this->getViewer($request);
-		$viewer->assign('MODULE_NAME', $moduleName);
-		$viewer->assign('DATA', $data);
-		$viewer->view('charts/ShowTimeHelpDesk.tpl', $moduleName);
 	}
 }

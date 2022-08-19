@@ -6,12 +6,19 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Users_List_View extends Settings_Vtiger_List_View
 {
 	use \App\Controller\Traits\SettingsPermission;
+
+	/**
+	 * List view model instance.
+	 *
+	 * @var Vtiger_ListView_Model
+	 */
+	public $listViewModel;
 
 	/** {@inheritdoc} */
 	public function getFooterScripts(App\Request $request)
@@ -90,11 +97,11 @@ class Users_List_View extends Settings_Vtiger_List_View
 			}
 		}
 		$searchParams = App\Condition::validSearchParams($moduleName, $request->getArray('search_params'));
-		if (empty($searchParams) || !\is_array($searchParams)) {
-			$searchParamsRaw = $searchParams = [];
+		if (empty($searchParams) || !\is_array($searchParams) || empty($searchParams[0])) {
+			$searchParamsRaw = $searchParams = [[['status', 'e', 'Active']]];
 		}
 		$this->listViewModel->loadSearchLockedFields($request);
-		$transformedSearchParams = $this->listViewModel->get('query_generator')->parseBaseSearchParamsToCondition($searchParams);
+		$transformedSearchParams = $this->listViewModel->getQueryGenerator()->parseBaseSearchParamsToCondition($searchParams);
 		$this->listViewModel->set('search_params', $transformedSearchParams);
 
 		//To make smarty to get the details easily accesible
@@ -108,7 +115,7 @@ class Users_List_View extends Settings_Vtiger_List_View
 			}
 		}
 		if (!empty($searchResult) && \is_array($searchResult)) {
-			$this->listViewModel->get('query_generator')->addNativeCondition(['vtiger_crmentity.crmid' => $searchResult]);
+			$this->listViewModel->getQueryGenerator()->addNativeCondition(['vtiger_crmentity.crmid' => $searchResult]);
 		}
 		if (!$this->listViewHeaders) {
 			$this->listViewHeaders = $this->listViewModel->getListViewHeaders();
@@ -153,11 +160,12 @@ class Users_List_View extends Settings_Vtiger_List_View
 		$viewer->assign('MODULE_MODEL', $this->listViewModel->getModule());
 		$viewer->assign('VIEW_MODEL', $this->listViewModel);
 		$viewer->assign('VIEW', $request->getByType('view', 1));
-		$viewer->assign('IS_MODULE_EDITABLE', $this->listViewModel->getModule()->isPermitted('EditView'));
+		$viewer->assign('IS_MODULE_EDITABLE', $this->listViewModel->getModule()->isPermitted('CreateView'));
 		$viewer->assign('IS_MODULE_DELETABLE', $this->listViewModel->getModule()->isPermitted('Delete'));
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
 		$viewer->assign('SEARCH_DETAILS', $searchParams);
 		$viewer->assign('SEARCH_PARAMS', $searchParamsRaw);
+		$viewer->assign('ADVANCED_CONDITIONS', []);
 		$viewer->assign('LOCKED_EMPTY_FIELDS', $request->isEmpty('lockedEmptyFields', true) ? [] : $request->getArray('lockedEmptyFields'));
 	}
 
@@ -204,7 +212,7 @@ class Users_List_View extends Settings_Vtiger_List_View
 		if (empty($searchParams) || !\is_array($searchParams)) {
 			$searchParams = [];
 		}
-		$transformedSearchParams = $listViewModel->get('query_generator')->parseBaseSearchParamsToCondition($searchParams);
+		$transformedSearchParams = $listViewModel->getQueryGenerator()->parseBaseSearchParamsToCondition($searchParams);
 		$listViewModel->set('search_params', $transformedSearchParams);
 		if (!empty($operator)) {
 			$listViewModel->set('operator', $operator);

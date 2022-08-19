@@ -4,8 +4,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Sławomir Kłos <s.klos@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -67,7 +67,7 @@ class CustomView extends \Tests\Base
 			'featured' => 0,
 			'color' => '',
 			'description' => 'Record delete test',
-			'columnslist' => \CustomView_Record_Model::getInstanceById($recordModel->getId())->getSelectedFields()
+			'columnslist' => array_keys(\CustomView_Record_Model::getInstanceById($recordModel->getId())->getSelectedFields()),
 		];
 		$newCustomViewModel->setData($customViewData);
 		$newCustomViewModel->save();
@@ -81,7 +81,7 @@ class CustomView extends \Tests\Base
 		$leadsDefCvid = (new \App\Db\Query())->select(['cvid'])->from('vtiger_customview')->where(['entitytype' => 'Leads', 'setdefault' => 1])->scalar();
 		$this->assertSame($newCustomViewModel->getId(), $leadsDefCvid, 'Default cvid for module Leads mismatch');
 
-		\Settings_CustomView_Module_Model::delete($newCvid);
+		\CustomView_Record_Model::getInstanceById($newCvid)->delete();
 		$this->assertEmpty((new \App\Db\Query())->select(['cvid'])->from('vtiger_customview')->where(['cvid' => $newCvid])->scalar(), 'New CustomView should be removed');
 	}
 }

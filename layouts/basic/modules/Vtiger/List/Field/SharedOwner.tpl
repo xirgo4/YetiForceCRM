@@ -1,10 +1,11 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
+	<!-- tpl-Base-List-Field-SharedOwner -->
 	{assign var=FIELD_INFO value=\App\Json::encode($FIELD_MODEL->getFieldInfo())}
 	{if !isset($CURRENT_USER_ID)}
 		{assign var="CURRENT_USER_ID" value=$USER_MODEL->getId()}
 	{/if}
-	<div class="tpl-List-Field-SharedOwner picklistSearchField">
+	<div class="picklistSearchField u-min-w-150pxr">
 		{assign var=ASSIGNED_USER_ID value=$FIELD_MODEL->getName()}
 		{if isset($SEARCH_INFO['searchValue'])}
 			{assign var=SEARCH_VALUES value=explode('##', $SEARCH_INFO['searchValue'])}
@@ -20,7 +21,7 @@
 			{assign var=ALL_ACTIVEUSER_LIST value=\App\Fields\Owner::getInstance()->getAccessibleUsers()}
 			{assign var=ALL_ACTIVEGROUP_LIST value=\App\Fields\Owner::getInstance()->getAccessibleGroups()}
 		{/if}
-		<select class="select2noactive listSearchContributor {$ASSIGNED_USER_ID}"
+		<select class="select2noactive listSearchContributor {$ASSIGNED_USER_ID} form-control"
 			name="{$ASSIGNED_USER_ID}" multiple="multiple" data-fieldinfo='{$FIELD_INFO|escape}'
 			{if !empty($FIELD_MODEL->get('source_field_name'))}
 				data-source-field-name="{$FIELD_MODEL->get('source_field_name')}" data-module-name="{$FIELD_MODEL->getModuleName()}"
@@ -62,4 +63,5 @@
 			{/if}
 		</select>
 	</div>
+	<!-- /tpl-Base-List-Field-SharedOwner -->
 {/strip}

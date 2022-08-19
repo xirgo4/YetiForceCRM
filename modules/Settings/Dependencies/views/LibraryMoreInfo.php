@@ -5,8 +5,8 @@
  *
  * @package   Settings.View
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Adrian Koń <a.kon@yetiforce.com>
  */
 class Settings_Dependencies_LibraryMoreInfo_View extends Settings_Vtiger_BasicModal_View
@@ -18,9 +18,7 @@ class Settings_Dependencies_LibraryMoreInfo_View extends Settings_Vtiger_BasicMo
 	 */
 	public $packageFiles = ['package.json', 'composer.json', 'bower.json'];
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$result = false;

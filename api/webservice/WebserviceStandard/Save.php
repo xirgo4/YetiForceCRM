@@ -2,10 +2,10 @@
 /**
  * Action file to save record.
  *
- * @package Api
+ * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Tomasz Kur <t.kur@yetiforce.com>
  * @author	Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
@@ -19,6 +19,7 @@ class Save extends \Vtiger_Save_Action
 {
 	/** @var int ID of application. */
 	protected $appId;
+
 	/** @var array Skipped value. */
 	public $skippedData = [];
 
@@ -32,11 +33,11 @@ class Save extends \Vtiger_Save_Action
 	/**
 	 * Initialization with API data.
 	 *
-	 * @param BaseModule\Record $record
+	 * @param BaseModule\Record|Users\Record $record
 	 *
 	 * @return void
 	 */
-	public function init(BaseModule\Record $record): void
+	public function init(\Api\Core\BaseAction $record): void
 	{
 		$this->appId = $record->controller->app['id'];
 		$this->record = $record->recordModel;
@@ -48,6 +49,9 @@ class Save extends \Vtiger_Save_Action
 		$fieldModelList = $this->record->getModule()->getFields();
 		$requestKeys = $request->getAllRaw();
 		unset($requestKeys['module'],$requestKeys['action'],$requestKeys['record']);
+		if (empty($requestKeys)) {
+			throw new \Api\Core\Exception('No input data', 406);
+		}
 		foreach ($fieldModelList as $fieldName => $fieldModel) {
 			if (!$fieldModel->isWritable()) {
 				continue;

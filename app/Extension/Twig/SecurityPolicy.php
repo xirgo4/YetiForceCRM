@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -20,7 +20,7 @@ class SecurityPolicy
 	/** @var string[] Allowed tags */
 	private $allowedTags = ['if', 'for', 'set'];
 	/** @var string[] Allowed filters */
-	private $allowedFilters = ['escape', 'lower', 'upper', 'date'];
+	private $allowedFilters = ['escape', 'lower', 'upper', 'date', 'split'];
 	/** @var string[] Allowed methods */
 	private $allowedMethods = [];
 	/** @var string[] Allowed properties */

@@ -1,19 +1,22 @@
 <?php
-
-namespace App;
-
 /**
  * Privilege Util basic class.
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
+
+namespace App;
+
 class PrivilegeUtil
 {
+	/** @var int Allowed group nests */
+	public const GROUP_LOOP_LIMIT = 5;
+
 	/** Function to get parent record owner.
 	 * @param $tabid    -- tabid :: Type integer
 	 * @param $parModId -- parent module id :: Type integer
@@ -297,7 +300,7 @@ class PrivilegeUtil
 			$users = static::getQueryToUsersByGroup($groupId)->column();
 		} else {
 			$users = static::getQueryToUsersByGroup($groupId, false)->column();
-			if ($i < 5) {
+			if ($i < self::GROUP_LOOP_LIMIT) {
 				++$i;
 				if (true === $subGroups) {
 					$subGroups = [];
@@ -330,6 +333,48 @@ class PrivilegeUtil
 	}
 
 	/**
+	 * Gets query to users by members.
+	 *
+	 * @param array $members
+	 *
+	 * @return Db\Query
+	 */
+	public static function getQueryToUsersByMembers(array $members): Db\Query
+	{
+		$queryGenerator = (new \App\QueryGenerator('Users'))->setFields(['id']);
+		$columName = $queryGenerator->getColumnName('id');
+		$conditions = ['or'];
+		foreach ($members as $member) {
+			[$type, $id] = explode(':', $member);
+			switch ($type) {
+					case self::MEMBER_TYPE_USERS:
+						if (!isset($conditions[$type])) {
+							$conditions[$type][$columName] = [(int) $id];
+						} else {
+							$conditions[$type][$columName][] = (int) $id;
+						}
+						break;
+					case self::MEMBER_TYPE_GROUPS:
+						$conditions[] = [$columName => (new \App\Db\Query())->select(['userid'])->from(["condition_{$type}_{$id}_" . \App\Layout::getUniqueId() => self::getQueryToUsersByGroup((int) $id)])];
+						break;
+					case self::MEMBER_TYPE_ROLES:
+						$conditions[] = [$columName => self::getQueryToUsersByRole($id)];
+						break;
+					case self::MEMBER_TYPE_ROLE_AND_SUBORDINATES:
+						$conditions[] = [$columName => self::getQueryToUsersByRoleAndSubordinate($id)];
+						break;
+					default:
+						break;
+				}
+		}
+		if (\count($conditions) <= 1) {
+			$conditions[] = [$columName => -1];
+		}
+
+		return $queryGenerator->setFields(['id'])->addNativeCondition(array_values($conditions))->createQuery();
+	}
+
+	/**
 	 * Gets query to users by group.
 	 *
 	 * @param int  $groupId
@@ -354,7 +399,7 @@ class PrivilegeUtil
 				->where(['vtiger_group2rs.groupid' => $groupId])
 			);
 		if ($recursive) {
-			if ($depth < 5) {
+			if ($depth < self::GROUP_LOOP_LIMIT) {
 				$dataReader = (new \App\Db\Query())->select(['containsgroupid'])->from('vtiger_group2grouprel')->where(['groupid' => $groupId])->createCommand()->query();
 				while ($containsGroupId = $dataReader->readColumn(0)) {
 					$query->union((new \App\Db\Query())->select(['userid'])->from(["query_{$groupId}_{$containsGroupId}_{$depth}" => static::getQueryToUsersByGroup($containsGroupId, $recursive, $depth)]));
@@ -586,9 +631,10 @@ class PrivilegeUtil
 				}
 			}
 		}
-		$homeTabid = Module::getModuleId('Home');
-		if (!isset($userTabPerrArr[$homeTabid])) {
-			$userTabPerrArr[$homeTabid] = 0;
+		$homeId = Module::getModuleId('Home');
+		if (!isset($userTabPerrArr[$homeId])) {
+			$dashBoardId = Module::getModuleId('Dashboard');
+			$userTabPerrArr[$homeId] = $userTabPerrArr[$dashBoardId] ?? 1;
 		}
 		Cache::staticSave('getCombinedUserModulesPermissions', $userId, $userTabPerrArr);
 		return $userTabPerrArr;
@@ -1253,6 +1299,47 @@ class PrivilegeUtil
 			Log::warning('Exceeded the recursive limit, a loop might have been created. Group ID:' . $groupId);
 		}
 		return $groups;
+	}
+
+	/**
+	 * Creates a query to all groups where the user is a member..
+	 *
+	 * @param int $userId
+	 *
+	 * @return Db\Query
+	 */
+	public static function getQueryToGroupsByUserId(int $userId): Db\Query
+	{
+		return (new \App\Db\Query())->select(['groupid'])->from('vtiger_groups')->where(['groupid' => self::getAllGroupsByUser($userId)]);
+	}
+
+	/**
+	 * Returns the leaders of the groups where the user is a member.
+	 *
+	 * @param int $userId
+	 *
+	 * @return array
+	 */
+	public static function getLeadersGroupByUserId(int $userId): array
+	{
+		$db = \App\Db::getInstance();
+		$query = self::getQueryToGroupsByUserId($userId)->andWhere(['<>', 'parentid', 0])->andWhere(['not', ['parentid' => null]]);
+		$member = new \yii\db\Expression('CASE WHEN vtiger_users.id IS NOT NULL THEN CONCAT(' . $db->quoteValue(self::MEMBER_TYPE_USERS) . ',\':\', parentid) ELSE CONCAT(' . $db->quoteValue(self::MEMBER_TYPE_GROUPS) . ',\':\', parentid) END');
+		$query->select(['groupid', 'member' => $member])->leftJoin('vtiger_users', 'vtiger_groups.parentid=vtiger_users.id');
+
+		return $query->createCommand()->queryAllByGroup(0);
+	}
+
+	/**
+	 * Returns groups whose leader is the user.
+	 *
+	 * @param int $userId
+	 *
+	 * @return array
+	 */
+	public static function getGroupsWhereUserIsLeader(int $userId): array
+	{
+		return (new \App\Db\Query())->select(['groupid'])->from('vtiger_groups')->where(['or', ['parentid' => $userId], ['parentid' => self::getQueryToGroupsByUserId($userId)]])->column();
 	}
 
 	/**

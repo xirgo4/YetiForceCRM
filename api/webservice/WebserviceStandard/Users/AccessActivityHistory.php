@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license	YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license	YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author	Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -31,6 +31,8 @@ class AccessActivityHistory extends \Api\Core\BaseAction
 
 	/**
 	 * Get user history of access activity.
+	 *
+	 * @api
 	 *
 	 * @return array
 	 *
@@ -95,7 +97,7 @@ class AccessActivityHistory extends \Api\Core\BaseAction
 		while ($row = $dataReader->read()) {
 			$rows[] = [
 				'time' => \App\Fields\DateTime::formatToDisplay($row['time']),
-				'status' => \App\Language::translate($row['status'], 'Settings.WebserviceUsers'),
+				'status' => \App\Language::translate($row['status'], 'Settings:WebserviceUsers'),
 				'agent' => $row['agent'],
 				'ip' => $row['ip'],
 			];

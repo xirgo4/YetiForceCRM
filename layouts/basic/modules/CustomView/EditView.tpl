@@ -6,7 +6,7 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-* Contributor(s): YetiForce.com
+* Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
@@ -34,28 +34,44 @@
 					<input type="hidden" name="source_module" value="{$SOURCE_MODULE}" />
 					<input type="hidden" id="stdfilterlist" name="stdfilterlist" value="" />
 					<input type="hidden" id="advfilterlist" name="advfilterlist" value="" />
+					<input type="hidden" id="advancedConditions" name="advanced_conditions" value="" />
 					<input type="hidden" id="status" name="status" value="{$CV_PRIVATE_VALUE}" />
 					<input type="hidden" id="sourceModule" value="{$SOURCE_MODULE}" />
-					{assign var=SELECTED_FIELDS value=$CUSTOMVIEW_MODEL->getSelectedFields()}
+					{assign var=CV_SELECTED_FIELDS value=$CUSTOMVIEW_MODEL->getSelectedFields()}
+					{assign var=SELECTED_FIELDS value=array_keys($CV_SELECTED_FIELDS)}
 					<div class="modal-body">
 						<div class="js-toggle-panel c-panel" data-js="click">
-							<div class="blockHeader c-panel__header py-2">
-								<span class="iconToggle fas fa-chevron-down fa-xs m-1 mt-2" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down"></span>
+							<div class="blockHeader c-panel__header py-2 js-toggle-block" data-js="click">
+								<span class="js-toggle-icon fas fa-chevron-down fa-xs m-1 mt-2 mr-3" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down" data-js="container"></span>
 								<h5>
 									<span class="fas fa-columns mr-2" aria-hidden="true"></span>
 									{\App\Language::translate('LBL_BASIC_DETAILS',$MODULE_NAME)}
 								</h5>
 							</div>
 							<div class="c-panel__body py-1">
-								<div class="form-group">
-									<div class="row col-md-5">
-										<label class="float-left col-form-label "><span
-												class="redColor">*</span> {\App\Language::translate('LBL_VIEW_NAME',$MODULE_NAME)}
+								<div class="form-row">
+									<div class="d-flex col-md-5">
+										<label class="float-left col-form-label ">
+											<span class="redColor">*</span> {\App\Language::translate('LBL_VIEW_NAME',$MODULE_NAME)}
 											:</label>
 										<div class="col-md-7">
-											<input type="text" id="viewname" class="form-control"
-												data-validation-engine="validate[required]" name="viewname"
-												value="{$CUSTOMVIEW_MODEL->get('viewname')}" />
+											<input type="text" id="viewname" class="form-control" data-validation-engine="validate[required]" name="viewname" value="{$CUSTOMVIEW_MODEL->get('viewname')}" />
+										</div>
+									</div>
+									<div class="d-flex col-md-5">
+										<label class="float-left col-form-label ">{\App\Language::translate('LBL_COLOR_VIEW',$MODULE_NAME)}
+											:</label>
+										<div class="col-md-7">
+											{assign var=COLOR value=$CUSTOMVIEW_MODEL->get('color')}
+											<div class="input-group js-color-picker" data-js="color-picker">
+												<input type="text" class="form-control js-color-picker__field" name="color"
+													value="{$COLOR}" />
+												<div class="input-group-append">
+													<div class="input-group-text">
+														<span class="c-circle c-circle--small js-color-picker__color" style="background-color: {$COLOR}"></span>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -74,12 +90,16 @@
 													<optgroup
 														label="{\App\Language::translate($BLOCK_LABEL, $SOURCE_MODULE)}">
 														{foreach key=FIELD_NAME item=FIELD_MODEL from=$BLOCK_FIELDS}
+															{assign var=CUSTOM_VIEW_COLUMN_NAME value=$FIELD_MODEL->getCustomViewSelectColumnName()}
 															{if $FIELD_MODEL->isMandatory()}
-																{append var="MANDATORY_FIELDS" value=$FIELD_MODEL->getCustomViewSelectColumnName()}
+																{append var="MANDATORY_FIELDS" value=$CUSTOM_VIEW_COLUMN_NAME}
 															{/if}
-															{assign var=ELEMENT_POSITION_IN_ARRAY value=array_search($FIELD_MODEL->getCustomViewSelectColumnName(), $SELECTED_FIELDS)}
-															<option value="{$FIELD_MODEL->getCustomViewSelectColumnName()}"
+															{assign var=ELEMENT_POSITION_IN_ARRAY value=array_search($CUSTOM_VIEW_COLUMN_NAME, $SELECTED_FIELDS)}
+															<option value="{$CUSTOM_VIEW_COLUMN_NAME}"
 																data-field-name="{$FIELD_NAME}"
+																data-field-label="{{\App\Language::translate($FIELD_MODEL->getFieldLabel(), $SOURCE_MODULE)}}"
+																data-custom-label="{if isset($CV_SELECTED_FIELDS[$CUSTOM_VIEW_COLUMN_NAME])}
+																{\App\Purifier::encodeHtml($CV_SELECTED_FIELDS[$CUSTOM_VIEW_COLUMN_NAME])}{/if}"
 																{if $ELEMENT_POSITION_IN_ARRAY !== false}
 																	data-sort-index="{$ELEMENT_POSITION_IN_ARRAY}" selected="selected"
 																{/if}
@@ -99,9 +119,14 @@
 															<optgroup
 																label="{\App\Language::translate($RELATED_FIELD_LABEL, $SOURCE_MODULE)}&nbsp;-&nbsp;{\App\Language::translate($MODULE_KEY, $MODULE_KEY)}&nbsp;-&nbsp;{\App\Language::translate($BLOCK_LABEL, $MODULE_KEY)}">
 																{foreach key=FIELD_NAME item=FIELD_MODEL from=$BLOCK_FIELDS}
-																	{assign var=ELEMENT_POSITION_IN_ARRAY value=array_search($FIELD_MODEL->getCustomViewSelectColumnName($RELATED_FIELD_NAME), $SELECTED_FIELDS)}
-																	<option value="{$FIELD_MODEL->getCustomViewSelectColumnName($RELATED_FIELD_NAME)}"
+																	{assign var=CUSTOM_VIEW_COLUMN_NAME value=$FIELD_MODEL->getCustomViewSelectColumnName($RELATED_FIELD_NAME)}
+																	{assign var=ELEMENT_POSITION_IN_ARRAY value=array_search($CUSTOM_VIEW_COLUMN_NAME, $SELECTED_FIELDS)}
+																	<option value="{$CUSTOM_VIEW_COLUMN_NAME}"
 																		data-field-name="{$FIELD_NAME}"
+																		data-field-label="{\App\Language::translate($RELATED_FIELD_LABEL, $SOURCE_MODULE)}
+																		&nbsp;-&nbsp;{\App\Language::translate($FIELD_MODEL->getFieldLabel(), $MODULE_KEY)}"
+																		data-custom-label="{if isset($CV_SELECTED_FIELDS[$CUSTOM_VIEW_COLUMN_NAME])}
+																		{\App\Purifier::encodeHtml($CV_SELECTED_FIELDS[$CUSTOM_VIEW_COLUMN_NAME])}{/if}"
 																		{if $ELEMENT_POSITION_IN_ARRAY !== false}
 																			data-sort-index="{$ELEMENT_POSITION_IN_ARRAY}" selected="selected"
 																		{/if}
@@ -124,41 +149,37 @@
 											value="{\App\Purifier::encodeHtml(\App\Json::encode($MANDATORY_FIELDS))}" />
 									</div>
 								</div>
-								<div class="form-group marginbottomZero">
-									<div class="row col-md-5">
-										<label class="float-left col-form-label ">{\App\Language::translate('LBL_COLOR_VIEW',$MODULE_NAME)}
-											:</label>
-										<div class="col-md-7">
-											{assign var=COLOR value=$CUSTOMVIEW_MODEL->get('color')}
-											<div class="input-group js-color-picker" data-js="color-picker">
-												<input type="text" class="form-control js-color-picker__field" name="color"
-													value="{$COLOR}" />
-												<div class="input-group-append">
-													<div class="input-group-text">
-														<span class="c-circle c-circle--small js-color-picker__color" style="background-color: {$COLOR}"></span>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
+							</div>
+						</div>
+						<div class="js-toggle-panel c-panel" data-js="click">
+							<div class="blockHeader c-panel__header py-2 js-toggle-block" data-js="click">
+								<span class="js-toggle-icon fas fa-chevron-right fa-xs m-1 mt-2 mr-3" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down" data-js="container"></span>
+								<h5>
+									<span class="yfi-company-detlis mr-2" aria-hidden="true"></span>
+									{\App\Language::translate('LBL_SET_CUSTOM_COLUMNS_LABEL',$MODULE_NAME)}
+								</h5>
+							</div>
+							<div class="c-panel__body py-1 d-none">
+								<input type="hidden" name="customFieldNames" value="" class="js-custom-field-names" data-js="val">
+								<div class="js-custom-name-fields">
 								</div>
 							</div>
 						</div>
 						<div class="js-toggle-panel c-panel" data-js="click">
-							<div class="blockHeader c-panel__header py-2">
-								<span class="iconToggle fas fa-chevron-right fa-xs m-1 mt-2" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down"></span>
+							<div class="blockHeader c-panel__header py-2 js-toggle-block" data-js="click">
+								<span class="js-toggle-icon fas fa-chevron-right fa-xs m-1 mt-2 mr-3" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down" data-js="container"></span>
 								<h5>
 									<span class="yfi-company-detlis mr-2" aria-hidden="true"></span>
 									{\App\Language::translate('LBL_DESCRIPTION_INFORMATION',$MODULE_NAME)}
 								</h5>
 							</div>
 							<div class="c-panel__body py-1 d-none">
-								<textarea name="description" id="description" class="js-editor" data-js="ckeditor">{$CUSTOMVIEW_MODEL->get('description')}</textarea>
+								<textarea name="description" id="description" class="js-editor" data-purify-mode="Html" data-js="ckeditor">{$CUSTOMVIEW_MODEL->get('description')}</textarea>
 							</div>
 						</div>
 						<div class="js-toggle-panel c-panel" data-js="click">
-							<div class="blockHeader c-panel__header py-2">
-								<span class="iconToggle fas fa-chevron-right fa-xs m-1 mt-2" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down"></span>
+							<div class="blockHeader c-panel__header py-2 js-toggle-block" data-js="click">
+								<span class="js-toggle-icon fas fa-chevron-right fa-xs m-1 mt-2 mr-3" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down" data-js="container"></span>
 								<h5>
 									<span class="mdi mdi-content-duplicate mr-2" aria-hidden="true"></span>
 									{\App\Language::translate('LBL_FIND_DUPLICATES',$MODULE_NAME)}
@@ -182,16 +203,17 @@
 								</div>
 							</div>
 						</div>
+						{include file=\App\Layout::getTemplatePath('CustomView/AdvCondBody.tpl', $MODULE_NAME) HIDDE_BLOCKS=true}
 						<div class="js-toggle-panel c-panel" data-js="click">
-							<div class="blockHeader c-panel__header py-2">
-								<span class="iconToggle fas fa-chevron-down fa-xs m-1 mt-2" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down"></span>
+							<div class="blockHeader c-panel__header py-2 js-toggle-block" data-js="click">
+								<span class="js-toggle-icon fas fa-chevron-down fa-xs m-1 mt-2 mr-3" data-hide="fas fa-chevron-right" data-show="fas fa-chevron-down" data-js="container"></span>
 								<h5>
 									<span class="yfi yfi-users-2 mr-2"></span>
 									{\App\Language::translate('LBL_CHOOSE_FILTER_CONDITIONS', $MODULE_NAME)}:
 								</h5>
 							</div>
 							<div class="c-panel__body py-1">
-								<div class="filterConditionsDiv">
+								<div class="pb-0 js-condition-builder-view" data-js="container">
 									<div class="row">
 										<span class="col-md-12">
 											{include file=\App\Layout::getTemplatePath('ConditionBuilder.tpl') MODULE_NAME=$SOURCE_MODULE}

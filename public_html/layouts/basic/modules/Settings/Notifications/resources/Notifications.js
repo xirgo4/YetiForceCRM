@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 jQuery.Class(
@@ -77,21 +77,22 @@ jQuery.Class(
 				});
 			});
 			container.find('.remove').on('click', function (e) {
-				var removeButton = jQuery(e.currentTarget);
-				var currentTrElement = removeButton.closest('tr');
-				var message = app.vtranslate('JS_DELETE_CONFIRMATION');
-				Vtiger_Helper_Js.showConfirmationBox({ message: message }).done(function (e) {
-					var params = {
-						module: app.getModuleName(),
-						parent: app.getParentModuleName(),
-						action: 'Delete',
-						id: currentTrElement.data('id')
-					};
-					var progress = jQuery.progressIndicator();
-					AppConnector.request(params).done(function (data) {
-						progress.progressIndicator({ mode: 'hide' });
-						thisInstance.showTable();
-					});
+				let removeButton = jQuery(e.currentTarget);
+				let currentTrElement = removeButton.closest('tr');
+				app.showConfirmModal({
+					title: app.vtranslate('JS_DELETE_CONFIRMATION'),
+					confirmedCallback: () => {
+						let progress = jQuery.progressIndicator();
+						AppConnector.request({
+							module: app.getModuleName(),
+							parent: app.getParentModuleName(),
+							action: 'Delete',
+							id: currentTrElement.data('id')
+						}).done(function (data) {
+							progress.progressIndicator({ mode: 'hide' });
+							thisInstance.showTable();
+						});
+					}
 				});
 			});
 		},

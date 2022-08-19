@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Text_UIType extends Vtiger_Base_UIType
@@ -20,7 +20,7 @@ class Vtiger_Text_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function setValueFromRequest(App\Request $request, Vtiger_Record_Model $recordModel, $requestFieldName = false)
 	{
-		$fieldName = $this->getFieldModel()->getFieldName();
+		$fieldName = $this->getFieldModel()->getName();
 		if (!$requestFieldName) {
 			$requestFieldName = $fieldName;
 		}
@@ -36,11 +36,11 @@ class Vtiger_Text_UIType extends Vtiger_Base_UIType
 			return;
 		}
 		if (!\is_string($value)) {
-			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
+			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
-		$maximumLength = $this->getFieldModel()->get('maximumlength');
+		$maximumLength = $this->getFieldModel()->getMaxValue();
 		if ($maximumLength && \strlen($value) > $maximumLength) {
-			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
+			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
 		$this->validate[$value] = true;
 	}
@@ -72,7 +72,7 @@ class Vtiger_Text_UIType extends Vtiger_Base_UIType
 		} else {
 			$value = \App\Purifier::purify($value);
 			if (!$rawText) {
-				$value = nl2br(\App\Layout::truncateText($value, $length));
+				$value = \App\Layout::truncateText($value, $length, true, true);
 			}
 		}
 		return $value;
@@ -99,7 +99,7 @@ class Vtiger_Text_UIType extends Vtiger_Base_UIType
 	}
 
 	/** {@inheritdoc} */
-	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel)
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
 	{
 		$value = \App\Utils\Completions::decode($value, \App\Utils\Completions::FORMAT_TEXT);
 		return $this->getDisplayValue($value, $recordModel->getId(), $recordModel, true, false);
@@ -130,7 +130,7 @@ class Vtiger_Text_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/** {@inheritdoc} */

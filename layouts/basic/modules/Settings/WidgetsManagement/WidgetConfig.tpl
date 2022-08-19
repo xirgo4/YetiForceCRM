@@ -1,14 +1,14 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Settings-WidgetsManagement-WidgetConfig -->
 	{assign var=LINKID value=$WIDGET_MODEL->get('linkid')}
 	{assign var=LINK_LABEL_KEY value=$WIDGET_MODEL->get('linklabel')}
 	<li class="col-md-12">
 		<div class="opacity editFieldsWidget ml-0 border1px" data-block-id="{$AUTHORIZATION_KEY}"
-			 data-field-id="{$WIDGET_MODEL->get('id')}" data-linkid="{$LINKID}" data-sequence="">
+			data-field-id="{$WIDGET_MODEL->get('id')}" data-linkid="{$LINKID}" data-sequence="">
 			<div class="row py-1  justify-content-between">
 				<div class="col-9 text-truncate">
-					<span class="fieldLabel ml-3">{\App\Language::translate($WIDGET_MODEL->getTitle(), $SELECTED_MODULE_NAME)}</span>
+					<span class="fieldLabel ml-3">{$WIDGET_MODEL->getTranslatedTitle()}</span>
 					{if $LINK_LABEL_KEY === 'LBL_UPDATES' && !\App\YetiForce\Shop::check('YetiForceWidgets')}
 						<a class="btn btn-sm" href="index.php?parent=Settings&module=YetiForce&view=Shop&product=YetiForceWidgets&mode=showProductModal" title="{\App\Language::translate('LBL_PAID_FUNCTIONALITY', 'Settings::YetiForce')}"><span class="yfi-premium color-red-600"></span></a>
 					{/if}

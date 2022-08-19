@@ -5,7 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  *************************************************************************************/
 'use strict';
 
@@ -1318,6 +1318,13 @@ jQuery.Class(
 		getContainer: function getContainer() {
 			return this.container;
 		},
+		/**
+		 * Get widget content
+		 * @returns {jQuery}
+		 */
+		getContainerContent: function getContainer() {
+			return this.getContainer().find('.dashboardWidgetContent');
+		},
 		setContainer: function setContainer(element) {
 			this.container = element;
 			return this;
@@ -1349,11 +1356,16 @@ jQuery.Class(
 				});
 			});
 		},
+		/**
+		 * Load scrollbar
+		 */
 		loadScrollbar: function loadScrollbar() {
-			const container = $(this.getChartContainer(false));
-			if (typeof container === 'undefined') {
-				// if there is no data
-				return false;
+			let container = $(this.getChartContainer(false));
+			if (!container.length) {
+				container = this.getContainerContent();
+			}
+			if (!container.length) {
+				return;
 			}
 			const widget = container.closest('.dashboardWidget');
 			const content = widget.find('.dashboardWidgetContent');
@@ -1459,7 +1471,6 @@ jQuery.Class(
 			this.registerFilter();
 			this.registerFilterChangeEvent();
 			this.restrictContentDrag();
-			this.registerContentAutoResize();
 			this.registerWidgetSwitch();
 			this.registerChangeSorting();
 			this.registerLoadMore();
@@ -1479,7 +1490,7 @@ jQuery.Class(
 		setSortingButton: function setSortingButton(currentElement) {
 			if (currentElement.length) {
 				let container = this.getContainer(),
-					drefresh = container.find('a[name="drefresh"]'),
+					drefresh = container.find('.js-widget-refresh'),
 					url = drefresh.data('url');
 				url = url.replace('&sortorder=desc', '');
 				url = url.replace('&sortorder=asc', '');
@@ -1547,7 +1558,7 @@ jQuery.Class(
 			var container = this.getContainer();
 			thisInstance.setSortingButton(container.find('.changeRecordSort'));
 			container.find('.changeRecordSort').on('click', function (e) {
-				var drefresh = container.find('a[name="drefresh"]');
+				var drefresh = container.find('.js-widget-refresh');
 				thisInstance.setSortingButton(jQuery(e.currentTarget));
 				drefresh.click();
 			});
@@ -1559,7 +1570,7 @@ jQuery.Class(
 			switchButtons.on('change', (e) => {
 				var currentElement = $(e.currentTarget);
 				var dashboardWidgetHeader = currentElement.closest('.dashboardWidgetHeader');
-				var drefresh = dashboardWidgetHeader.find('a[name="drefresh"]');
+				var drefresh = dashboardWidgetHeader.find('.js-widget-refresh');
 				thisInstance.setUrlSwitch(currentElement).done(function (data) {
 					if (data) {
 						drefresh.click();
@@ -1572,7 +1583,7 @@ jQuery.Class(
 			switchButtons.each(function (index, e) {
 				var currentElement = jQuery(e);
 				var dashboardWidgetHeader = currentElement.closest('.dashboardWidgetHeader');
-				var drefresh = dashboardWidgetHeader.find('a[name="drefresh"]');
+				var drefresh = dashboardWidgetHeader.find('.js-widget-refresh');
 				var url = drefresh.data('url');
 				var urlparams = currentElement.data('urlparams');
 				if (urlparams !== '') {
@@ -1597,7 +1608,7 @@ jQuery.Class(
 		refreshWidget: function refreshWidget() {
 			let thisInstance = this;
 			let parent = this.getContainer();
-			let element = parent.find('a[name="drefresh"]');
+			let element = parent.find('.js-widget-refresh');
 			let url = element.data('url');
 			let contentContainer = parent.find('.dashboardWidgetContent');
 			let params = url;
@@ -1686,7 +1697,7 @@ jQuery.Class(
 		registerFilter: function registerFilter() {
 			const container = this.getContainer();
 			const search = container.find('.listSearchContributor');
-			const refreshBtn = container.find('a[name="drefresh"]');
+			const refreshBtn = container.find('.js-widget-refresh');
 			const originalUrl = refreshBtn.data('url');
 			const selects = container.find('.select2noactive');
 			search.css('width', '100%');
@@ -1768,12 +1779,12 @@ jQuery.Class(
 		registerFilterChangeEvent: function registerFilterChangeEvent() {
 			let container = this.getContainer();
 			container.on('change', '.widgetFilter', (e) => {
-				container.find('a[name="drefresh"]').trigger('click');
+				container.find('.js-widget-refresh').trigger('click');
 			});
 			if (container.find('.widgetFilterByField').length) {
 				App.Fields.Picklist.showSelect2ElementView(container.find('.select2noactive'));
 				this.getContainer().on('change', '.widgetFilterByField .form-control', (e) => {
-					container.find('a[name="drefresh"]').trigger('click');
+					container.find('.js-widget-refresh').trigger('click');
 				});
 			}
 		},
@@ -1868,16 +1879,6 @@ jQuery.Class(
 			if (container.data('cache') == 1) {
 				this.paramCache = true;
 			}
-		},
-		/**
-		 * Auto resize charts when widget was resized
-		 */
-		registerContentAutoResize() {
-			this.getContainer()
-				.closest('.grid-stack')
-				.on('gsresizestop', (event, elem) => {
-					this.loadScrollbar();
-				});
 		},
 		/**
 		 * Load and display chart into the view
@@ -2358,90 +2359,120 @@ YetiForce_Widget_Js(
 	{
 		calendarView: false,
 		calendarCreateView: false,
-
+		fullCalendar: false,
+		/**
+		 * Register calendar
+		 */
 		registerCalendar: function () {
-			var thisInstance = this;
-			var userDefaultActivityView = 'month';
-			var container = thisInstance.getContainer();
+			const self = this,
+				container = this.getContainer();
 			//Default time format
-			var userDefaultTimeFormat = CONFIG.hourFormat;
-			if (userDefaultTimeFormat == 24) {
-				userDefaultTimeFormat = 'H(:mm)';
+			let userTimeFormat = CONFIG.hourFormat;
+			if (userTimeFormat == 24) {
+				userTimeFormat = {
+					hour: '2-digit',
+					minute: '2-digit',
+					hour12: false,
+					meridiem: false
+				};
 			} else {
-				userDefaultTimeFormat = 'h(:mm) A';
+				userTimeFormat = {
+					hour: 'numeric',
+					minute: '2-digit',
+					meridiem: 'short'
+				};
 			}
-
-			//Default first day of the week
-			var convertedFirstDay = CONFIG.firstDayOfWeekNo;
 			//Default first hour of the day
-			var defaultFirstHour = app.getMainParams('startHour');
-			var explodedTime = defaultFirstHour.split(':');
+			let defaultFirstHour = app.getMainParams('startHour');
+			let explodedTime = defaultFirstHour.split(':');
 			defaultFirstHour = explodedTime['0'];
-			var defaultDate = app.getMainParams('defaultDate');
+			let defaultDate = app.getMainParams('defaultDate');
 			if (this.paramCache && defaultDate != moment().format('YYYY-MM-DD')) {
 				defaultDate = moment(defaultDate).format('D') == 1 ? moment(defaultDate) : moment(defaultDate).add(1, 'M');
 			}
 			container.find('.js-widget-quick-create').on('click', function (e) {
 				App.Components.QuickCreate.createRecord($(this).data('module-name'));
 			});
-			thisInstance.getCalendarView().fullCalendar({
-				header: {
-					left: ' ',
-					center: 'prev title next',
-					right: ' '
-				},
-				defaultDate: defaultDate,
-				timeFormat: userDefaultTimeFormat,
-				axisFormat: userDefaultTimeFormat,
-				firstHour: defaultFirstHour,
-				firstDay: convertedFirstDay,
-				defaultView: userDefaultActivityView,
+			this.fullCalendar = new FullCalendar.Calendar(this.getCalendarView().get(0), {
+				headerToolbar: { left: ' ', center: 'prev title next', right: ' ' },
+				initialDate: defaultDate,
+				eventTimeFormat: userTimeFormat,
+				slotLabelFormat: userTimeFormat,
+				scrollTime: defaultFirstHour,
+				firstDay: CONFIG.firstDayOfWeekNo,
+				initialView: 'dayGridMonth',
 				editable: false,
-				slotMinutes: 15,
-				theme: false,
-				defaultEventMinutes: 0,
-				eventLimit: true,
+				slotDuration: 15,
+				defaultTimedEventDuration: '01:00:00',
+				dayMaxEventRows: false,
 				allDaySlot: false,
-				monthNames: App.Fields.Date.fullMonthsTranslated,
-				monthNamesShort: App.Fields.Date.monthsTranslated,
-				dayNames: App.Fields.Date.fullDaysTranslated,
-				dayNamesShort: App.Fields.Date.daysTranslated,
-				buttonText: {
-					today: app.vtranslate('JS_TODAY'),
-					month: app.vtranslate('JS_MONTH'),
-					week: app.vtranslate('JS_WEEK'),
-					day: app.vtranslate('JS_DAY')
-				},
+				moreLinkContent: app.vtranslate('JS_MORE'),
 				allDayText: app.vtranslate('JS_ALL_DAY'),
-				eventLimitText: app.vtranslate('JS_MORE'),
-				eventRender: function (event, element, view) {
-					element = '<div class="cell-calendar">';
-					for (var key in event.event) {
-						element +=
-							'<a class="" href="javascript:;"' +
-							' data-date="' +
-							event.date +
-							'"' +
-							' data-type="' +
-							key +
-							'" title="' +
-							event.event[key].label +
-							'">' +
-							'<span class="' +
-							event.event[key].className +
-							(event.width <= 20 ? ' small-badge' : '') +
-							(event.width >= 24 ? ' big-badge' : '') +
-							' badge badge-secondary u-fs-95per">' +
-							event.event[key].count +
-							'</span>' +
-							'</a>\n';
+				noEventsText: app.vtranslate('JS_NO_RECORDS'),
+				viewHint: '$0',
+				contentHeight: 'auto',
+				buttonText: {
+					today: '',
+					year: app.vtranslate('JS_YEAR'),
+					week: app.vtranslate('JS_WEEK'),
+					month: app.vtranslate('JS_MONTH'),
+					day: app.vtranslate('JS_DAY'),
+					dayGridMonth: app.vtranslate('JS_MONTH'),
+					dayGridWeek: app.vtranslate('JS_WEEK'),
+					listWeek: app.vtranslate('JS_WEEK'),
+					dayGridDay: app.vtranslate('JS_DAY'),
+					timeGridDay: app.vtranslate('JS_DAY')
+				},
+				navLinkHint: (_dateStr, zonedDate) => {
+					return App.Fields.Date.dateToUserFormat(zonedDate);
+				},
+				dayHeaderContent: (arg) => {
+					return App.Fields.Date.daysTranslated[arg.date.getDay()];
+				},
+				titleFormat: (args) => {
+					return Calendar_Js.monthFormat[CONFIG.dateFormat]
+						.replace('YYYY', args.date['year'])
+						.replace('MMMM', App.Fields.Date.fullMonthsTranslated[args.date['month']]);
+				},
+				dateClick: (args) => {
+					let date = moment(args.date).format(CONFIG.dateFormat.toUpperCase());
+					App.Components.QuickCreate.createRecord('Calendar', {
+						noCache: true,
+						data: {
+							date_start: date,
+							due_date: date
+						},
+						callbackFunction: function () {
+							self.getCalendarView().closest('.dashboardWidget').find('.js-widget-refresh').trigger('click');
+						}
+					});
+				},
+				eventClick: function (info) {
+					info.jsEvent.preventDefault();
+					let url = $(info.el).attr('href');
+					if (url !== undefined) {
+						let params = [];
+						url += '&viewname=' + container.find('select.widgetFilter.customFilter').val();
+						const owner = container.find('.widgetFilter.owner option:selected');
+						if (owner.val() != 'all') {
+							params.push(['assigned_user_id', 'e', owner.val()]);
+						}
+						if (container.find('.widgetFilterSwitch').length > 0) {
+							const status = container.find('.widgetFilterSwitch').data();
+							params.push(['activitystatus', 'e', status[container.find('.widgetFilterSwitch').val()]]);
+						}
+						const date = App.Fields.Date.dateToUserFormat(info.event.start);
+						params.push(
+							['activitytype', 'e', info.event.extendedProps.activityType],
+							['date_start', 'bw', date + ' 00:00:00,' + date + ' 23:59:59']
+						);
+						url += '&search_params=' + encodeURIComponent(JSON.stringify([params]));
+						window.location.href = `${url}`;
 					}
-					element += '</div>';
-					return element;
 				}
 			});
-			thisInstance
-				.getCalendarView()
+			this.fullCalendar.render();
+			this.getCalendarView()
 				.find('td.fc-day-top')
 				.on('mouseenter', function () {
 					jQuery('<span class="plus pull-left fas fa-plus"></span>').prependTo($(this));
@@ -2449,25 +2480,7 @@ YetiForce_Widget_Js(
 				.on('mouseleave', function () {
 					$(this).find('.plus').remove();
 				});
-			let formatDate = CONFIG.dateFormat.toUpperCase();
-			thisInstance
-				.getCalendarView()
-				.find('td.fc-day-top')
-				.on('click', function () {
-					let date = moment($(this).data('date')).format(formatDate);
-					let params = {
-						noCache: true,
-						data: {
-							date_start: date,
-							due_date: date
-						}
-					};
-					params.callbackFunction = function () {
-						thisInstance.getCalendarView().closest('.dashboardWidget').find('a[name="drefresh"]').trigger('click');
-					};
-					App.Components.QuickCreate.createRecord('Calendar', params);
-				});
-			var switchBtn = container.find('.js-switch--calendar');
+			const switchBtn = container.find('.js-switch--calendar');
 			switchBtn.on('change', (e) => {
 				const currentTarget = $(e.currentTarget);
 				if (typeof currentTarget.data('on-text') !== 'undefined') container.find('.widgetFilterSwitch').val('current');
@@ -2476,19 +2489,19 @@ YetiForce_Widget_Js(
 				this.refreshWidget();
 			});
 		},
-		loadCalendarData: function (allEvents) {
-			var thisInstance = this;
-			thisInstance.getCalendarView().fullCalendar('removeEvents');
-			var view = thisInstance.getCalendarView().fullCalendar('getView');
-			var formatDate = CONFIG.dateFormat.toUpperCase();
-			var start_date = view.start.format(formatDate);
-			var end_date = view.end.format(formatDate);
-			var parent = thisInstance.getContainer();
-			var user = parent.find('.owner').val();
+		/**
+		 * Load calendar data
+		 */
+		loadCalendarData: function () {
+			this.fullCalendar.removeAllEvents();
+			const start_date = App.Fields.Date.dateToUserFormat(this.fullCalendar.view.activeStart),
+				end_date = App.Fields.Date.dateToUserFormat(this.fullCalendar.view.activeEnd),
+				parent = this.getContainer();
+			let user = parent.find('.owner').val();
 			if (user == 'all') {
 				user = '';
 			}
-			var params = {
+			let params = {
 				module: 'Calendar',
 				action: 'Calendar',
 				mode: 'getEvents',
@@ -2498,8 +2511,7 @@ YetiForce_Widget_Js(
 				widget: true
 			};
 			if (parent.find('.customFilter').length > 0) {
-				var customFilter = parent.find('.customFilter').val();
-				params.customFilter = customFilter;
+				params.customFilter = parent.find('.customFilter').val();
 			}
 			let widgetFilterSwitch = parent.find('.widgetFilterSwitch');
 			if (widgetFilterSwitch.length > 0) {
@@ -2510,88 +2522,54 @@ YetiForce_Widget_Js(
 				}
 			}
 			if (this.paramCache) {
-				var drefresh = this.getContainer().find('a[name="drefresh"]');
-				var url = drefresh.data('url');
-				var paramCache = {
+				this.setFilterToCache(this.getContainer().find('.js-widget-refresh').data('url'), {
 					owner: user,
-					customFilter: customFilter,
+					customFilter: params.customFilter,
 					start: start_date
-				};
-				thisInstance.setFilterToCache(url, paramCache);
+				});
 			}
-			AppConnector.request(params).done(function (events) {
-				var height =
-					thisInstance.getCalendarView().find('.fc-bg :first').height() -
-					thisInstance.getCalendarView().find('.fc-day-number').height() -
-					10;
-				var width = thisInstance.getCalendarView().find('.fc-day-number').width() / 2 - 10;
-				for (var i in events.result) {
-					events.result[i]['width'] = width;
-					events.result[i]['height'] = height;
-				}
-				thisInstance.getCalendarView().fullCalendar('addEventSource', events.result);
-				thisInstance
-					.getCalendarView()
-					.find('.cell-calendar a')
-					.on('click', function () {
-						var container = thisInstance.getContainer();
-						var url = 'index.php?module=Calendar&view=List';
-						if (customFilter) {
-							url += '&viewname=' + container.find('select.widgetFilter.customFilter').val();
-						} else {
-							url += '&viewname=All';
-						}
-						url += '&search_params=[[';
-						var owner = container.find('.widgetFilter.owner option:selected');
-						if (owner.val() != 'all') {
-							url += '["assigned_user_id","e","' + owner.val() + '"],';
-						}
-						if (parent.find('.widgetFilterSwitch').length > 0) {
-							var status = parent.find('.widgetFilterSwitch').data();
-							url += '["activitystatus","e","' + status[params.time] + '"],';
-						}
-						var date = moment($(this).data('date')).format(thisInstance.getUserDateFormat().toUpperCase());
-						window.location.href =
-							url +
-							'["activitytype","e","' +
-							$(this).data('type') +
-							'"],["date_start","bw","' +
-							date +
-							',' +
-							date +
-							'"]]]';
-					});
+			AppConnector.request(params).done((events) => {
+				this.fullCalendar.addEventSource(events.result);
 			});
 		},
+		/**
+		 * Get calendar view container
+		 * @returns {jQuery}
+		 */
 		getCalendarView: function () {
-			if (this.calendarView == false) {
+			if (this.calendarView === false) {
 				this.calendarView = this.getContainer().find('.js-calendar__container');
 			}
 			return this.calendarView;
 		},
+		/**
+		 * Update month name
+		 */
 		getMonthName: function () {
-			var thisInstance = this;
-			var month = thisInstance.getCalendarView().find('.fc-toolbar h2').text();
+			let month = this.getCalendarView().find('.fc-toolbar h2').text();
 			if (month) {
 				this.getContainer()
 					.find('.headerCalendar .month')
 					.html('<h3>' + month + '</h3>');
 			}
 		},
+		/**
+		 * Register change view
+		 */
 		registerChangeView: function () {
-			var thisInstance = this;
-			var container = this.getContainer();
+			let thisInstance = this;
+			let container = this.getContainer();
 			container.find('.fc-toolbar').addClass('d-none');
-			var month = container.find('.fc-toolbar h2').text();
+			let month = container.find('.fc-toolbar h2').text();
 			if (month) {
 				container
 					.find('.headerCalendar')
 					.removeClass('d-none')
 					.find('.month')
 					.append('<h3>' + month + '</h3>');
-				var button = container.find('.headerCalendar button');
+				let button = container.find('.headerCalendar button');
 				button.each(function () {
-					var tag = jQuery(this).data('type');
+					let tag = jQuery(this).data('type');
 					jQuery(this).on('click', function () {
 						thisInstance
 							.getCalendarView()
@@ -2603,12 +2581,21 @@ YetiForce_Widget_Js(
 				});
 			}
 		},
+		/** @inheritdoc */
+		loadScrollbar: function loadScrollbar() {
+			if (this.fullCalendar) {
+				this.fullCalendar.updateSize();
+			}
+			this._super();
+		},
+		/** @inheritdoc */
 		postLoadWidget: function () {
 			this.registerCalendar();
 			this.loadCalendarData(true);
 			this.registerChangeView();
 			this.registerFilterChangeEvent();
 		},
+		/** @inheritdoc */
 		refreshWidget: function () {
 			let thisInstance = this;
 			let refreshContainer = this.getContainer().find('.dashboardWidgetContent');
@@ -2901,7 +2888,7 @@ YetiForce_Widget_Js(
 			var loadMoreHandler = contentContainer.find('.load-more');
 			loadMoreHandler.on('click', function () {
 				var parent = thisInstance.getContainer();
-				var element = parent.find('a[name="drefresh"]');
+				var element = parent.find('.js-widget-refresh');
 				var url = element.data('url');
 				var params = url;
 				var widgetFilters = parent.find('.widgetFilter');
@@ -2991,8 +2978,16 @@ YetiForce_Widget_Js(
 			});
 		},
 		editNotebookContent: function () {
-			$('.dashboard_notebookWidget_text', this.container).show();
 			$('.dashboard_notebookWidget_view', this.container).hide();
+			let editContainer = $('.dashboard_notebookWidget_text', this.container).show();
+			let editTextArea = editContainer.find('textarea');
+			editTextArea.css(
+				'height',
+				this.container.innerHeight() -
+					this.container.find('.dashboardWidgetHeader').innerHeight() -
+					editTextArea.prev().innerHeight() -
+					16
+			);
 		},
 		saveNotebookContent: function () {
 			let textarea = $('.dashboard_notebookWidget_textarea', this.container),
@@ -3349,6 +3344,194 @@ YetiForce_Widget_Js(
 						app.errorLog(error);
 					});
 			});
+		}
+	}
+);
+YetiForce_Widget_Js(
+	'YetiForce_TimeCounter_Widget_Js',
+	{},
+	{
+		/** @type {number} Hours of the timer */
+		hr: 0,
+		/** @type {number} Timer minutes */
+		min: 0,
+		/** @type {number} Seconds of the timer */
+		sec: 0,
+		/** @type {boolean} Starting a timer */
+		counter: true,
+		/** @type {(string|number)} Time to start work */
+		timeStart: '',
+		/** @type {(string|number)} End of work time */
+		timeStop: '',
+		/**
+		 * Show quick create form
+		 */
+		postLoadWidget: function () {
+			this._super();
+			this.registerNavigatorButtons();
+		},
+		/**
+		 * Register events on the navigation buttons.
+		 */
+		registerNavigatorButtons: function () {
+			const container = this.getContainer();
+			let btnStart = container.find('.js-time-counter-start');
+			let btnStop = container.find('.js-time-counter-stop');
+			let btnReset = container.find('.js-time-counter-reset');
+			let navigatorButtons = container.find('.js-navigator-buttons');
+			let btnMinutes = container.find('.js-time-counter-minute');
+			btnStart.on('click', () => {
+				navigatorButtons.addClass('active');
+				btnStart.addClass('d-none');
+				btnStop.removeClass('d-none');
+				btnReset.removeClass('d-none');
+				btnMinutes.attr('disabled', true);
+				btnMinutes.removeClass('btn-outline-success');
+				btnMinutes.addClass('btn-outline-danger');
+				this.startTimerCounter();
+			});
+			btnStop.on('click', () => {
+				this.stopTimerCounter(false);
+			});
+			btnReset.on('click', () => {
+				navigatorButtons.removeClass('active');
+				btnReset.addClass('d-none');
+				btnStop.addClass('d-none');
+				btnStart.removeClass('d-none');
+				btnMinutes.attr('disabled', false);
+				btnMinutes.removeClass('btn-outline-danger');
+				btnMinutes.addClass('btn-outline-success');
+				this.resetTimerCounter();
+			});
+			if (btnMinutes.length > 1) {
+				btnMinutes.on('click', (e) => {
+					this.counter = false;
+					let element = $(e.currentTarget);
+					this.min = element.data('value');
+					let dateEnd = new Date();
+					let hours = (dateEnd.getHours() < 10 ? '0' : '') + dateEnd.getHours();
+					let minutes = (dateEnd.getMinutes() < 10 ? '0' : '') + dateEnd.getMinutes();
+					this.timeStop = hours + ':' + minutes;
+					this.stopTimerCounter(true);
+				});
+			}
+		},
+		/**
+		 * Time counting starts
+		 */
+		startTimerCounter: function () {
+			let dateStart = new Date();
+			let hours = (dateStart.getHours() < 10 ? '0' : '') + dateStart.getHours();
+			let minutes = (dateStart.getMinutes() < 10 ? '0' : '') + dateStart.getMinutes();
+			this.timeStart = hours + ':' + minutes;
+			if (this.counter === true) {
+				this.counter = false;
+				this.timeCounter();
+			}
+		},
+		/**
+		 * Time counting ends.
+		 * @param {boolean} $afterTime
+		 */
+		stopTimerCounter: function ($afterTime) {
+			if (this.counter === false) {
+				this.counter = true;
+				let quickCreateParams = {};
+				let customParams = {};
+				if ($afterTime) {
+					this.setStopAfterTime();
+				} else {
+					this.setStopBeforeTime();
+				}
+				customParams['time_start'] = this.timeStart;
+				customParams['time_end'] = this.timeStop;
+				quickCreateParams['data'] = customParams;
+				quickCreateParams['noCache'] = true;
+				App.Components.QuickCreate.createRecord('OSSTimeControl', quickCreateParams);
+			}
+		},
+		/**
+		 * Sets the end time before ending the call.
+		 */
+		setStopBeforeTime: function () {
+			if (parseInt(this.sec) > 30 || parseInt(this.min) === 0) {
+				this.min = parseInt(this.min) + 1;
+			}
+			let dateStart = new Date();
+			dateStart.setHours(this.timeStart.split(':')[0]);
+			dateStart.setMinutes(this.timeStart.split(':')[1]);
+			dateStart.setHours(dateStart.getHours() + parseInt(this.hr));
+			dateStart.setMinutes(dateStart.getMinutes() + parseInt(this.min));
+			let hours = (dateStart.getHours() < 10 ? '0' : '') + dateStart.getHours();
+			let minutes = (dateStart.getMinutes() < 10 ? '0' : '') + dateStart.getMinutes();
+			this.timeStop = hours + ':' + minutes;
+			this.sec = 0;
+			this.min = 0;
+			this.hr = 0;
+		},
+
+		/**
+		 * Sets the end time after ending the call.
+		 */
+		setStopAfterTime: function () {
+			let dateEnd = new Date();
+			dateEnd.setHours(this.timeStop.split(':')[0]);
+			dateEnd.setMinutes(this.timeStop.split(':')[1]);
+			dateEnd.setHours(dateEnd.getHours() - parseInt(this.hr));
+			dateEnd.setMinutes(dateEnd.getMinutes() - parseInt(this.min));
+			let hours = (dateEnd.getHours() < 10 ? '0' : '') + dateEnd.getHours();
+			let minutes = (dateEnd.getMinutes() < 10 ? '0' : '') + dateEnd.getMinutes();
+			this.timeStart = hours + ':' + minutes;
+			this.sec = 0;
+			this.min = 0;
+			this.hr = 0;
+		},
+		/**
+		 * Resets the counting operation.
+		 */
+		resetTimerCounter: function () {
+			if (this.counter === false) {
+				this.counter = true;
+				this.sec = 0;
+				this.min = 0;
+				this.hr = 0;
+			}
+			this.getContainer().find('.js-time-counter').html('00:00:00');
+		},
+		/**
+		 * Counting time from the moment of starting work.
+		 */
+		timeCounter: function () {
+			if (this.counter === false) {
+				this.sec = parseInt(this.sec);
+				this.min = parseInt(this.min);
+				this.hr = parseInt(this.hr);
+				this.sec = this.sec + 1;
+				if (this.sec === 60) {
+					this.min = this.min + 1;
+					this.sec = 0;
+				}
+				if (this.min === 60) {
+					this.hr = this.hr + 1;
+					this.min = 0;
+					this.sec = 0;
+				}
+				if (this.sec < 10 || this.sec === 0) {
+					this.sec = '0' + this.sec;
+				}
+				if (this.min < 10 || this.min === 0) {
+					this.min = '0' + this.min;
+				}
+				if (this.hr < 10 || this.hr === 0) {
+					this.hr = '0' + this.hr;
+				}
+				this.getContainer()
+					.find('.js-time-counter')
+					.html(this.hr + ':' + this.min + ':' + this.sec);
+				setTimeout((_) => {
+					this.timeCounter();
+				}, 1000);
+			}
 		}
 	}
 );

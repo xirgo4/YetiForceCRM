@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -50,6 +50,26 @@ class Log extends Logger
 				'category' => ['type' => 'Text', 'label' => 'LBL_CATEGORY'],
 				'message' => ['type' => 'Text', 'label' => 'LBL_MESSAGE'],
 				'code' => ['type' => 'Text', 'label' => 'LBL_CODE'],
+				'trace' => ['type' => 'Text', 'label' => 'LBL_BACKTRACE'],
+			],
+			'filter' => [
+				'time' => 'DateTimeRange',
+				'category' => 'Text',
+				'message' => 'Text',
+				'code' => 'Text',
+				'trace' => 'Text',
+			],
+		],
+		'wapro' => [
+			'label' => 'LBL_WAPRO_ERP',
+			'labelModule' => 'Settings:Wapro',
+			'table' => 'l_#__wapro',
+			'icon' => 'fab fa-connectdevelop',
+			'columns' => [
+				'time' => ['type' => 'DateTime', 'label' => 'LBL_TIME'],
+				'category' => ['type' => 'Text', 'label' => 'LBL_CATEGORY'],
+				'message' => ['type' => 'Text', 'label' => 'LBL_MESSAGE'],
+				'error' => ['type' => 'Text', 'label' => 'LBL_CODE'],
 				'trace' => ['type' => 'Text', 'label' => 'LBL_BACKTRACE'],
 			],
 			'filter' => [
@@ -175,9 +195,7 @@ class Log extends Logger
 				}
 			}
 		} else {
-			$bitmapValues = array_reduce(self::$levelMap, function ($carry, $item) {
-				return $carry | $item;
-			});
+			$bitmapValues = array_reduce(self::$levelMap, fn ($carry, $item) => $carry | $item);
 			if (!($bitmapValues & $levels) && 0 !== $levels) {
 				throw new Exceptions\AppException("Incorrect $levels value");
 			}

@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-Detail-Widget-BlockView -->
 	{foreach key=BLOCK_LABEL_KEY item=FIELD_MODEL_LIST from=$RECORD_STRUCTURE}
@@ -30,7 +30,7 @@
 							{if !$FIELD_MODEL->isViewableInDetailView()}
 								{continue}
 							{/if}
-							<div class="form-row c-table__row--hover border-bottom py-0 u-fs-13px c-detail-widget__mobile-line ">
+							<div class="form-row c-table__row--hover border-bottom py-0 u-fs-13px c-detail-widget__mobile-line js-field-block-column {if $FIELD_MODEL->get('hideField')} d-none{/if}">
 								<div class="col-5 fieldLabel {$WIDTHTYPE} d-flex align-items-center" id="{$MODULE_NAME}_detailView_fieldLabel_{$FIELD_MODEL->getName()}">
 									{assign var=HELPINFO_LABEL value=\App\Language::getTranslateHelpInfo($FIELD_MODEL, $VIEW)}
 									<label class="font-weight-bold mb-0">

@@ -4,8 +4,8 @@
  *
  * @package   Controller
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -224,7 +224,6 @@ abstract class Base extends \App\Controller\Base
 			'~libraries/clockpicker/dist/bootstrap4-clockpicker.css',
 			'~libraries/animate.css/animate.css',
 			'~libraries/tributejs/dist/tribute.css',
-			'~libraries/emojipanel/dist/emojipanel.css',
 			'~libraries/emoji-mart-vue-fast/css/emoji-mart.css',
 			'~libraries/overlayscrollbars/css/OverlayScrollbars.css',
 			'~src/css/quasar.css',
@@ -258,7 +257,6 @@ abstract class Base extends \App\Controller\Base
 				'~libraries/quasar/dist/quasar.ie.polyfills.umd.min.js',
 				'~libraries/whatwg-fetch/dist/fetch.umd.js',
 				'~libraries/url-polyfill/url-polyfill.js',
-				'~libraries/gridstack/dist/gridstack-poly.min.js',
 			];
 			$jsFileNames = array_merge($polyfills, $jsFileNames);
 		}
@@ -291,7 +289,6 @@ abstract class Base extends \App\Controller\Base
 			'~libraries/popper.js/dist/umd/popper.js',
 			'~libraries/bootstrap/dist/js/bootstrap.js',
 			'~libraries/bootstrap-tabdrop/js/bootstrap-tabdrop.js',
-			'~libraries/bootbox/dist/bootbox.min.js',
 			'~libraries/microplugin/src/microplugin.js',
 			'~libraries/sifter/sifter.js',
 			'~libraries/jQuery-Validation-Engine/js/jquery.validationEngine.js',
@@ -303,7 +300,6 @@ abstract class Base extends \App\Controller\Base
 			'~vendor/ckeditor/ckeditor/ckeditor.js',
 			'~vendor/ckeditor/ckeditor/adapters/jquery.js',
 			'~libraries/tributejs/dist/tribute.js',
-			'~libraries/emojipanel/dist/emojipanel.js',
 			'~libraries/vue/dist/vue.js',
 			'~layouts/resources/libraries/quasar.config.js',
 			'~libraries/quasar/dist/quasar.umd.min.js',
@@ -484,9 +480,10 @@ abstract class Base extends \App\Controller\Base
 				'rowHeight' => $userModel->getDetail('rowheight'),
 				'userId' => $userModel->getId(),
 				'purifierAllowedDomains' => \App\Config::security('purifierAllowedDomains', []),
+				'globalSearchDefaultOperator' => \App\RecordSearch::OPERATORS[$userModel->getDetail('default_search_operator')],
+				'maxUploadLimit' => \App\Config::getMaxUploadSize(),
 				// Modifying this file or functions that affect the footer appearance will violate the license terms!!!
 				'disableBranding' => \App\YetiForce\Shop::check('YetiForceDisableBranding'),
-				'globalSearchDefaultOperator' => \App\RecordSearch::OPERATORS[$userModel->getDetail('default_search_operator')],
 			];
 		}
 		foreach ($jsEnv as $key => $value) {

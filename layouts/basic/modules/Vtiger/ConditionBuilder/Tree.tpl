@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-ConditionBuilder-Tree -->
 	{assign var="WIDTHTYPE_GROUP" value='input-group-sm'}
@@ -10,12 +10,12 @@
 	{else}
 		{assign var="FIELD_VALUES" value=''}
 	{/if}
-	{assign var="DISPLAY_VALUE" value=$FIELD_MODEL->getDisplayValue($FIELD_VALUES)}
+	{assign var="DISPLAY_VALUE" value=\App\Purifier::encodeHtml($FIELD_MODEL->getDisplayValue($FIELD_VALUES, false, false, true))}
 	<div class="js-tree-container fieldValue" data-js="container">
 		<input name="{$FIELD_MODEL->getFieldName()}" type="hidden" value="{$FIELD_VALUES}" class="sourceField js-condition-builder-value"
-			data-displayvalue='{$DISPLAY_VALUE}' data-fieldinfo='{$FIELD_INFO}'
+			data-fieldinfo='{$FIELD_INFO}'
 			data-multiple="{if $FIELD_MODEL->getFieldDataType() !== 'tree'}1{else}0{/if}"
-			data-treetemplate="{$FIELD_MODEL->getFieldParams()}" data-modulename="{$FIELD_MODEL->getModuleName()}">
+			data-treetemplate="{$FIELD_MODEL->getFieldParams()}" data-module-name="{$FIELD_MODEL->getModuleName()}">
 		{assign var="displayId" value=$FIELD_MODEL->get('fieldvalue')}
 		<div class="input-group {$WIDTHTYPE_GROUP}">
 			{if $FIELD_MODEL->get('displaytype') != 10}

@@ -1,7 +1,7 @@
 /**
  * build vue files in dev mode
  *
- * @license YetiForce Public License 4.0
+ * @license YetiForce Public License 5.0
  * @author Tomasz Poradzewski <t.poradzewski@yetiforce.com>
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */

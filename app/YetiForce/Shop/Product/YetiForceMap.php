@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -27,11 +27,11 @@ class YetiForceMap extends \App\YetiForce\Shop\AbstractBaseProduct
 
 	/** {@inheritdoc} */
 	public $prices = [
-		'Micro' => 20,
-		'Small' => 50,
-		'Medium' => 100,
-		'Large' => 250,
-		'Corporation' => 1250,
+		'Micro' => 5,
+		'Small' => 12,
+		'Medium' => 25,
+		'Large' => 50,
+		'Corporation' => 100,
 	];
 
 	/** {@inheritdoc} */

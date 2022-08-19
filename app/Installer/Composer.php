@@ -7,8 +7,8 @@ namespace App\Installer;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Composer
@@ -33,6 +33,7 @@ class Composer
 		'.github',
 		'.dependabot',
 		'.git',
+		'.npm',
 		'.gitattributes',
 		'.gitignore',
 		'.gitkeep',
@@ -53,6 +54,7 @@ class Composer
 		'readme.md',
 		'security.md',
 		'upgrade.md',
+		'doc',
 		'docs',
 		'demo',
 		'examples',
@@ -67,6 +69,7 @@ class Composer
 		'sample',
 		'samples',
 		'todo',
+		'tutorial',
 		'test',
 		'tests',
 		'whatsnew',
@@ -97,6 +100,8 @@ class Composer
 		'crowdin.yml',
 		'sonar-project.properties',
 		'whitesource.config.json',
+		'changelog.htm',
+		'FAQ.htm',
 	];
 	/**
 	 * Clear vendor files.
@@ -104,10 +109,6 @@ class Composer
 	 * @var array
 	 */
 	public static $clearVendorFiles = [
-		'dg/rss-php' => [
-			'example-atom.php',
-			'example-rss.php',
-		],
 		'ezyang/htmlpurifier' => [
 			'plugins',
 		],
@@ -152,7 +153,6 @@ class Composer
 	 * @var array
 	 */
 	public static $copyDirectories = [
-		'public_html/libraries/ckeditor-image-to-base' => 'public_html/vendor/ckeditor/ckeditor/plugins/ckeditor-image-to-base',
 	];
 
 	/**
@@ -173,7 +173,7 @@ class Composer
 			return;
 		}
 		$publicDir = $rootDir . \DIRECTORY_SEPARATOR . 'public_html' . \DIRECTORY_SEPARATOR;
-		$types = ['js', 'css', 'woff', 'woff2', 'ttf', 'png', 'gif', 'jpg', 'json'];
+		$types = ['js', 'css', 'woff', 'woff2', 'ttf', 'png', 'gif', 'jpg', 'json', 'svg'];
 		$list = '';
 		foreach (static::$publicPackage as $package => $method) {
 			$src = 'vendor' . \DIRECTORY_SEPARATOR . $package;

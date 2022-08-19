@@ -3,8 +3,8 @@
 /**
  * Settings QuickCreateEditor index view class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  * @author    Adrian Kon <a.kon@yetiforce.com>
  */
@@ -41,7 +41,7 @@ class Settings_QuickCreateEditor_Index_View extends Settings_Vtiger_Index_View
 	public function showFieldLayout(App\Request $request)
 	{
 		$sourceModule = $request->getByType('sourceModule', 2);
-		$menuModelsList = Vtiger_Module_Model::getQuickCreateModules();
+		$menuModelsList = \App\Module::getQuickCreateModules();
 
 		if (empty($sourceModule)) {
 			$firstElement = reset($menuModelsList);

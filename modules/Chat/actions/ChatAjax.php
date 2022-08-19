@@ -5,8 +5,8 @@
  *
  * @package Action
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Arkadiusz Adach <a.adach@yetiforce.com>
  * @author    Tomasz Poradzewski <t.poradzewski@yetiforce.com>
@@ -39,17 +39,13 @@ class Chat_ChatAjax_Action extends \App\Controller\Action
 		$this->exposeMethod('addParticipant');
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function isSessionExtend(App\Request $request)
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
 		$userPrivileges = \Users_Privileges_Model::getCurrentUserPrivilegesModel();

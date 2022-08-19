@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Settings-Workflows-Tasks-VTWatchdog -->
 	<div class="alert alert-info">
@@ -24,10 +24,13 @@
 					{\App\Language::translate('LBL_WATCHING_USERS', $QUALIFIED_MODULE)}
 				</option>
 				<option {if isset($TASK_OBJECT->recipients) && $TASK_OBJECT->recipients eq 'owner'}selected="selected" {/if} value="owner">
-					{\App\Language::translate('LBL_OWNER_REKORD', $QUALIFIED_MODULE)}
+					{\App\Language::translate('LBL_OWNER_RECORD', $QUALIFIED_MODULE)}
+				</option>
+				<option {if isset($TASK_OBJECT->recipients) && $TASK_OBJECT->recipients eq 'showner'}selected="selected" {/if} value="showner">
+					{\App\Language::translate('Share with users', $SOURCE_MODULE)}
 				</option>
 				<option {if isset($TASK_OBJECT->recipients) && $TASK_OBJECT->recipients eq 'owner_and_showner'}selected="selected" {/if} value="owner_and_showner">
-					{\App\Language::translate('LBL_OWNER_REKORD', $QUALIFIED_MODULE)} + {\App\Language::translate('Share with users', $SOURCE_MODULE)}
+					{\App\Language::translate('LBL_OWNER_RECORD', $QUALIFIED_MODULE)} + {\App\Language::translate('Share with users', $SOURCE_MODULE)}
 				</option>
 				{foreach from=\App\PrivilegeUtil::getMembers() key=GROUP_LABEL item=ALL_GROUP_MEMBERS}
 					<optgroup label="{\App\Language::translate($GROUP_LABEL)}">
@@ -60,13 +63,7 @@
 	<div class="row padding-bottom1per">
 		<span class="col-md-3">{\App\Language::translate('LBL_MESSAGE', $QUALIFIED_MODULE)}</span>
 		<div class="col-md-9">
-			<textarea class="js-editor form-control messageContent" name="message" rows="3" data-js="ckeditor">
-					{if isset($TASK_OBJECT->message)}
-							{$TASK_OBJECT->message}
-					{else}
-
-					{/if}
-				</textarea>
+			<textarea class="js-editor form-control messageContent" name="message" rows="3" data-purify-mode="Html" data-js="ckeditor">{if isset($TASK_OBJECT->message)} {$TASK_OBJECT->message} {else} {/if}</textarea>
 		</div>
 	</div>
 	<!-- /tpl-Settings-Workflows-Tasks-VTWatchdog -->

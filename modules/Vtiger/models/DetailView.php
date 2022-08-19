@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_DetailView_Model extends \App\Base
@@ -112,7 +112,8 @@ class Vtiger_DetailView_Model extends \App\Base
 					]);
 				}
 			}
-			if ($moduleModel->isPermitted('WorkflowTrigger') && $recordModel->isEditable()) {
+			if ($moduleModel->isPermitted('WorkflowTrigger')
+			 || ($recordModel->isEditable() || ($recordModel->isPermitted('EditView') && $moduleModel->isPermitted('WorkflowTriggerWhenRecordIsBlocked') && $recordModel->isBlocked()))) {
 				Vtiger_Loader::includeOnce('~~modules/com_vtiger_workflow/include.php');
 				Vtiger_Loader::includeOnce('~~modules/com_vtiger_workflow/VTEntityMethodManager.php');
 				$wfs = new VTWorkflowManager();
@@ -190,6 +191,19 @@ class Vtiger_DetailView_Model extends \App\Base
 					'modalView' => true,
 				]);
 			}
+			$smsModuleModel = Vtiger_Module_Model::getInstance('SMSNotifier');
+			if ($smsModuleModel->isSMSActiveForModule($moduleName)
+				&& $smsModuleModel->isQuickCreateSupported()
+				&& array_filter($recordModel->getModule()->getFieldsByType('phone', true), fn ($fieldModel) => !$recordModel->isEmpty($fieldModel->getName()))
+			) {
+				$linkModelList['DETAIL_VIEW_ADDITIONAL'][] = Vtiger_Link_Model::getInstanceFromValues([
+					'linktype' => 'DETAIL_VIEW_ADDITIONAL',
+					'linklabel' => 'BTN_SMSNOTIFIER',
+					'linkurl' => 'javascript:Vtiger_Detail_Js.triggerSMSmodal(this)',
+					'linkicon' => 'yfm-SMSNotifier',
+					'linkclass' => 'btn-outline-dark btn-sm',
+				]);
+			}
 			if ($fields = App\Field::getQuickChangerFields($moduleModel->getId())) {
 				foreach ($fields as $field) {
 					if (App\Field::checkQuickChangerConditions($field, $recordModel)) {
@@ -240,7 +254,7 @@ class Vtiger_DetailView_Model extends \App\Base
 					'linklabel' => 'LBL_ACTIVATE_RECORD',
 					'title' => \App\Language::translate('LBL_ACTIVATE_RECORD'),
 					'dataUrl' => 'index.php?module=' . $recordModel->getModuleName() . '&action=State&state=Active&record=' . $recordModel->getId(),
-					'linkdata' => ['confirm' => \App\Language::translate('LBL_ACTIVATE_RECORD_DESC'), 'source-view' => 'Detail'],
+					'linkdata' => ['confirm' => \App\Language::translate('LBL_ACTIVATE_RECORD_DESC'), 'source-view' => 'Href'],
 					'linkicon' => 'fas fa-undo-alt',
 					'linkclass' => 'entityStateBtn btn-outline-dark btn-sm js-action-confirm',
 					'style' => empty($stateColors['Active']) ? '' : "background: {$stateColors['Active']};",
@@ -252,7 +266,7 @@ class Vtiger_DetailView_Model extends \App\Base
 					'linklabel' => 'LBL_ARCHIVE_RECORD',
 					'title' => \App\Language::translate('LBL_ARCHIVE_RECORD'),
 					'dataUrl' => 'index.php?module=' . $recordModel->getModuleName() . '&action=State&state=Archived&record=' . $recordModel->getId(),
-					'linkdata' => ['confirm' => \App\Language::translate('LBL_ARCHIVE_RECORD_DESC'), 'source-view' => 'Detail'],
+					'linkdata' => ['confirm' => \App\Language::translate('LBL_ARCHIVE_RECORD_DESC'), 'source-view' => 'Href'],
 					'linkicon' => 'fas fa-archive',
 					'linkclass' => 'entityStateBtn btn-outline-dark btn-sm js-action-confirm',
 					'style' => empty($stateColors['Archived']) ? '' : "background: {$stateColors['Archived']};",
@@ -264,7 +278,7 @@ class Vtiger_DetailView_Model extends \App\Base
 					'linklabel' => 'LBL_MOVE_TO_TRASH',
 					'title' => \App\Language::translate('LBL_MOVE_TO_TRASH'),
 					'dataUrl' => 'index.php?module=' . $recordModel->getModuleName() . '&action=State&state=Trash&record=' . $recordModel->getId(),
-					'linkdata' => ['confirm' => \App\Language::translate('LBL_MOVE_TO_TRASH_DESC'), 'source-view' => 'Detail'],
+					'linkdata' => ['confirm' => \App\Language::translate('LBL_MOVE_TO_TRASH_DESC'), 'source-view' => 'Href'],
 					'linkicon' => 'fas fa-trash-alt',
 					'linkclass' => 'entityStateBtn btn-outline-dark btn-sm js-action-confirm',
 					'style' => empty($stateColors['Trash']) ? '' : "background: {$stateColors['Trash']};",

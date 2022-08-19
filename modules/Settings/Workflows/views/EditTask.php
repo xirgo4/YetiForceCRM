@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Settings_Workflows_EditTask_View extends Settings_Vtiger_Index_View
@@ -53,7 +53,6 @@ class Settings_Workflows_EditTask_View extends Settings_Vtiger_Index_View
 			if (!empty($taskObject->entity_type) && $taskObject->field_value_mapping) {
 				$relationModuleModel = Vtiger_Module_Model::getInstance($taskObject->entity_type);
 				$ownerFieldModels = $relationModuleModel->getFieldsByType('owner');
-
 				$fieldMapping = \App\Json::decode($taskObject->field_value_mapping);
 				foreach ($fieldMapping as $key => $mappingInfo) {
 					if (\array_key_exists($mappingInfo['fieldname'], $ownerFieldModels)) {
@@ -88,7 +87,7 @@ class Settings_Workflows_EditTask_View extends Settings_Vtiger_Index_View
 					$recordStructureModulesField[$relatedModuleName][$referenceField->getFieldName()] = Vtiger_RecordStructure_Model::getInstanceForModule(Vtiger_Module_Model::getInstance($relatedModuleName))->getStructure();
 				}
 			}
-			$viewer->assign('ADVANCE_CRITERIA', $taskObject->conditions);
+			$viewer->assign('ADVANCE_CRITERIA', $taskObject->conditions ?? []);
 			$viewer->assign('RECORD_STRUCTURE_RELATED_MODULES', $recordStructureModulesField);
 			$viewer->assign('RECORD_STRUCTURE', Vtiger_RecordStructure_Model::getInstanceForModule($moduleModel)->getStructure());
 		}

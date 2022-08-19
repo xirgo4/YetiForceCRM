@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 require_once 'include/ConfigUtils.php';
 require_once 'include/utils/CommonUtils.php';
@@ -168,9 +168,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 				\App\Log::error("HandlerClass: $handlerClass", 'Loader');
 				throw new \App\Exceptions\AppException('LBL_HANDLER_NOT_FOUND', 405);
 			}
-			if ($handler->csrfActive) {
-				$handler->validateRequest($request);
-			}
+			$handler->validateRequest($request);
 			if ($handler->loginRequired() && $this->checkLogin($request)) {
 				return true;
 			}

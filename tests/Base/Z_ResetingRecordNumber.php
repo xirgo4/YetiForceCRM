@@ -4,8 +4,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Rafal Pospiech <r.pospiech@yetiforce.com>
  */
 
@@ -41,7 +41,7 @@ class RecordNumber extends \App\Fields\RecordNumber
 		'2018-01-02',
 		'2018-01-02',
 		'2018-02-03',
-		'2018-05-05'
+		'2018-05-05',
 	];
 
 	/**

@@ -2,10 +2,13 @@
 /**
  * Cron - Send notifications via mail.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @package Cron
+ *
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radoslaw Skrzypczak <r.skrzypczak@yetiforce.com>
  * @author    Adrian Kon <a.kon@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
 /**
@@ -15,9 +18,7 @@ class Notification_Notifications_Cron extends \App\CronHandler
 {
 	const MODULE_NAME = 'Notification';
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process()
 	{
 		$query = (new \App\Db\Query())->from('u_#__watchdog_schedule');

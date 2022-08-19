@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -95,7 +95,7 @@ class Request extends \App\Request
 	{
 		$type = $this->contentType;
 		if (!empty($type)) {
-			$type = explode('/', $type);
+			$type = explode('/', (explode(';', $type)[0]));
 			$type = array_pop($type);
 		}
 		$return = [];
@@ -105,8 +105,7 @@ class Request extends \App\Request
 				break;
 			case 'form-data':
 			case 'x-www-form-urlencoded':
-				mb_parse_str($content, $data);
-				$return = $data;
+				$return = \Notihnio\MultipartFormDataParser\MultipartFormDataParser::parse()->params;
 				break;
 		}
 		return $this->content = $return;

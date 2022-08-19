@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -51,8 +51,8 @@ This file is auto-generated.
 
 @package Config
 
-@copyright YetiForce Sp. z o.o
-@license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+@copyright YetiForce S.A.
+@license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
 ';
 
 	/**
@@ -234,10 +234,16 @@ This file is auto-generated.
 		$class->addComment("Configuration file: $className.");
 		foreach ($this->template as $parameterName => $parameter) {
 			if (isset($parameter['type']) && 'function' === $parameter['type']) {
-				$class->addMethod($parameterName)->setStatic()->setBody($parameter['default'])->addComment($parameter['description']);
+				$property = $class->addMethod($parameterName)->setStatic()->setBody($parameter['default'])->addComment($parameter['description']);
 			} else {
 				$value = $this->has($parameterName) ? $this->get($parameterName) : Config::get($className, $parameterName, $parameter['default']);
-				$class->addProperty($parameterName, $value)->setStatic()->addComment($parameter['description']);
+				$property = $class->addProperty($parameterName, $value)->setStatic()->addComment($parameter['description']);
+			}
+			if (isset($parameter['docTags'])) {
+				foreach ($parameter['docTags'] as $tagName => $val) {
+					$property->addComment('');
+					$property->addComment("@{$tagName} {$val}");
+				}
 			}
 		}
 		if (false === file_put_contents($this->path, $file, LOCK_EX)) {

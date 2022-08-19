@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Users_ListView_Model extends Vtiger_ListView_Model
@@ -28,7 +28,7 @@ class Users_ListView_Model extends Vtiger_ListView_Model
 				'linklabel' => 'LBL_ADD_RECORD',
 				'linkurl' => $this->getModule()->getCreateRecordUrl(),
 				'linkicon' => '',
-				'linkclass' => 'btn-light'
+				'linkclass' => 'btn-light',
 			]);
 		}
 		$advancedLinks = $this->getAdvancedLinks();
@@ -54,7 +54,7 @@ class Users_ListView_Model extends Vtiger_ListView_Model
 				'linktype' => 'LISTVIEWMASSACTION',
 				'linklabel' => 'LBL_MASS_EDIT',
 				'linkurl' => 'javascript:Vtiger_List_Js.triggerMassEdit("index.php?module=Users&view=MassActionAjax&mode=showMassEditForm");',
-				'linkicon' => 'yfi yfi-full-editing-view'
+				'linkicon' => 'yfi yfi-full-editing-view',
 			];
 			$massActionLinks[] = [
 				'linktype' => 'LISTVIEWMASSACTION',
@@ -77,31 +77,17 @@ class Users_ListView_Model extends Vtiger_ListView_Model
 		return $links;
 	}
 
-	/**
-	 * Function to get the list view entries.
-	 *
-	 * @param Vtiger_Paging_Model $pagingModel , $status (Active or Inactive User). Default false
-	 *
-	 * @return <Array> - Associative array of record id mapped to Vtiger_Record_Model instance
-	 */
+	/** {@inheritdoc} */
 	public function getListViewEntries(Vtiger_Paging_Model $pagingModel)
 	{
-		$queryGenerator = $this->get('query_generator');
+		$queryGenerator = $this->getQueryGenerator();
 		// Added as Users module do not have custom filters and id column is added by querygenerator.
 		$fields = $queryGenerator->getFields();
 		$fields[] = 'id';
 		$fields[] = 'imagename';
 		$fields[] = 'authy_secret_totp';
 		$queryGenerator->setFields($fields);
-		$searchParams = $this->getArray('search_params');
-		foreach ($searchParams as &$params) {
-			foreach ($params as &$param) {
-				if ('is_admin' === $param['field_name']) {
-					$param['value'] = '0' == $param['value'] ? 'off' : 'on';
-				}
-			}
-		}
-		$this->set('search_params', $searchParams);
+
 		return parent::getListViewEntries($pagingModel);
 	}
 
@@ -162,7 +148,7 @@ class Users_ListView_Model extends Vtiger_ListView_Model
 					'sourceField' => $sourceFieldName,
 					'relatedModule' => $moduleName,
 					'relatedField' => $fieldName,
-					'relatedSortOrder' => $this->getForSql('sortorder')
+					'relatedSortOrder' => $this->getForSql('sortorder'),
 				]);
 			}
 			return $this->getQueryGenerator()->setOrder($orderBy, $this->getForSql('sortorder'));

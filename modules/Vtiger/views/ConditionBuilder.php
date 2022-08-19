@@ -1,16 +1,24 @@
 <?php
 
 /**
- * View to display row with fields, operators and value.
+ * Condition builder view file.
  *
  * @package View
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Tomasz Kur <t.kur@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-class Vtiger_ConditionBuilder_View extends Vtiger_IndexAjax_View
+/**
+ * Condition builder view class.
+ */
+class Vtiger_ConditionBuilder_View extends \App\Controller\View\Page
 {
+	use App\Controller\ClearProcess;
+	use \App\Controller\ExposeMethod;
+
 	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
@@ -20,14 +28,41 @@ class Vtiger_ConditionBuilder_View extends Vtiger_IndexAjax_View
 	}
 
 	/** {@inheritdoc} */
+	public function __construct()
+	{
+		parent::__construct();
+		$this->exposeMethod('row');
+		$this->exposeMethod('builder');
+	}
+
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
-		$sourceModuleName = $request->getByType('sourceModuleName', 2);
+		if ($mode = $request->getMode()) {
+			$this->invokeExposedMethod($mode, $request);
+		} else {
+			$this->row($request);
+		}
+	}
+
+	/**
+	 * Display one condition for a field.
+	 *
+	 * @param App\Request $request
+	 *
+	 * @return void
+	 */
+	public function row(App\Request $request): void
+	{
+		$relatedModuleSkip = $request->getBoolean('relatedModuleSkip', false);
+		$sourceModuleName = $request->getByType('sourceModuleName', \App\Purifier::ALNUM);
 		$sourceModuleModel = Vtiger_Module_Model::getInstance($sourceModuleName);
 		$recordStructureModulesField = [];
-		foreach ($sourceModuleModel->getFieldsByReference() as $referenceField) {
-			foreach ($referenceField->getReferenceList() as $relatedModuleName) {
-				$recordStructureModulesField[$relatedModuleName][$referenceField->getFieldName()] = Vtiger_RecordStructure_Model::getInstanceForModule(Vtiger_Module_Model::getInstance($relatedModuleName))->getStructure();
+		if (!$relatedModuleSkip) {
+			foreach ($sourceModuleModel->getFieldsByReference() as $referenceField) {
+				foreach ($referenceField->getReferenceList() as $relatedModuleName) {
+					$recordStructureModulesField[$relatedModuleName][$referenceField->getFieldName()] = Vtiger_RecordStructure_Model::getInstanceForModule(Vtiger_Module_Model::getInstance($relatedModuleName))->getStructure();
+				}
 			}
 		}
 		$fieldInfo = false;
@@ -46,7 +81,7 @@ class Vtiger_ConditionBuilder_View extends Vtiger_IndexAjax_View
 		if ($request->isEmpty('operator', true)) {
 			$selectedOperator = key($operators);
 		} else {
-			$selectedOperator = $request->getByType('operator', 'Alnum');
+			$selectedOperator = $request->getByType('operator', \App\Purifier::ALNUM);
 		}
 		$viewer = $this->getViewer($request);
 		$viewer->assign('OPERATORS', $operators);
@@ -57,5 +92,35 @@ class Vtiger_ConditionBuilder_View extends Vtiger_IndexAjax_View
 		$viewer->assign('FIELD_INFO', $fieldInfo);
 		$viewer->assign('SOURCE_MODULE', $sourceModuleName);
 		$viewer->view('ConditionBuilderRow.tpl', $sourceModuleName);
+	}
+
+	/**
+	 * Display the condition builder panel.
+	 *
+	 * @param App\Request $request
+	 *
+	 * @return void
+	 */
+	public function builder(App\Request $request): void
+	{
+		$viewer = $this->getViewer($request);
+		$advanceCriteria = $request->getArray('advanceCriteria', \App\Purifier::TEXT);
+		$relatedModuleSkip = $request->getBoolean('relatedModuleSkip', false);
+		$sourceModuleName = $request->getByType('sourceModuleName', \App\Purifier::ALNUM);
+		$sourceModuleModel = \Vtiger_Module_Model::getInstance($sourceModuleName);
+		$recordStructureModulesField = [];
+		if (!$relatedModuleSkip) {
+			foreach ($sourceModuleModel->getFieldsByReference() as $referenceField) {
+				foreach ($referenceField->getReferenceList() as $relatedModuleName) {
+					$recordStructureModulesField[$relatedModuleName][$referenceField->getFieldName()] = Vtiger_RecordStructure_Model::getInstanceForModule(Vtiger_Module_Model::getInstance($relatedModuleName))->getStructure();
+				}
+			}
+		}
+
+		$viewer->assign('ADVANCE_CRITERIA', $advanceCriteria ? \App\Condition::getConditionsFromRequest($advanceCriteria) : []);
+		$viewer->assign('RECORD_STRUCTURE_RELATED_MODULES', $recordStructureModulesField);
+		$viewer->assign('RECORD_STRUCTURE', Vtiger_RecordStructure_Model::getInstanceForModule($sourceModuleModel)->getStructure());
+		$viewer->assign('SOURCE_MODULE', $sourceModuleName);
+		$viewer->view('ConditionBuilder.tpl', $sourceModuleName);
 	}
 }

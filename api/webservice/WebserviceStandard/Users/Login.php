@@ -4,8 +4,8 @@
  *
  * @package API
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author  Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -38,6 +38,8 @@ class Login extends \Api\Core\BaseAction
 
 	/**
 	 * Post method.
+	 *
+	 * @api
 	 *
 	 * @throws \Api\Core\Exception
 	 *
@@ -356,7 +358,7 @@ class Login extends \Api\Core\BaseAction
 				'params' => \App\Json::encode($params),
 				'ip' => $this->controller->request->getServer('REMOTE_ADDR'),
 				'last_method' => $this->controller->request->getServer('REQUEST_URI'),
-				'agent' => \App\TextParser::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false),
+				'agent' => \App\TextUtils::textTruncate($this->controller->request->getServer('HTTP_USER_AGENT', '-'), 100, false),
 			])->execute();
 	}
 
@@ -371,7 +373,7 @@ class Login extends \Api\Core\BaseAction
 	{
 		$db = \App\Db::getInstance('webservice');
 		$userData = (new \App\Db\Query())->from($this->controller->app['tables']['user'])
-			->where(['user_name' => $this->controller->request->get('userName'), 'status' => 1])
+			->where(['server_id' => $this->controller->app['id'], 'user_name' => $this->controller->request->get('userName'), 'status' => 1])
 			->limit(1)->one($db);
 		if (!$userData) {
 			$this->saveLoginHistory([

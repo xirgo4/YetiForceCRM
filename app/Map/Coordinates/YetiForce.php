@@ -7,8 +7,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -27,6 +27,7 @@ class YetiForce extends Base
 			return false;
 		}
 		$params = array_merge([
+			'version' => 2.0,
 			'format' => 'json',
 			'addressdetails' => 1,
 			'limit' => 1,
@@ -59,13 +60,12 @@ class YetiForce extends Base
 	}
 
 	/** {@inheritdoc} */
-	public function getCoordinatesByValue(string $value)
+	public function getCoordinatesByValue(string $value): array
 	{
-		$coordinatesDetails = $this->getCoordinates(['q' => $value]);
-		if ($coordinatesDetails) {
+		if ($coordinatesDetails = $this->getCoordinates(['q' => $value])) {
 			$coordinatesDetails = reset($coordinatesDetails);
 			return ['lat' => $coordinatesDetails['lat'], 'lon' => $coordinatesDetails['lon']];
 		}
-		return false;
+		return [];
 	}
 }

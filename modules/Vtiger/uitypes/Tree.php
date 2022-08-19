@@ -5,9 +5,10 @@
  *
  * @package   UIType
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 {
@@ -20,8 +21,8 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 		if ('T' !== substr($value, 0, 1) || !is_numeric(substr($value, 1))) {
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
-		$maximumLength = $this->getFieldModel()->get('maximumlength');
-		if ($maximumLength && App\TextParser::getTextLength($value) > $maximumLength) {
+		$maximumLength = $this->getFieldModel()->getMaxValue();
+		if ($maximumLength && App\TextUtils::getTextLength($value) > $maximumLength) {
 			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
 		$this->validate[$value] = true;
@@ -51,9 +52,9 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 			if ($rawText) {
 				$text = \App\Fields\Tree::getPicklistValue($fieldModel->getFieldParams(), $fieldModel->getModuleName())[$value];
 				if (\is_int($length)) {
-					$text = \App\TextParser::textTruncate($text, $length);
+					$text = \App\TextUtils::textTruncate($text, $length);
 				}
-				return \App\Purifier::encodeHtml($text);
+				return $text;
 			}
 			$value = \App\Fields\Tree::getPicklistValueImage($fieldModel->getFieldParams(), $fieldModel->getModuleName(), $value);
 			$text = $value['name'];
@@ -69,12 +70,10 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 			$text = implode(', ', $names);
 		}
 		if (\is_int($length)) {
-			$text = \App\TextParser::textTruncate($text, $length);
+			$text = \App\TextUtils::textTruncate($text, $length);
 		}
-		if (isset($value['icon'])) {
-			return $value['icon'] . '' . \App\Purifier::encodeHtml($text);
-		}
-		return \App\Purifier::encodeHtml($text);
+
+		return $rawText ? $text : ($value['icon'] ?? '') . \App\Purifier::encodeHtml($text);
 	}
 
 	/** {@inheritdoc} */
@@ -153,7 +152,7 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'y', 'ny'];
+		return ['e', 'n', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/**

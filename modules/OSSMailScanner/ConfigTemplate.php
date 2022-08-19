@@ -2,8 +2,8 @@
 /**
  * OSSMailScanner module config.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 return [
 	'ONE_MAIL_FOR_MULTIPLE_RECIPIENTS' => [
@@ -26,18 +26,6 @@ return [
 	'attachMailBodyGraphicUrl' => [
 		'default' => true,
 		'description' => "Do you want to attach graphic files from the email body as documents: From URL src=https://www.example.domain/image_file ?\n@var bool When the option is disabled, graphic files aren't saved in the CRM",
-		'validation' => '\App\Validator::bool',
-		'sanitization' => '\App\Purifier::bool'
-	],
-	'attachMailBodyGraphicBase64' => [
-		'default' => true,
-		'description' => "Do you want to attach graphic files from the email body as documents: From Base64 src='data:image/jpeg;base64, ...... ?\n@var bool When the option is disabled, graphic files aren't saved in the CRM",
-		'validation' => '\App\Validator::bool',
-		'sanitization' => '\App\Purifier::bool'
-	],
-	'attachMailBodyGraphicCid' => [
-		'default' => true,
-		'description' => "Do you want to attach graphic files from the email body as documents: src=cid:part1... ?\n@var bool When the option is disabled, graphic files aren't saved in the CRM",
 		'validation' => '\App\Validator::bool',
 		'sanitization' => '\App\Purifier::bool'
 	],

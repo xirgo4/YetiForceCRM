@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Users_Module_Model extends Vtiger_Module_Model
@@ -36,6 +36,12 @@ class Users_Module_Model extends Vtiger_Module_Model
 	public function isUtilityActionEnabled()
 	{
 		return true;
+	}
+
+	/** {@inheritdoc} */
+	public function isCustomViewAdvCondEnabled(): bool
+	{
+		return false;
 	}
 
 	/** {@inheritdoc} */
@@ -102,13 +108,13 @@ class Users_Module_Model extends Vtiger_Module_Model
 		\App\Db::getInstance()->createCommand()
 			->insert('vtiger_loginhistory', [
 				'user_name' => $userName,
-				'user_ip' => empty($userIPAddress) ? '-' : \App\TextParser::textTruncate($userIPAddress, 252, true),
+				'user_ip' => empty($userIPAddress) ? '-' : \App\TextUtils::textTruncate($userIPAddress, 252, true),
 				'login_time' => date('Y-m-d H:i:s'),
 				'logout_time' => null,
 				'status' => $status,
 				'browser' => $browser->name . ' ' . $browser->ver,
 				'userid' => \App\User::getUserIdByName($userName),
-				'agent' => \App\TextParser::textTruncate(\App\Request::_getServer('HTTP_USER_AGENT', '-'), 500, false),
+				'agent' => \App\TextUtils::textTruncate(\App\Request::_getServer('HTTP_USER_AGENT', '-'), 500, false),
 			])->execute();
 	}
 
@@ -210,27 +216,28 @@ class Users_Module_Model extends Vtiger_Module_Model
 	 *
 	 * @return array
 	 */
-	public static function getSwitchUsers($showRole = false)
+	public static function getSwitchUsers($showRole = false): array
 	{
-		require 'user_privileges/switchUsers.php';
+		require ROOT_DIRECTORY . '/user_privileges/switchUsers.php';
 		$baseUserId = \App\User::getCurrentUserRealId();
-		$users = $userIds = [];
+		$users = [];
 		if (isset($switchUsers[$baseUserId])) {
-			foreach ($switchUsers[$baseUserId] as $userId => &$userName) {
-				$users[$userId] = ['userName' => $userName];
-				$userIds[] = $userId;
+			foreach ($switchUsers[$baseUserId] as $userId) {
+				$userModel = \App\User::getUserModel($userId);
+				if (empty($userModel->getId()) || !$userModel->isActive()) {
+					continue;
+				}
+				$users[$userId] = $userId;
 			}
 			if ($showRole) {
-				$dataReader = (new \App\Db\Query())->select(['vtiger_role.rolename', 'vtiger_user2role.userid', 'vtiger_users.is_admin'])->from('vtiger_role')
-					->leftJoin('vtiger_user2role', 'vtiger_role.roleid = vtiger_user2role.roleid')
-					->leftJoin('vtiger_users', 'vtiger_user2role.userid = vtiger_users.id')
-					->where(['vtiger_user2role.userid' => $userIds])
-					->createCommand()->query();
-				while ($row = $dataReader->read()) {
-					$users[$row['userid']]['roleName'] = $row['rolename'];
-					$users[$row['userid']]['isAdmin'] = 'on' === $row['is_admin'];
+				foreach ($users as $userId => &$row) {
+					$userModel = \App\User::getUserModel($userId);
+					$row = [
+						'userName' => $userModel->getName(),
+						'roleName' => $userModel->getRoleName(),
+						'isAdmin' => $userModel->isAdmin(),
+					];
 				}
-				$dataReader->close();
 			}
 		}
 		return $users;

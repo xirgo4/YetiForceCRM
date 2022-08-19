@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -58,7 +58,7 @@ class ServerAccess
 				'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
 				'linklabel' => 'BTN_SERVER_ACCESS',
 				'linkhint' => $label,
-				'linkicon' => ($isActive ? 'yfi-public-webservice' : 'yfi-unshare-in-webservice'),
+				'linkicon' => ($isActive ? 'yfi-share-portal-record' : 'yfi-unshare-portal-record'),
 				'linkclass' => 'js-action-confirm btn-sm ' . self::BTN_CLASS[$source][$isActive],
 				'dataUrl' => "index.php?module={$recordModel->getModuleName()}&action=SaveAjax&record={$recordModel->getId()}&field={$fieldName}&value=" . ($isActive ? 0 : 1),
 				'linkdata' => ['add-btn-icon' => 1,	'source-view' => $source],
@@ -67,7 +67,7 @@ class ServerAccess
 			$return = \Vtiger_Link_Model::getInstanceFromValues([
 				'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
 				'linklabel' => 'BTN_SERVER_ACCESS',
-				'linkicon' => ($isActive ? 'yfi-public-webservice' : 'yfi-unshare-in-webservice'),
+				'linkicon' => ($isActive ? 'yfi-share-portal-record' : 'yfi-unshare-portal-record'),
 				'linkclass' => 'btn-sm js-quick-edit-modal ' . self::BTN_CLASS[$source][$isActive],
 				'linkdata' => [
 					'module' => $recordModel->getModuleName(),

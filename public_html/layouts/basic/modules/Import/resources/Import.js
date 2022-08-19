@@ -5,7 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  ************************************************************************************/
 'use strict';
 
@@ -27,7 +27,7 @@ if (typeof ImportJs === 'undefined') {
 			var filePath = jQuery('#import_file').val();
 			if (filePath != '') {
 				var fileExtension = filePath.split('.').pop();
-				jQuery('#type').val(fileExtension);
+				jQuery('.js-type').val(fileExtension);
 				ImportJs.handleFileTypeChange();
 			}
 		},
@@ -149,15 +149,17 @@ if (typeof ImportJs === 'undefined') {
 			return true;
 		},
 		convertOptionsToJSONArray: function (objName, targetObjName) {
-			var obj = jQuery(objName);
-			var arr = [];
+			let obj = jQuery(objName);
+			let arr = [];
 			if (typeof obj !== 'undefined' && obj[0] != '') {
-				for (var i = 0; i < obj[0].length; ++i) {
-					arr.push(obj[0].options[i].value);
+				for (let i = 0; i < obj[0].length; ++i) {
+					if (obj[0].options[i].selected) {
+						arr.push(obj[0].options[i].value);
+					}
 				}
 			}
 			if (targetObjName !== 'undefined') {
-				var targetObj = $(targetObjName);
+				let targetObj = $(targetObjName);
 				if (typeof targetObj !== 'undefined') targetObj.val(JSON.stringify(arr));
 			}
 			return arr;

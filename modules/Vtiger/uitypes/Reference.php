@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Reference_UIType extends Vtiger_Base_UIType
@@ -33,13 +33,13 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 			return;
 		}
 		if (!is_numeric($value)) {
-			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
+			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
 		$maximumLength = $this->getFieldModel()->get('maximumlength');
 		if ($maximumLength) {
 			$rangeValues = explode(',', $maximumLength);
 			if (($rangeValues[1] ?? $rangeValues[0]) < $value || (isset($rangeValues[1]) ? $rangeValues[0] : 0) > $value) {
-				throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
+				throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 			}
 		}
 		$this->validate[$value] = true;
@@ -54,10 +54,8 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 	 */
 	public function getReferenceModule($value): ?Vtiger_Module_Model
 	{
-		$fieldModel = $this->getFieldModel();
-		$referenceModuleList = $fieldModel->getReferenceList();
-		$referenceEntityType = \App\Record::getType($value);
-		if (!empty($referenceModuleList) && \in_array($referenceEntityType, $referenceModuleList)) {
+		$referenceModuleList = $this->getFieldModel()->getReferenceList();
+		if (!empty($referenceModuleList) && ($referenceEntityType = \App\Record::getType($value)) && \in_array($referenceEntityType, $referenceModuleList)) {
 			return Vtiger_Module_Model::getInstance($referenceEntityType);
 		}
 		if (!empty($referenceModuleList) && \in_array('Users', $referenceModuleList)) {
@@ -69,34 +67,20 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getDisplayValue($value, $record = false, $recordModel = false, $rawText = false, $length = false)
 	{
-		if (empty($value) || !($referenceModule = $this->getReferenceModule($value))) {
+		if (empty($value)) {
 			return '';
 		}
+		if (!($referenceModule = $this->getReferenceModule($value))) {
+			return '<i class="color-red-500" title="' . \App\Purifier::encodeHtml($value) . '">' . \App\Language::translate('LBL_RECORD_DOES_NOT_EXIST') . '</i>';
+		}
 		$referenceModuleName = $referenceModule->getName();
-
 		if ('Users' === $referenceModuleName || 'Groups' === $referenceModuleName) {
 			return \App\Fields\Owner::getLabel($value);
 		}
-		if (!\App\Record::isExists($value)) {
-			return '';
+		if ($rawText) {
+			return \App\Record::getLabel($value, $rawText);
 		}
-		$label = \App\Record::getLabel($value, $rawText);
-		if ($rawText || ($value && !\App\Privilege::isPermitted($referenceModuleName, 'DetailView', $value))) {
-			return $label;
-		}
-		if (\is_int($length)) {
-			$label = \App\TextParser::textTruncate($label, $length);
-		} elseif (true !== $length) {
-			$label = App\TextParser::textTruncate($label, \App\Config::main('href_max_length'));
-		}
-		if ('Active' !== \App\Record::getState($value)) {
-			$label = '<s>' . $label . '</s>';
-		}
-		$url = "index.php?module={$referenceModuleName}&view={$referenceModule->getDetailViewName()}&record={$value}";
-		if (!empty($this->fullUrl)) {
-			$url = Config\Main::$site_URL . $url;
-		}
-		return "<a class='modCT_$referenceModuleName showReferenceTooltip js-popover-tooltip--record' href='$url'>$label</a>";
+		return \App\Record::getHtmlLink($value, $referenceModuleName, \is_int($length) ? $length : \App\Config::main('href_max_length'), !empty($this->fullUrl));
 	}
 
 	/** {@inheritdoc} */
@@ -118,7 +102,7 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 	}
 
 	/** {@inheritdoc} */
-	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel)
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
 	{
 		if (empty($value) || !($referenceModule = $this->getReferenceModule($value))) {
 			return '';
@@ -278,7 +262,7 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 		if ('modifiedby' === $fieldName) {
 			return 'List/Field/Owner.tpl';
 		}
-		if (App\Config::performance('SEARCH_REFERENCE_BY_AJAX')) {
+		if (App\Config::performance('SEARCH_REFERENCE_BY_AJAX') || $fieldModel->get('searchByAjax')) {
 			return 'List/Field/Reference.tpl';
 		}
 		return parent::getListSearchTemplateName();
@@ -299,7 +283,7 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/** {@inheritdoc} */
@@ -319,7 +303,6 @@ class Vtiger_Reference_UIType extends Vtiger_Base_UIType
 			\App\Relation::clearCacheByModule($module);
 		}
 		\App\Cache::delete('HierarchyByRelation', '');
-
 		parent::delete();
 	}
 }

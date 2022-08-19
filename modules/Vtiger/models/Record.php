@@ -7,7 +7,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -41,7 +41,6 @@ class Vtiger_Record_Model extends \App\Base
 	protected $handlerExceptions = [];
 	protected $handler;
 	protected $privileges = [];
-	protected $fullForm = true;
 	/**
 	 * @var string Record label
 	 */
@@ -88,7 +87,7 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function set($key, $value)
 	{
-		if (!$this->isNew && !\in_array($key, ['mode', 'id', 'newRecord', 'modifiedtime', 'modifiedby', 'createdtime']) && (isset($this->value[$key]) && $this->value[$key] != $value)) {
+		if (!$this->isNew && !\in_array($key, ['mode', 'id', 'newRecord', 'modifiedtime', 'modifiedby', 'createdtime']) && (\array_key_exists($key, $this->value) && $this->value[$key] != $value)) {
 			$this->changes[$key] = $this->get($key);
 		}
 		$this->value[$key] = $value;
@@ -206,16 +205,6 @@ class Vtiger_Record_Model extends \App\Base
 		return $changes;
 	}
 
-	/**
-	 * Set full form.
-	 *
-	 * @param bool $value
-	 */
-	public function setFullForm($value)
-	{
-		$this->fullForm = $value;
-	}
-
 	public function getSearchName()
 	{
 		$displayName = $this->get('searchlabel');
@@ -295,27 +284,19 @@ class Vtiger_Record_Model extends \App\Base
 	}
 
 	/**
-	 * Function to get raw data.
+	 * Function to get raw data value by field.
 	 *
-	 * @return array|false
+	 * @param string $fieldName
+	 *
+	 * @return mixed
 	 */
-	public function getRawData()
+	public function getRawValue(string $fieldName)
 	{
-		return $this->rawData ?? false;
-	}
-
-	/**
-	 * Function to set raw data.
-	 *
-	 * @param array $data
-	 *
-	 * @return Vtiger_Record_Model instance
-	 */
-	public function setRawData($data)
-	{
-		$this->rawData = $data;
-
-		return $this;
+		$value = $this->get($fieldName);
+		if ($fieldName && $fieldModel = $this->getField($fieldName)) {
+			$value = $fieldModel->getUITypeModel()->getRawValue($value);
+		}
+		return $value;
 	}
 
 	/**
@@ -336,7 +317,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function getDetailViewUrl()
 	{
 		$menuUrl = '';
-		if (isset($_REQUEST['parent']) && 'Settings' !== $_REQUEST['parent']) {
+		if (!empty($_REQUEST['parent']) && 'Settings' !== $_REQUEST['parent']) {
 			$menuUrl .= '&parent=' . \App\Request::_getInteger('parent');
 		}
 		if (isset($_REQUEST['mid'])) {
@@ -477,7 +458,29 @@ class Vtiger_Record_Model extends \App\Base
 		} else {
 			$field = $this->getModule()->getFieldByName($field);
 		}
-		return $field->getUITypeModel()->getListViewDisplayValue($this->get($field->getFieldName()), $this->getId(), $this, $rawText);
+		return $field->getUITypeModel()->getListViewDisplayValue($this->get($field->getName()), $this->getId(), $this, $rawText);
+	}
+
+	/**
+	 * Function to get the display value in Tiles.
+	 *
+	 * @param string|Vtiger_Field_Model $field
+	 * @param bool                      $rawText
+	 *
+	 * @throws \App\Exceptions\AppException
+	 *
+	 * @return string
+	 */
+	public function getTilesDisplayValue($field, $rawText = false)
+	{
+		if ($field instanceof Vtiger_Field_Model) {
+			if (!empty($field->get('source_field_name')) && isset($this->ext[$field->get('source_field_name')][$field->getModuleName()])) {
+				return $this->ext[$field->get('source_field_name')][$field->getModuleName()]->getTilesDisplayValue($field, $rawText);
+			}
+		} else {
+			$field = $this->getModule()->getFieldByName($field);
+		}
+		return $field->getUITypeModel()->getTilesDisplayValue($this->get($field->getName()), $this->getId(), $this, $rawText);
 	}
 
 	/**
@@ -594,9 +597,7 @@ class Vtiger_Record_Model extends \App\Base
 		$saveFields = $this->getModule()->getFieldsForSave($this);
 		$forSave = $this->getEntityDataForSave();
 
-		if (!$this->isNew()) {
-			$saveFields = array_intersect($saveFields, array_merge(array_keys($this->changes), [$moduleModel->getSequenceNumberFieldName()]));
-		} else {
+		if ($this->isNew()) {
 			$entityModel = $this->getEntity();
 			$forSave[$entityModel->table_name] = [];
 			if (!empty($entityModel->customFieldTable)) {
@@ -607,6 +608,8 @@ class Vtiger_Record_Model extends \App\Base
 					$forSave[$tableName] = [];
 				}
 			}
+		} else {
+			$saveFields = array_intersect($saveFields, array_merge(array_keys($this->changes), [$moduleModel->getSequenceNumberFieldName()]));
 		}
 		foreach ($this->dataForSave as $tableName => $values) {
 			$forSave[$tableName] = array_merge($forSave[$tableName] ?? [], $values);
@@ -705,7 +708,7 @@ class Vtiger_Record_Model extends \App\Base
 			$eventHandler->trigger('EntityBeforeDelete');
 			$db->createCommand()->delete('vtiger_crmentity', ['crmid' => $this->getId()])->execute();
 			\App\Db::getInstance('admin')->createCommand()->delete('s_#__privileges_updater', ['crmid' => $this->getId()])->execute();
-			Vtiger_MultiImage_UIType::deleteRecord($this);
+			\App\Fields\File::deleteForRecord($this);
 			$eventHandler->trigger('EntityAfterDelete');
 			if ($this->getModule()->isCommentEnabled()) {
 				(new \App\BatchMethod(['method' => 'ModComments_Module_Model::deleteForRecord', 'params' => [$this->getId()]]))->save();
@@ -720,6 +723,8 @@ class Vtiger_Record_Model extends \App\Base
 
 	/**
 	 * Static Function to get the instance of a clean Vtiger Record Model for the given module name.
+	 *
+	 * @uses \App\Base::__construct()
 	 *
 	 * @param string $moduleName
 	 *
@@ -746,6 +751,8 @@ class Vtiger_Record_Model extends \App\Base
 
 	/**
 	 * Static Function to get the instance of the Vtiger Record Model given the recordid and the module name.
+	 *
+	 * @uses self::__construct()
 	 *
 	 * @param int    $recordId
 	 * @param string $module
@@ -827,9 +834,24 @@ class Vtiger_Record_Model extends \App\Base
 	public function isEditable(): bool
 	{
 		if (!isset($this->privileges['isEditable'])) {
-			return $this->privileges['isEditable'] = $this->isPermitted('EditView') && !$this->isLockByFields() && false === Users_Privileges_Model::checkLockEdit($this->getModuleName(), $this) && empty($this->getUnlockFields()) && !$this->isReadOnly();
+			return $this->privileges['isEditable'] = $this->isPermitted('EditView') && !$this->isBlocked();
 		}
 		return $this->privileges['isEditable'];
+	}
+
+	/**
+	 * Function check if record is blocked.
+	 *
+	 * @return bool
+	 */
+	public function isBlocked(): bool
+	{
+		if (!isset($this->privileges['isBlocked'])) {
+			$this->privileges['isBlocked'] = $this->isLockByFields()
+			|| true === Users_Privileges_Model::checkLockEdit($this->getModuleName(), $this)
+			|| !empty($this->getUnlockFields()) || $this->isReadOnly();
+		}
+		return $this->privileges['isBlocked'];
 	}
 
 	/**
@@ -941,9 +963,10 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function getUnlockFields($isAjaxEditable = false)
 	{
+		$id = $this->getId();
 		$cacheName = 'UnlockFields' . $isAjaxEditable;
-		if (\App\Cache::staticHas($cacheName, $this->getId())) {
-			return \App\Cache::staticGet($cacheName, $this->getId());
+		if ($id && \App\Cache::staticHas($cacheName, $id)) {
+			return \App\Cache::staticGet($cacheName, $id);
 		}
 		$lockFields = \App\RecordStatus::getLockStatus($this->getModule()->getName());
 		foreach ($lockFields as $fieldName => $values) {
@@ -951,7 +974,9 @@ class Vtiger_Record_Model extends \App\Base
 				unset($lockFields[$fieldName]);
 			}
 		}
-		\App\Cache::staticSave($cacheName, $this->getId(), $lockFields);
+		if ($id) {
+			\App\Cache::staticSave($cacheName, $this->getId(), $lockFields);
+		}
 		return $lockFields;
 	}
 
@@ -1288,12 +1313,23 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @throws \App\Exceptions\AppException
 	 * @throws \App\Exceptions\Security
+	 *
+	 * @return void
 	 */
-	public function initInventoryDataFromRequest(App\Request $request)
+	public function initInventoryDataFromRequest(App\Request $request): void
 	{
 		$inventory = Vtiger_Inventory_Model::getInstance($this->getModuleName());
 		$rawInventory = $request->getRaw('inventory');
-		unset($rawInventory['_NUM_']);
+		if (isset($rawInventory['_NUM_'])) {
+			unset($rawInventory['_NUM_']);
+		}
+		if ($inventory->getField('name')) {
+			foreach ($rawInventory as $key => $inventoryRow) {
+				if (empty($inventoryRow['name'])) {
+					unset($rawInventory[$key]);
+				}
+			}
+		}
 		$request->set('inventory', $rawInventory, true);
 		$this->initInventoryData($request->getMultiDimensionArray('inventory', ['id' => \App\Purifier::INTEGER] + $inventory->getPurifyTemplate()));
 	}
@@ -1385,7 +1421,7 @@ class Vtiger_Record_Model extends \App\Base
 			return [];
 		}
 		$links = $recordLinks = [];
-		if ($this->getModule()->isSummaryViewSupported()) {
+		if ($this->getModule()->isSummaryViewSupported() && array_filter($this->getModule()->getWidgets())) {
 			$recordLinks['LBL_SHOW_QUICK_DETAILS'] = [
 				'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
 				'linklabel' => 'LBL_SHOW_QUICK_DETAILS',
@@ -1655,7 +1691,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linkclass' => 'btn-sm btn-dark relationDelete entityStateBtn',
 				]);
 			}
-			if (!empty($relationModel->getTypeRelationModel()->customFields) && ($relationModel->getTypeRelationModel()->getFields()) && ($parentRecord = $relationModel->get('parentRecord')) && $parentRecord->isEditable() && $this->isEditable()) {
+			if (!empty($relationModel->getTypeRelationModel()->customFields) && ($relationModel->getTypeRelationModel()->getFields(true)) && ($parentRecord = $relationModel->get('parentRecord')) && $parentRecord->isEditable() && $this->isEditable()) {
 				$changeRelationDataButton = Vtiger_Link_Model::getInstanceFromValues([
 					'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
 					'linklabel' => 'LBL_CHANGE_RELATION_DATA',
@@ -1811,14 +1847,18 @@ class Vtiger_Record_Model extends \App\Base
 	public function getImage()
 	{
 		$image = [];
-		if (!$this->isEmpty('imagename') && \App\Json::isJson($this->get('imagename'))) {
+		if (!$this->isEmpty('imagename') && \App\Json::isJson($this->get('imagename')) && !\App\Json::isEmpty($this->get('imagename'))) {
 			$image = \App\Json::decode($this->get('imagename'));
 			if (empty($image) || !($image = \current($image)) || empty($image['path'])) {
 				\App\Log::warning("Problem with data compatibility: No parameter path [{$this->get('imagename')}]");
 				return [];
 			}
 			$image['path'] = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $image['path'];
-			$image['url'] = "file.php?module={$this->getModuleName()}&action=MultiImage&field=imagename&record={$this->getId()}&key={$image['key']}";
+			if (file_exists($image['path'])) {
+				$image['url'] = "file.php?module={$this->getModuleName()}&action=MultiImage&field=imagename&record={$this->getId()}&key={$image['key']}";
+			} else {
+				$image = [];
+			}
 		} else {
 			foreach ($this->getModule()->getFieldsByType('multiImage') as $fieldModel) {
 				if (!$this->isEmpty($fieldModel->getName()) && \App\Json::isJson($this->get($fieldModel->getName()))) {
@@ -1828,8 +1868,11 @@ class Vtiger_Record_Model extends \App\Base
 						return [];
 					}
 					$image['path'] = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $image['path'];
-					$image['url'] = "file.php?module={$this->getModuleName()}&action=MultiImage&field={$fieldModel->getName()}&record={$this->getId()}&key={$image['key']}";
-					break;
+					if (file_exists($image['path'])) {
+						$image['url'] = "file.php?module={$this->getModuleName()}&action=MultiImage&field={$fieldModel->getName()}&record={$this->getId()}&key={$image['key']}";
+						break;
+					}
+					$image = [];
 				}
 			}
 		}

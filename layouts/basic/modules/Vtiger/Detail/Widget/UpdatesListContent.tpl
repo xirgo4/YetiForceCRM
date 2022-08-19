@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-Detail-Widget-UpdatesListContent -->
 	<table class="table table-bordered mt-2">
@@ -14,7 +14,7 @@
 				<tr>
 					<th class="{$WIDTHTYPE}" scope="row">{$ROW['value']}</th>
 					<td class="{$WIDTHTYPE}"><span title="{\Vtiger_Util_Helper::formatDateDiffInStrings($ROW['date'])}">{\App\Fields\DateTime::formatToDisplay($ROW['date'])}</span></td>
-					<td class="{$WIDTHTYPE}">{App\Fields\RangeTime::displayElapseTime($ROW['time'],'i','')}</td>
+					<td class="{$WIDTHTYPE}">{App\Fields\RangeTime::displayElapseTime($ROW['time'],'i')}</td>
 				</tr>
 			{/foreach}
 		</tbody>

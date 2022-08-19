@@ -4,8 +4,8 @@
  *
  * @package Tests
  *
- * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -17,7 +17,9 @@ namespace Tests\App;
 class Utils extends \Tests\Base
 {
 	/**
-	 * Testing Benchmarks file.
+	 * Tests `\App\Utils\Benchmarks` methods.
+	 *
+	 * @see \App\Utils\Benchmarks
 	 *
 	 * @return void
 	 */
@@ -28,5 +30,17 @@ class Utils extends \Tests\Base
 		$this->assertArrayHasKey('ram', $benchmarks);
 		$this->assertArrayHasKey('hardDrive', $benchmarks);
 		$this->assertArrayHasKey('db', $benchmarks);
+	}
+
+	/**
+	 * Tests `\App\Utils\Completions` methods.
+	 *
+	 * @see \App\Utils\Completions
+	 *
+	 * @return void
+	 */
+	public function testCompletions(): void
+	{
+		$this->assertSame('<img src="file.php?module=Documents&action=DownloadFile&record=448&fileid=19&show=true" />', \App\Utils\Completions::decodeCustomTag('<yetiforce type="Documents" crm-id="448" attachment-id="19"></yetiforce>'));
 	}
 }

@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 Settings_Vtiger_List_Js(
@@ -84,12 +84,13 @@ Settings_Vtiger_List_Js(
 				e.stopPropagation();
 				e.preventDefault();
 				let deleteId = $(this).closest('tr').data('id');
-				Vtiger_Helper_Js.showConfirmationBox({
-					message: app.vtranslate('JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE')
-				}).done(function (e) {
-					Settings_PDF_List_Js.deleteById(deleteId, false).done(function () {
-						self.registerTemplateDelete(container);
-					});
+				app.showConfirmModal({
+					title: app.vtranslate('JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE'),
+					confirmedCallback: () => {
+						Settings_PDF_List_Js.deleteById(deleteId, false).done(function () {
+							self.registerTemplateDelete(container);
+						});
+					}
 				});
 			});
 		},

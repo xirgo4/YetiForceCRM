@@ -5,8 +5,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Arkadiusz Adach <a.adach@yetiforce.com>
  * @author    Tomasz Poradzewski <t.poradzewski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -142,7 +142,7 @@ final class Chat
 	/**
 	 * Get current room ID, type.
 	 *
-	 * @return []|false
+	 * @return array|false
 	 */
 	public static function getCurrentRoom()
 	{
@@ -698,9 +698,7 @@ final class Chat
 			}
 		}
 
-		$lastMessage = 1 === \count($lastMessagesData) ? current($lastMessagesData) : array_reduce($lastMessagesData, function ($a, $b) {
-			return $a['created'] > $b['created'] ? $a : $b;
-		});
+		$lastMessage = 1 === \count($lastMessagesData) ? current($lastMessagesData) : array_reduce($lastMessagesData, fn ($a, $b) => $a['created'] > $b['created'] ? $a : $b);
 		if (!empty($lastMessage)) {
 			$lastMessage['messages'] = static::decodeNoHtmlMessage($lastMessage['messages'], false);
 			$lastMessage['userData'] = static::getUserInfo($lastMessage['userid']);

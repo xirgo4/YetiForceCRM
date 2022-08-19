@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Users_Save_Action extends Vtiger_Save_Action
@@ -69,8 +69,6 @@ class Users_Save_Action extends Vtiger_Save_Action
 				return false;
 			}
 			$this->saveRecord($request);
-			$settingsModuleModel = Settings_Users_Module_Model::getInstance();
-			$settingsModuleModel->refreshSwitchUsers();
 			if ($request->getBoolean('relationOperation')) {
 				$parentRecordModel = Vtiger_Record_Model::getInstanceById($request->getInteger('sourceRecord'), $request->getByType('sourceModule', 2));
 				$loadUrl = $parentRecordModel->getDetailViewUrl();

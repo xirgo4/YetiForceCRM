@@ -2,11 +2,11 @@
 /**
  * Requirements validation.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
-if (\PHP_VERSION_ID < 70300) {
-	throw new \Exception('Wrong PHP version, recommended version >= 7.3');
+if (\PHP_VERSION_ID < 70400) {
+	throw new \Exception('Wrong PHP version, recommended version >= 7.4');
 }
 if (isset($checkLibrary)) {
 	$extensions = get_loaded_extensions();

@@ -4,21 +4,17 @@
  *
  * @package   Settings.Model
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 /**
  * Config editor basic module class.
  */
 class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public $name = 'ConfigEditor';
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public $listFields = [
 		'upload_maxsize' => 'LBL_MAX_UPLOAD_SIZE',
 		'default_module' => 'LBL_DEFAULT_MODULE',
@@ -32,7 +28,11 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 		'backgroundClosingModal' => 'LBL_BG_CLOSING_MODAL',
 		'href_max_length' => 'LBL_HREF_MAX_LEGTH',
 		'langInLoginView' => 'LBL_SHOW_LANG_IN_LOGIN_PAGE',
-		'layoutInLoginView' => 'LBL_SHOW_LAYOUT_IN_LOGIN_PAGE'
+		'layoutInLoginView' => 'LBL_SHOW_LAYOUT_IN_LOGIN_PAGE',
+	];
+	/** @var array Fields for performance */
+	public $performanceFields = [
+		'MAX_NUMBER_EXPORT_RECORDS' => 'LBL_MAX_NUMBER_EXPORT_RECORDS'
 	];
 
 	/** @var array Fields for relation */
@@ -41,7 +41,7 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 		'SHOW_RELATED_ICON' => 'LBL_RELATION_SHOW_RELATED_ICON',
 		'SHOW_RECORDS_COUNT' => 'LBL_RELATION_SHOW_RECORDS_COUNT',
 		'COMMENT_MAX_LENGTH' => 'LBL_RELATION_COMMENT_MAX_LENGTH',
-		'separateChangeRelationButton' => 'LBL_RELATION_SEPARATE_CHANGE_RELATION_BUTTON'
+		'separateChangeRelationButton' => 'LBL_RELATION_SEPARATE_CHANGE_RELATION_BUTTON',
 	];
 
 	/** @var string Configuration type */
@@ -71,15 +71,25 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 	/**
 	 * Gets fields for edit.
 	 *
+	 * @param mixed|null $configName
+	 *
 	 * @return array
 	 */
-	public function getEditFields(): array
+	public function getEditFields($configName = null): array
 	{
 		$fields = [];
-		if ('Main' === $this->type) {
-			$fields = $this->listFields;
-		} elseif ('Relation' === $this->type) {
-			$fields = $this->relationFields;
+		switch ($configName ?? $this->type) {
+			case 'Main':
+				$fields = $this->listFields;
+				break;
+			case 'Relation':
+				$fields = $this->relationFields;
+				break;
+			case 'Performance':
+				$fields = $this->performanceFields;
+				break;
+			default:
+				break;
 		}
 		return $fields;
 	}
@@ -144,14 +154,25 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 		$moduleName = $this->getName(true);
 		$params = ['uitype' => 7, 'column' => $name, 'name' => $name,  'displaytype' => 1, 'typeofdata' => 'I~M', 'presence' => 0, 'isEditableReadOnly' => false, 'maximumlength' => '', 'validator' => [['name' => 'NumberRange100']], 'source' => 'main'];
 		switch ($name) {
+			case 'MAX_NUMBER_EXPORT_RECORDS':
+				$params['label'] = $this->performanceFields[$name];
+				$params['validator'] = [['name' => 'WholeNumberGreaterThanZero']];
+				$params['uitype'] = 7;
+				$params['maximumlength'] = '99999999';
+				$params['source'] = 'performance';
+				$params['purifyType'] = \App\Purifier::TEXT;
+				$params['fieldvalue'] = $this->get($name);
+				break;
 			case 'listMaxEntriesMassEdit':
 				$params['maximumlength'] = '5000';
 				$params['validator'] = [['name' => 'WholeNumberGreaterThanZero']];
 				$params['label'] = $this->listFields[$name];
+				$params['purifyType'] = \App\Purifier::TEXT;
 				break;
 			case 'upload_maxsize':
 				$params['label'] = $this->listFields[$name];
-				$params['maximumlength'] = (string) round((vtlib\Functions::getMaxUploadSize() / 1048576), 0);
+				$params['purifyType'] = \App\Purifier::TEXT;
+				$params['maximumlength'] = (string) round(\App\Config::getMaxUploadSize(false, true), 0) ?: '';
 				unset($params['validator']);
 				break;
 			case 'layoutInLoginView':
@@ -160,6 +181,7 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 				$params['label'] = $this->listFields[$name];
 				$params['uitype'] = 56;
 				$params['typeofdata'] = 'C~M';
+				$params['purifyType'] = \App\Purifier::BOOL;
 				unset($params['validator']);
 				break;
 			case 'breadcrumbs':
@@ -167,13 +189,16 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 				$params['uitype'] = 56;
 				$params['typeofdata'] = 'C~M';
 				$params['source'] = 'layout';
+				$params['purifyType'] = \App\Purifier::BOOL;
 				unset($params['validator']);
 				break;
 			case 'default_module':
 				$params['label'] = $this->listFields[$name];
 				$params['uitype'] = 16;
+				$params['maximumlength'] = '40';
 				unset($params['validator']);
 				$params['picklistValues'] = ['Home' => \App\Language::translate('Home')];
+				$params['purifyType'] = \App\Purifier::TEXT;
 				foreach (\vtlib\Functions::getAllModules(true, false, 0) as $module) {
 					$params['picklistValues'][$module['name']] = \App\Language::translate($module['name'], $module['name']);
 				}
@@ -181,7 +206,9 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 			case 'defaultLayout':
 				$params['label'] = $this->listFields[$name];
 				$params['uitype'] = 16;
+				$params['maximumlength'] = '50';
 				$params['picklistValues'] = \App\Layout::getAllLayouts();
+				$params['purifyType'] = \App\Purifier::TEXT;
 				unset($params['validator']);
 				break;
 			// Realtion
@@ -193,6 +220,7 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 				$params['source'] = 'relation';
 				$params['tooltip'] = 'LBL_RELATION_COMMENT_MAX_LENGTH_DESC';
 				$params['fieldvalue'] = $this->get($name);
+				$params['purifyType'] = \App\Purifier::TEXT;
 				break;
 			case 'SHOW_RELATED_MODULE_NAME':
 			case 'SHOW_RELATED_ICON':
@@ -202,6 +230,7 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 				$params['typeofdata'] = 'C~M';
 				$params['source'] = 'relation';
 				$params['fieldvalue'] = $this->get($name);
+				$params['purifyType'] = \App\Purifier::BOOL;
 				unset($params['validator']);
 				break;
 			case 'separateChangeRelationButton':
@@ -211,7 +240,21 @@ class Settings_ConfigEditor_Module_Model extends Settings_Vtiger_Module_Model
 				$params['source'] = 'relation';
 				$params['fieldvalue'] = $this->get($name);
 				$params['tooltip'] = 'LBL_RELATION_SEPARATE_CHANGE_RELATION_BUTTON_DESC';
+				$params['purifyType'] = \App\Purifier::BOOL;
 				unset($params['validator']);
+				break;
+			case 'title_max_length':
+			case 'MINIMUM_CRON_FREQUENCY':
+				$params['uitype'] = 7;
+				$params['purifyType'] = \App\Purifier::TEXT;
+				$params['maximumlength'] = '0,100';
+				break;
+			case 'listview_max_textlength':
+			case 'list_max_entries_per_page':
+			case 'href_max_length':
+				$params['uitype'] = 7;
+				$params['purifyType'] = \App\Purifier::TEXT;
+				$params['maximumlength'] = '255';
 				break;
 			default:
 				break;

@@ -5,8 +5,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -163,6 +163,9 @@ class Fixer
 					case 'int':
 						if ($column->unsigned) {
 							$range = '4294967295';
+							if (7 == $field['uitype'] || 1 == $field['uitype']) {
+								$range = '0,' . $range;
+							}
 						} else {
 							$range = '-2147483648,2147483647';
 						}
@@ -170,6 +173,9 @@ class Fixer
 					case 'smallint':
 						if ($column->unsigned) {
 							$range = '65535';
+							if (7 == $field['uitype'] || 1 == $field['uitype']) {
+								$range = '0,' . $range;
+							}
 						} else {
 							$range = '-32768,32767';
 						}
@@ -177,12 +183,18 @@ class Fixer
 					case 'tinyint':
 						if ($column->unsigned) {
 							$range = '255';
+							if (7 == $field['uitype'] || 1 == $field['uitype']) {
+								$range = '0,' . $range;
+							}
 						} else {
 							$range = '-128,127';
 						}
 						break;
 					case 'decimal':
 						$range = 10 ** (((int) $column->size) - ((int) $column->scale)) - 1;
+						if ($column->unsigned) {
+							$range = '0,' . $range;
+						}
 						break;
 					default:
 						$range = false;
@@ -194,7 +206,7 @@ class Fixer
 				\App\Log::warning("Type not found: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} |type:{$type}|{$column->type}|{$column->dbType}", __METHOD__);
 				++$typeNotFound;
 			} elseif ($field['maximumlength'] != $range) {
-				if (\in_array($field['uitype'], [1, 2, 7, 10, 16, 52, 53, 56, 71, 72, 120, 156, 300, 308, 317])) {
+				if (\in_array($field['uitype'], [1, 2, 7, 9, 10, 16, 52, 53, 56, 71, 72, 120, 156, 300, 308, 317, 327])) {
 					$update = true;
 				} else {
 					\App\Log::warning("Requires verification: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} <> {$range} |type:{$type}|{$column->type}|{$column->dbType}", __METHOD__);

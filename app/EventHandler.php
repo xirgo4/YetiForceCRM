@@ -7,8 +7,8 @@ namespace App;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -89,6 +89,50 @@ class EventHandler
 				'active' => ['label' => 'LBL_EVENT_IS_ACTIVE'],
 			],
 		],
+		'DetailViewBefore' => [
+			'label' => 'LBL_DETAIL_VIEW_BEFORE',
+			'icon' => 'mdi mdi-account-details c-mdi',
+			'columns' => [
+				'eventName' => ['label' => 'LBL_EVENT_NAME'],
+				'eventDescription' => ['label' => 'LBL_EVENT_DESC'],
+				'modules' => ['label' => 'LBL_INCLUDE_MODULES'],
+				'modulesExcluded' => ['label' => 'LBL_EXCLUDE_MODULES'],
+				'active' => ['label' => 'LBL_EVENT_IS_ACTIVE'],
+			],
+		],
+		'EditViewBefore' => [
+			'label' => 'LBL_EDIT_VIEW_BEFORE',
+			'icon' => 'yfi yfi-full-editing-view ',
+			'columns' => [
+				'eventName' => ['label' => 'LBL_EVENT_NAME'],
+				'eventDescription' => ['label' => 'LBL_EVENT_DESC'],
+				'modules' => ['label' => 'LBL_INCLUDE_MODULES'],
+				'modulesExcluded' => ['label' => 'LBL_EXCLUDE_MODULES'],
+				'active' => ['label' => 'LBL_EVENT_IS_ACTIVE'],
+			],
+		],
+		'EditViewDuplicate' => [
+			'label' => 'LBL_EDIT_VIEW_DUPLICATE',
+			'icon' => 'fas fa-clone',
+			'columns' => [
+				'eventName' => ['label' => 'LBL_EVENT_NAME'],
+				'eventDescription' => ['label' => 'LBL_EVENT_DESC'],
+				'modules' => ['label' => 'LBL_INCLUDE_MODULES'],
+				'modulesExcluded' => ['label' => 'LBL_EXCLUDE_MODULES'],
+				'active' => ['label' => 'LBL_EVENT_IS_ACTIVE'],
+			],
+		],
+		'InventoryRecordDetails' => [
+			'label' => 'LBL_INVENTORY_RECORD_DETAILS',
+			'icon' => 'fas fa-pallet',
+			'columns' => [
+				'eventName' => ['label' => 'LBL_EVENT_NAME'],
+				'eventDescription' => ['label' => 'LBL_EVENT_DESC'],
+				'modules' => ['label' => 'LBL_INCLUDE_MODULES'],
+				'modulesExcluded' => ['label' => 'LBL_EXCLUDE_MODULES'],
+				'active' => ['label' => 'LBL_EVENT_IS_ACTIVE'],
+			],
+		],
 	];
 
 	/**
@@ -158,7 +202,7 @@ class EventHandler
 				if ($byKey) {
 					$return[$key] = $vars;
 				} else {
-					$return = array_unique(array_merge($return, $vars));
+					$return = array_values(array_unique(array_merge($return, $vars)));
 				}
 			}
 		}
@@ -308,6 +352,7 @@ class EventHandler
 	public function setRecordModel(\Vtiger_Record_Model $recordModel)
 	{
 		$this->recordModel = $recordModel;
+		$this->moduleName = $recordModel->getModuleName();
 		return $this;
 	}
 
@@ -374,6 +419,18 @@ class EventHandler
 	public function getParams()
 	{
 		return $this->params;
+	}
+
+	/**
+	 * Get param.
+	 *
+	 * @param string $key
+	 *
+	 * @return mixed
+	 */
+	public function getParam(string $key)
+	{
+		return $this->params[$key] ?? null;
 	}
 
 	/**

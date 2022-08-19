@@ -7,8 +7,8 @@ namespace App\TextParser;
  *
  * @package TextParser
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Rafal Pospiech <r.pospiech@yetiforce.com>
  */
 class ProductsTableCorrectingBefore extends Base
@@ -41,14 +41,15 @@ class ProductsTableCorrectingBefore extends Base
 			} else {
 				$currency = $baseCurrency['id'];
 			}
-			$currencyData = \App\Fields\Currency::getById($currency);
-			$currencySymbol = $currencyData['currency_symbol'];
+			$currencySymbol = \App\Fields\Currency::getById($currency)['currency_symbol'];
+		} else {
+			$currencySymbol = \App\Fields\Currency::getDefault()['currency_symbol'];
 		}
-		$headerStyle = 'font-size:9px;padding:0px 4px;text-align:center;';
+		$headerStyle = 'font-size:9px;padding:0px 4px;text-align:center;background-color:#ddd;';
 		$bodyStyle = 'font-size:8px;border:1px solid #ddd;padding:0px 4px;';
 		$html .= '<table class="products-table-correcting-before" style="border-collapse:collapse;width:100%"><thead><tr>';
 		$groupModels = [];
-		foreach (['Name', 'Quantity', 'Discount', 'Currency', 'DiscountMode', 'TaxMode', 'UnitPrice', 'GrossPrice', 'NetPrice', 'Tax', 'TotalPrice', 'Value'] as $fieldType) {
+		foreach (['Name', 'Quantity', 'UnitPrice', 'TotalPrice', 'Discount', 'NetPrice', 'Currency', 'DiscountMode', 'Tax', 'TaxMode', 'GrossPrice', 'Value'] as $fieldType) {
 			foreach ($inventory->getFieldsByType($fieldType) as $fieldModel) {
 				$columnName = $fieldModel->getColumnName();
 				if (!$fieldModel->isVisible()) {
@@ -102,7 +103,7 @@ class ProductsTableCorrectingBefore extends Base
 		}
 		$html .= '</tbody><tfoot><tr>';
 		foreach ($groupModels as $fieldModel) {
-			$html .= "<th style=\"{$headerStyle}\">";
+			$html .= '<th style="font-size:9px;padding:0px 4px;text-align:right;background-color:#ddd;">';
 			if ($fieldModel->isSummary()) {
 				$sum = 0;
 				foreach ($inventoryRows as $inventoryRow) {

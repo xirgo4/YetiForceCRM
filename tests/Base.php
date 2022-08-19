@@ -4,8 +4,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -31,7 +31,7 @@ abstract class Base extends TestCase
 	protected function onNotSuccessfulTest(\Throwable $t): void
 	{
 		if (isset($this->logs)) {
-			echo "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+			echo "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  LOGS:\n";
 			//var_export(array_shift($t->getTrace()));
 			\print_r($this->logs);
 			echo "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";

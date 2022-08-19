@@ -6,8 +6,10 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
+
+use App\Json;
 
 /**
  * Vtiger Widget Model Class.
@@ -36,7 +38,7 @@ class Vtiger_Widget_Model extends \App\Base
 		$defaultSize = 4;
 		$size = $this->get('size');
 		if ($size) {
-			$size = \App\Json::decode(App\Purifier::decodeHtml($size));
+			$size = Json::decode(App\Purifier::decodeHtml($size));
 			if (isset($size[App\Session::get('fingerprint')], $size[App\Session::get('fingerprint')]['width'])) {
 				$defaultSize = (int) $size[App\Session::get('fingerprint')]['width'];
 			} elseif (!empty($size['width'])) {
@@ -51,7 +53,7 @@ class Vtiger_Widget_Model extends \App\Base
 		$defaultSize = 4;
 		$size = $this->get('size');
 		if ($size) {
-			$size = \App\Json::decode(App\Purifier::decodeHtml($size));
+			$size = Json::decode(App\Purifier::decodeHtml($size));
 			if (isset($size[App\Session::get('fingerprint')], $size[App\Session::get('fingerprint')]['height'])) {
 				$defaultSize = (int) $size[App\Session::get('fingerprint')]['height'];
 			} elseif (!empty($size['height'])) {
@@ -75,11 +77,11 @@ class Vtiger_Widget_Model extends \App\Base
 	public function getPosition(int $position, string $coordinate)
 	{
 		if ($positionData = $this->get('position')) {
-			$positionData = \App\Json::decode(App\Purifier::decodeHtml($positionData));
-			if (isset($positionData[App\Session::get('fingerprint')])) {
+			$positionData = Json::decode(App\Purifier::decodeHtml($positionData));
+			if (!empty($positionData[App\Session::get('fingerprint')])) {
 				$position = (int) $positionData[App\Session::get('fingerprint')][$coordinate];
 			}
-			if (isset($positionData[$coordinate])) {
+			if (!empty($positionData[$coordinate])) {
 				$position = (int) ($positionData[$coordinate]);
 			}
 		}
@@ -108,6 +110,18 @@ class Vtiger_Widget_Model extends \App\Base
 			$title = $this->get('linklabel');
 		}
 		return $title;
+	}
+
+	/**
+	 * Function to get the translated title.
+	 *
+	 * @return string
+	 */
+	public function getTranslatedTitle(): string
+	{
+		$queryParams = parse_url($this->get('linkurl'), PHP_URL_QUERY);
+		parse_str($queryParams, $output);
+		return \App\Language::translate($this->getTitle(), $output['module'], null, true, 'Dashboard');
 	}
 
 	public function getName()
@@ -184,6 +198,7 @@ class Vtiger_Widget_Model extends \App\Base
 
 	public static function updateWidgetPosition($position, $linkId, $widgetId, $userId)
 	{
+		$currentPosition = [];
 		if (!$linkId && !$widgetId) {
 			return;
 		}
@@ -192,9 +207,14 @@ class Vtiger_Widget_Model extends \App\Base
 		} elseif ($widgetId) {
 			$where = ['userid' => $userId, 'id' => $widgetId];
 		}
-		$currentPosition = App\Json::decode((new \App\Db\Query())->select(['position'])->from('vtiger_module_dashboard_widgets')->where($where)->scalar());
-		$currentPosition[App\Session::get('fingerprint')] = App\Json::decode($position);
-		\App\Db::getInstance()->createCommand()->update('vtiger_module_dashboard_widgets', ['position' => App\Json::encode($currentPosition)], $where)->execute();
+		$lastSavedPosition = (new \App\Db\Query())->select(['position'])->from('vtiger_module_dashboard_widgets')->where($where)->scalar();
+		if ($lastSavedPosition && !JSON::isEmpty($lastSavedPosition)) {
+			$currentPosition = JSON::decode($lastSavedPosition);
+		}
+		$currentPosition[App\Session::get('fingerprint')] = $position;
+		\App\Db::getInstance()->createCommand()
+			->update('vtiger_module_dashboard_widgets', ['position' => Json::encode($currentPosition)], $where)
+			->execute();
 	}
 
 	/**
@@ -215,9 +235,12 @@ class Vtiger_Widget_Model extends \App\Base
 		} elseif ($widgetId) {
 			$where = ['userid' => $userId, 'id' => $widgetId];
 		}
-		$currentSize = App\Json::decode((new \App\Db\Query())->select(['size'])->from('vtiger_module_dashboard_widgets')->where($where)->scalar());
-		$currentSize[App\Session::get('fingerprint')] = App\Json::decode($size);
-		\App\Db::getInstance()->createCommand()->update('vtiger_module_dashboard_widgets', ['size' => App\Json::encode($currentSize)], $where)->execute();
+		$lastSize = (new \App\Db\Query())->select(['size'])->from('vtiger_module_dashboard_widgets')->where($where)->scalar();
+		$currentSize = \App\Json::isEmpty($lastSize) ? [] : Json::decode($lastSize);
+		$currentSize[App\Session::get('fingerprint')] = $size;
+		\App\Db::getInstance()->createCommand()
+			->update('vtiger_module_dashboard_widgets', ['size' => Json::encode($currentSize)], $where)
+			->execute();
 	}
 
 	/**
@@ -269,26 +292,22 @@ class Vtiger_Widget_Model extends \App\Base
 	/**
 	 * Function to check the Widget is Default widget or not.
 	 *
-	 * @return <boolean> true/false
+	 * @return bool
 	 */
-	public function isDefault()
+	public function isDefault(): bool
 	{
-		if (1 == $this->get('isdefault')) {
-			return true;
-		}
-		return false;
+		return 1 == $this->get('isdefault');
 	}
 
 	/**
 	 * Process the UI Widget requested.
 	 *
-	 * @param vtlib\Link             $widgetLink
-	 * @param Current Smarty Context $context
-	 * @param Vtiger_Record_Model    $recordModel
+	 * @param Vtiger_Link_Model   $widgetLink
+	 * @param Vtiger_Record_Model $recordModel
 	 */
 	public function processWidget(Vtiger_Link_Model $widgetLink, Vtiger_Record_Model $recordModel)
 	{
-		if (preg_match('/^block:\\/\\/(.*)/', $widgetLink->get('linkurl'), $matches)) {
+		if (preg_match('/^block:\\/\\/(.*)/', $widgetLink->get('linkurl') ?? '', $matches)) {
 			[$widgetControllerClass, $widgetControllerClassFile] = explode(':', $matches[1]);
 			if (!class_exists($widgetControllerClass)) {
 				\vtlib\Deprecated::checkFileAccessForInclusion($widgetControllerClassFile);
@@ -415,32 +434,37 @@ class Vtiger_Widget_Model extends \App\Base
 			case 'width':
 				$params['uitype'] = 16;
 				$params['typeofdata'] = 'V~M';
+				$params['maximumlength'] = '2';
 				$params['picklistValues'] = [3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 => 9, 10 => 10, 11 => 11, 12 => 12];
 				$params['fieldvalue'] = $this->getWidth();
 				break;
 			case 'height':
 				$params['uitype'] = 16;
 				$params['typeofdata'] = 'V~M';
+				$params['maximumlength'] = '2';
 				$params['picklistValues'] = [3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 => 9, 10 => 10, 11 => 11, 12 => 12];
 				$params['fieldvalue'] = $this->getHeight();
 				break;
 			case 'limit':
 				$params['uitype'] = 7;
 				$params['typeofdata'] = 'I~M';
+				$params['maximumlength'] = '127';
 				$params['fieldvalue'] = $this->get('limit') ?: 10;
 				break;
 			case 'default_owner':
 				$params['uitype'] = 16;
+				$params['maximumlength'] = '100';
 				$params['typeofdata'] = 'V~M';
 				$picklistValue = ['mine' => 'LBL_MINE', 'all' => 'LBL_ALL'];
 				foreach ($picklistValue as $key => $label) {
 					$params['picklistValues'][$key] = \App\Language::translate($label, $moduleName);
 				}
-				$value = $this->get('owners') ? \App\Json::decode($this->get('owners')) : [];
+				$value = $this->get('owners') ? Json::decode($this->get('owners')) : [];
 				$params['fieldvalue'] = $value['default'] ?? 'mine';
 				break;
 			case 'owners_all':
 				$params['uitype'] = 33;
+				$params['maximumlength'] = '100';
 				$params['typeofdata'] = 'V~M';
 				$picklistValue = [
 					'mine' => 'LBL_MINE',
@@ -451,7 +475,7 @@ class Vtiger_Widget_Model extends \App\Base
 				foreach ($picklistValue as $key => $label) {
 					$params['picklistValues'][$key] = \App\Language::translate($label, $moduleName);
 				}
-				$owners = $this->get('owners') ? \App\Json::decode($this->get('owners')) : [];
+				$owners = $this->get('owners') ? Json::decode($this->get('owners')) : [];
 				$value = $owners['available'] ?? ['mine'];
 				$params['fieldvalue'] = implode(' |##| ', $value);
 				break;
@@ -491,20 +515,20 @@ class Vtiger_Widget_Model extends \App\Base
 				switch ($fieldName) {
 					case 'width':
 					case 'height':
-						$size = $this->get('size') ? \App\Json::decode($this->get('size')) : [];
+						$size = $this->get('size') ? Json::decode($this->get('size')) : [];
 						$size[$fieldName] = $value;
-						$this->set('size', \App\Json::encode($size));
+						$this->set('size', Json::encode($size));
 						break;
 					case 'default_owner':
-						$owners = $this->get('owners') ? \App\Json::decode($this->get('owners')) : [];
+						$owners = $this->get('owners') ? Json::decode($this->get('owners')) : [];
 						$owners['default'] = $value;
-						$this->set('owners', \App\Json::encode($owners));
+						$this->set('owners', Json::encode($owners));
 						break;
 					case 'owners_all':
 						$value = $value ? explode(' |##| ', $value) : [];
-						$owners = $this->get('owners') ? \App\Json::decode($this->get('owners')) : [];
+						$owners = $this->get('owners') ? Json::decode($this->get('owners')) : [];
 						$owners['available'] = $value;
-						$this->set('owners', \App\Json::encode($owners));
+						$this->set('owners', Json::encode($owners));
 						break;
 					case 'default_date':
 						$this->set('date', $value);
@@ -566,7 +590,100 @@ class Vtiger_Widget_Model extends \App\Base
 	 */
 	public function getDataValue(string $name)
 	{
-		$values = $this->get('data') ? \App\Json::decode($this->get('data')) : [];
+		$values = $this->get('data') ? Json::decode($this->get('data')) : [];
 		return $values[$name] ?? null;
+	}
+
+	/**
+	 * Get dashboard id.
+	 *
+	 * @param \App\Request $request
+	 *
+	 * @return int
+	 */
+	public static function getDashboardId(App\Request $request)
+	{
+		$dashboardId = false;
+		if (!$request->isEmpty('dashboardId', true)) {
+			$dashboardId = $request->getInteger('dashboardId');
+		} elseif (isset($_SESSION['DashBoard'][$request->getModule()]['LastDashBoardId'])) {
+			$dashboardId = $_SESSION['DashBoard'][$request->getModule()]['LastDashBoardId'];
+		}
+		if (!$dashboardId) {
+			$dashboardId = Settings_WidgetsManagement_Module_Model::getDefaultDashboard();
+		}
+		$request->set('dashboardId', $dashboardId);
+		return $dashboardId;
+	}
+
+	/**
+	 * Clear configuration of widgets for this device.
+	 *
+	 * @param int $dashboardId
+	 *
+	 * @return void
+	 */
+	public static function clearDeviceConf(int $dashboardId): void
+	{
+		$fingerPrint = App\Session::get('fingerprint');
+		$dataReader = (new \App\Db\Query())->select(['id', 'position', 'size'])->from('vtiger_module_dashboard_widgets')->where([
+			'userid' => \App\User::getCurrentUserId(),
+			'dashboardid' => $dashboardId,
+		])->andWhere([
+			'or',
+			['like', 'position', "\"$fingerPrint\""],
+			['like', 'size', "\"$fingerPrint\""],
+		], )->createCommand()->query();
+
+		$createCommand = \App\Db::getInstance()->createCommand();
+		while (['id' => $id,'position' => $position,'size' => $size] = $dataReader->read()) {
+			$position = $position ? Json::decode($position) : [];
+			if (isset($position[$fingerPrint])) {
+				unset($position[$fingerPrint]);
+			}
+			$size = $size ? Json::decode($size) : [];
+			if (isset($size[$fingerPrint])) {
+				unset($size[$fingerPrint]);
+			}
+			$createCommand->update('vtiger_module_dashboard_widgets', ['position' => Json::encode($position), 'size' => Json::encode($size)], ['id' => $id])->execute();
+		}
+	}
+
+	/**
+	 * Check if the widget is removable.
+	 *
+	 * @return bool
+	 */
+	public function isDeletable(): bool
+	{
+		return !$this->get('isdefault');
+	}
+
+	/**
+	 * Check if the widget is viewable.
+	 *
+	 * @return bool
+	 */
+	public function isViewable(): bool
+	{
+		$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
+		$params = vtlib\Functions::getQueryParams($this->get('linkurl'));
+		$moduleName = $params['module'];
+		$sourceModulePermission = true;
+		if (($name = $params['name'] ?? '') && \in_array($name, ['CalendarActivities', 'OverdueActivities'])) {
+			$sourceModulePermission = $userPrivModel->hasModulePermission('Calendar');
+		}
+
+		return 'ModTracker' === $moduleName || ($sourceModulePermission && $userPrivModel->hasModulePermission($moduleName));
+	}
+
+	/**
+	 * Check if the widget is creatable.
+	 *
+	 * @return bool
+	 */
+	public function isCreatable(): bool
+	{
+		return false;
 	}
 }

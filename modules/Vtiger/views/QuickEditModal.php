@@ -4,8 +4,8 @@
  *
  * @package   View
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -80,6 +80,18 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		$viewer->assign('RECORD_STRUCTURE', $recordStructure);
 		$layout = $request->getByType('showLayout') ?: Config\Performance::$quickEditLayout ?? 'blocks';
 		$layout = 'Calendar' === $moduleName ? 'standard' : $layout;
+
+		$eventHandler = new App\EventHandler();
+		$eventHandler->setRecordModel($recordModel);
+		$eventHandler->setModuleName($moduleName);
+		$eventHandler->setParams([
+			'mode' => 'QuickEdit',
+			'layout' => $layout,
+			'viewInstance' => $this,
+		]);
+		$eventHandler->trigger('EditViewBefore');
+		['layout' => $layout] = $eventHandler->getParams();
+
 		if ('blocks' === $layout) {
 			$layout = 'blocks';
 			$blockModels = $moduleModel->getBlocks();
@@ -101,7 +113,6 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		}
 		$viewer->assign('SHOW_ALERT_NO_POWERS', ($changedFieldsExist && !$changedFields && !$recordStructure));
 		$viewer->assign('ADDRESS_BLOCK_LABELS', ['LBL_ADDRESS_INFORMATION', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_BILLING', 'LBL_ADDRESS_SHIPPING']);
-		$viewer->assign('PICKIST_DEPENDENCY_DATASOURCE', \App\Json::encode(\App\Fields\Picklist::getPicklistDependencyDatasource($moduleName)));
 		$viewer->assign('MAPPING_RELATED_FIELD', \App\Json::encode(\App\ModuleHierarchy::getRelationFieldByHierarchy($moduleName)));
 		$viewer->assign('LIST_FILTER_FIELDS', \App\Json::encode(\App\ModuleHierarchy::getFieldsForListFilter($moduleName)));
 		$viewer->assign('LAYOUT', $layout);
@@ -115,8 +126,7 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		$viewer->assign('MODULE_MODEL', $moduleModel);
 		$viewer->assign('VIEW', $request->getByType('view', 1));
 		$viewer->assign('MODE', 'edit');
-		$viewer->assign('MAX_UPLOAD_LIMIT_MB', Vtiger_Util_Helper::getMaxUploadSize());
-		$viewer->assign('MAX_UPLOAD_LIMIT', \App\Config::main('upload_maxsize'));
+		$viewer->assign('RECORD_ACTIVITY_NOTIFIER', $record && \App\Config::performance('recordActivityNotifier', false) && $moduleModel->isTrackingEnabled() && $moduleModel->isPermitted('RecordActivityNotifier'));
 		$viewer->view('Modals/QuickEdit.tpl', $request->getModule());
 	}
 
@@ -200,6 +210,7 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 	 */
 	public function getLinks(Vtiger_Record_Model $recordModel)
 	{
+		$links = Vtiger_Link_Model::getAllByType($recordModel->getModule()->getId(), ['QUICKCREATE_VIEW_HEADER', 'EDIT_VIEW_RECORD_COLLECTOR'], []);
 		$links['QUICKEDIT_VIEW_HEADER'][] = Vtiger_Link_Model::getInstanceFromValues([
 			'linktype' => 'QUICKEDIT_VIEW_HEADER',
 			'linkhint' => 'LBL_GO_TO_FULL_FORM',

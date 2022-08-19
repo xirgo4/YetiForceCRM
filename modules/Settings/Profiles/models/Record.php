@@ -6,6 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -234,8 +235,8 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 	/**
 	 * Check if has module field permission.
 	 *
-	 * @param string $module
-	 * @param int    $field
+	 * @param string             $module
+	 * @param Vtiger_Field_Model $field
 	 *
 	 * @return bool
 	 */
@@ -279,8 +280,8 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 	/**
 	 * Return module field permission value.
 	 *
-	 * @param string $module
-	 * @param int    $field
+	 * @param string             $module
+	 * @param Vtiger_Field_Model $field
 	 *
 	 * @return int
 	 */
@@ -318,7 +319,7 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 	 *
 	 * @param Vtiger_Module_Model $module
 	 *
-	 * @return bool|array
+	 * @return bool|Vtiger_Module_Model
 	 */
 	public function getProfileTabModel($module)
 	{
@@ -342,7 +343,7 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 	 * @param string             $module
 	 * @param Vtiger_Field_Model $field
 	 *
-	 * @return bool|array
+	 * @return bool|Vtiger_Field_Model
 	 */
 	public function getProfileTabFieldModel($module, $field)
 	{
@@ -471,6 +472,7 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 			$profileActionPermissions = $this->getProfileActionPermissions();
 			$profileUtilityPermissions = $this->getProfileUtilityPermissions();
 			$allTabActions = Vtiger_Action_Model::getAll(true);
+			$defaultFieldPermission = $this->getId() ? Settings_Profiles_Module_Model::NOT_PERMITTED_VALUE : Settings_Profiles_Module_Model::IS_PERMITTED_VALUE;
 
 			foreach ($allModules as $id => $moduleModel) {
 				$permissions = [];
@@ -494,11 +496,11 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 				foreach ($moduleFields as $fieldModel) {
 					$fieldPermissions = [];
 					$fieldId = $fieldModel->getId();
-					$fieldPermissions['visible'] = Settings_Profiles_Module_Model::IS_PERMITTED_VALUE;
+					$fieldPermissions['visible'] = $defaultFieldPermission;
 					if (isset($allFieldPermissions[$fieldId]['visible'])) {
 						$fieldPermissions['visible'] = $allFieldPermissions[$fieldId]['visible'];
 					}
-					$fieldPermissions['readonly'] = Settings_Profiles_Module_Model::IS_PERMITTED_VALUE;
+					$fieldPermissions['readonly'] = $defaultFieldPermission;
 					if (isset($allFieldPermissions[$fieldId]['readonly'])) {
 						$fieldPermissions['readonly'] = $allFieldPermissions[$fieldId]['readonly'];
 					}
@@ -591,8 +593,15 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 		if (\count($allModuleModules) > 0) {
 			$actionModels = Vtiger_Action_Model::getAll(true);
 			foreach ($allModuleModules as $moduleModel) {
-				if ($moduleModel->isActive() && isset($profilePermissions[$moduleModel->getId()])) {
-					$this->saveModulePermissions($moduleModel, $profilePermissions[$moduleModel->getId()]);
+				$moduleId = $moduleModel->getId();
+				if ($moduleModel->isActive() && isset($profilePermissions[$moduleId])) {
+					foreach ($actionModels as $actionModel) {
+						$actionId = $actionModel->getId();
+						if (!isset($profilePermissions[$moduleId]['actions'][$actionId]) && $actionModel->isModuleEnabled($moduleModel)) {
+							$profilePermissions[$moduleId]['actions'][$actionId] = Settings_Profiles_Module_Model::NOT_PERMITTED_VALUE;
+						}
+					}
+					$this->saveModulePermissions($moduleModel, $profilePermissions[$moduleId]);
 				} else {
 					$permissions = [];
 					$permissions['is_permitted'] = Settings_Profiles_Module_Model::IS_PERMITTED_VALUE;
@@ -783,12 +792,8 @@ class Settings_Profiles_Record_Model extends Settings_Vtiger_Record_Model
 		return Settings_Profiles_Module_Model::NOT_PERMITTED_VALUE;
 	}
 
-	/**
-	 * Function to get the list view actions for the record.
-	 *
-	 * @return array - Associate array of Vtiger_Link_Model instances
-	 */
-	public function getRecordLinks()
+	/** {@inheritdoc} */
+	public function getRecordLinks(): array
 	{
 		$links = [];
 

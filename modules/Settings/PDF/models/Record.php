@@ -3,8 +3,8 @@
 /**
  * Record Class for PDF Settings.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Maciej Stencel <m.stencel@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -47,12 +47,8 @@ class Settings_PDF_Record_Model extends Settings_Vtiger_Record_Model
 		return $this;
 	}
 
-	/**
-	 * Function to get the list view actions for the record.
-	 *
-	 * @return <Array> - Associate array of Vtiger_Link_Model instances
-	 */
-	public function getRecordLinks()
+	/** {@inheritdoc} */
+	public function getRecordLinks(): array
 	{
 		$links = [];
 
@@ -62,7 +58,7 @@ class Settings_PDF_Record_Model extends Settings_Vtiger_Record_Model
 				'linklabel' => 'LBL_EDIT_RECORD',
 				'linkurl' => $this->getEditViewUrl(),
 				'linkicon' => 'yfi yfi-full-editing-view',
-				'class' => 'js-edit'
+				'class' => 'js-edit',
 			],
 			[
 				'linktype' => 'LISTVIEWRECORD',
@@ -230,8 +226,11 @@ class Settings_PDF_Record_Model extends Settings_Vtiger_Record_Model
 			case 'status':
 				$value = $value ? 'FL_ACTIVE' : 'FL_INACTIVE';
 				break;
-			case 'margin_chkbox':
+			case 'default':
 				$value = $value ? 'LBL_YES' : 'LBL_NO';
+				break;
+			case 'generator':
+				$value = \App\Pdf\Pdf::getDriverLabel($value);
 				break;
 			default:
 				break;

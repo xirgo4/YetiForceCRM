@@ -5,7 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  *************************************************************************************/
 'use strict';
 
@@ -97,33 +97,6 @@ $.Class(
 				listInstance.noRecordSelectedAlert();
 			}
 		},
-		/*
-		 * function to trigger Send Sms
-		 * @params: send email url , module name.
-		 */
-		triggerSendSms: function (massActionUrl, module) {
-			let listInstance = Vtiger_List_Js.getInstance();
-			if (!listInstance.checkListRecordSelected()) {
-				Vtiger_List_Js.triggerMassAction(massActionUrl, (data) => {
-					new App.Fields.Text.Completions($(data).find('.js-completions').eq(0), {
-						emojiPanel: true,
-						completionsCollection: {}
-					});
-					data.on('submit', 'form', (e) => {
-						e.preventDefault();
-						let form = $(e.currentTarget);
-						form.find('.js-modal__save').attr('disabled', 'disabled');
-						listInstance.massActionSave(form).done(function (response) {
-							if (response.result && response.result.message) {
-								app.showNotify({ text: response.result.message, type: 'info' });
-							}
-						});
-					});
-				});
-			} else {
-				listInstance.noRecordSelectedAlert();
-			}
-		},
 		triggerMassQuickCreate: function (moduleName, data) {
 			let listInstance = Vtiger_List_Js.getInstance();
 			if (listInstance.checkListRecordSelected() != true) {
@@ -165,14 +138,14 @@ $.Class(
 					progressIndicatorElement.progressIndicator({ mode: 'hide' });
 					if (data) {
 						let callback = function (data) {
-							let params = app.validationEngineOptions;
+							let params = { ...app.validationEngineOptions };
 							params.onValidationComplete = function (form, valid) {
 								if (valid) {
 									thisInstance.transferOwnershipSave(form);
 								}
 								return false;
 							};
-							data.find('#changeOwner').validationEngine(app.validationEngineOptions);
+							data.find('#changeOwner').validationEngine(params);
 						};
 						app.showModalWindow(data, function (data) {
 							let selectElement = thisInstance.getRelatedModuleContainer();
@@ -191,7 +164,7 @@ $.Class(
 			const progressIndicatorElement = $.progressIndicator();
 			let url = 'index.php?module=' + module + '&view=ExportRecords';
 			app.showModalWindow(null, url, function (container) {
-				container.find('.js-modal__save').on('click', (e) => {
+				container.find('.js-modal__save').on('click', (_e) => {
 					let formData = container.find('.js-modal-form').serializeFormData();
 					const listInstance = Vtiger_List_Js.getInstance();
 					$.extend(formData, listInstance.getSearchParams());
@@ -298,35 +271,38 @@ $.Class(
 				});
 		},
 		triggerMassEdit: function (massEditUrl) {
-			let selectedCount = this.getSelectedRecordCount();
-			if (selectedCount > $('#listMaxEntriesMassEdit').val()) {
-				let params = {
-					title: app.vtranslate('JS_MESSAGE'),
-					text: app.vtranslate('JS_MASS_EDIT_LIMIT'),
-					type: 'error'
-				};
-				app.showNotify(params);
-				return;
+			let listInstance = Vtiger_List_Js.getInstance();
+			if (listInstance.checkListRecordSelected() !== true) {
+				let selectedCount = this.getSelectedRecordCount();
+				if (selectedCount > $('#listMaxEntriesMassEdit').val()) {
+					let params = {
+						title: app.vtranslate('JS_MESSAGE'),
+						text: app.vtranslate('JS_MASS_EDIT_LIMIT'),
+						type: 'error'
+					};
+					app.showNotify(params);
+					return;
+				}
+				Vtiger_List_Js.triggerMassAction(
+					massEditUrl,
+					function (container) {
+						app.event.trigger('MassEditModal.AfterLoad', container, massEditUrl);
+						let massEditForm = container.find('#massEdit');
+						massEditForm.validationEngine(app.validationEngineOptions);
+						listInstance.registerEventForTabClick(massEditForm);
+						let editInstance = Vtiger_Edit_Js.getInstance();
+						editInstance.registerBasicEvents(massEditForm);
+						listInstance.postMassEdit(container);
+						listInstance.registerSlimScrollMassEdit();
+						if ($('#massEditContainer').length) {
+							listInstance.inactiveFieldsValidation($('#massEditContainer').find('form'));
+						}
+					},
+					{ width: '65%' }
+				);
+			} else {
+				listInstance.noRecordSelectedAlert();
 			}
-			Vtiger_List_Js.triggerMassAction(
-				massEditUrl,
-				function (container) {
-					app.event.trigger('MassEditModal.AfterLoad', container, massEditUrl);
-					let massEditForm = container.find('#massEdit');
-					massEditForm.validationEngine(app.validationEngineOptions);
-					let listInstance = Vtiger_List_Js.getInstance();
-					listInstance.registerEventForTabClick(massEditForm);
-					let editInstance = Vtiger_Edit_Js.getInstance();
-					editInstance.registerBasicEvents(massEditForm);
-					listInstance.postMassEdit(container);
-					listInstance.registerSlimScrollMassEdit();
-
-					if ($('#massEditContainer').length) {
-						listInstance.inactiveFieldsValidation($('#massEditContainer').find('form'));
-					}
-				},
-				{ width: '65%' }
-			);
 		},
 		getSelectedRecordCount: function () {
 			let count;
@@ -407,30 +383,13 @@ $.Class(
 		triggerReviewChanges: function (reviewUrl) {
 			let listInstance = Vtiger_List_Js.getInstance();
 			let validationResult = listInstance.checkListRecordSelected();
-			if (validationResult != true) {
-				let message = app.vtranslate('JS_MASS_REVIEWING_CHANGES_CONFIRMATION');
-				let title = '<i class="fa fa-check-circle"></i> ' + app.vtranslate('JS_LBL_REVIEW_CHANGES');
-				Vtiger_Helper_Js.showConfirmationBox({ message: message, title: title })
-					.done(function (e) {
-						let params = listInstance.getSearchParams();
-						let url =
-							reviewUrl +
-							'&viewname=' +
-							params.viewname +
-							'&selected_ids=' +
-							params.selected_ids +
-							'&excluded_ids=' +
-							params.excluded_ids +
-							'&entityState=' +
-							params.entityState;
-						if (listInstance.getListSearchInstance()) {
-							url += '&search_params=' + params.search_params;
-							if (typeof searchValue !== 'undefined' && params.search_value.length > 0) {
-								url += '&search_key=' + params.search_key;
-								url += '&search_value=' + params.search_value;
-								url += '&operator=s';
-							}
-						}
+			if (validationResult !== true) {
+				app.showConfirmModal({
+					icon: 'fa fa-check-circle',
+					title: app.vtranslate('JS_LBL_REVIEW_CHANGES'),
+					text: app.vtranslate('JS_MASS_REVIEWING_CHANGES_CONFIRMATION'),
+					confirmedCallback: () => {
+						let params = { ...listInstance.getSearchParams() };
 						let deleteMessage = app.vtranslate('JS_LOADING_PLEASE_WAIT');
 						let progressIndicatorElement = $.progressIndicator({
 							message: deleteMessage,
@@ -439,7 +398,13 @@ $.Class(
 								enabled: true
 							}
 						});
-						AppConnector.request(url)
+						delete params.view;
+						delete params.module;
+						delete params.parent;
+						AppConnector.request({
+							url: reviewUrl,
+							data: params
+						})
 							.done(function (data) {
 								progressIndicatorElement.progressIndicator({
 									mode: 'hide'
@@ -457,10 +422,11 @@ $.Class(
 							.fail(function (error, err) {
 								app.errorLog(error, err);
 							});
-					})
-					.fail(function (error, err) {
+					},
+					rejectedCallback: () => {
 						Vtiger_List_Js.clearList();
-					});
+					}
+				});
 			} else {
 				listInstance.noRecordSelectedAlert();
 			}
@@ -472,7 +438,7 @@ $.Class(
 			let listInstance = Vtiger_List_Js.getInstance();
 			if (!listInstance.checkListRecordSelected()) {
 				Vtiger_List_Js.triggerMassAction(massActionUrl, (data) => {
-					new App.Fields.Text.Completions($(data).find('.js-completions').eq(0), { emojiPanel: false });
+					new App.Fields.Text.Completions($(data).find('.js-completions').eq(0));
 					$(data).on('submit', '#massSave', (e) => {
 						e.preventDefault();
 						let form = $(e.currentTarget),
@@ -587,7 +553,11 @@ $.Class(
 			if ($('#sortOrder').length) {
 				params.sortorder = $('#sortOrder').val();
 			}
-			let listSearchInstance = this.getListSearchInstance();
+			const advancedConditions = $('#listViewContents .js-custom-view-adv-cond');
+			if (advancedConditions.length) {
+				params.advancedConditions = advancedConditions.val();
+			}
+			const listSearchInstance = this.getListSearchInstance();
 			if (listSearchInstance !== false) {
 				let searchValue = listSearchInstance.getAlphabetSearchValue();
 				params.search_params = listSearchInstance.getListSearchParams(true);
@@ -602,7 +572,7 @@ $.Class(
 			return params;
 		},
 
-		/*
+		/**
 		 * Function which will give you all the list view params
 		 */
 		getListViewRecords: function (urlParams) {
@@ -711,7 +681,7 @@ $.Class(
 			}
 			return aDeferred.promise();
 		},
-		/*
+		/**
 		 * Function to return alerts if no records selected.
 		 */
 		noRecordSelectedAlert: function (text = 'JS_PLEASE_SELECT_ONE_RECORD') {
@@ -979,7 +949,7 @@ $.Class(
 					}
 					thisInstance
 						.massActionSave(form, true)
-						.done(function (data) {
+						.done(function () {
 							thisInstance.getListViewRecords();
 							Vtiger_List_Js.clearList();
 						})
@@ -1009,7 +979,7 @@ $.Class(
 					sortorder: listViewPageDiv.find('#sortOrder').val(),
 					viewname: self.getCurrentCvId()
 				})
-				.done(function (data) {
+				.done(function () {
 					aDeferred.resolve();
 				})
 				.fail(function (textStatus, errorThrown) {
@@ -1184,7 +1154,7 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the event for changing the custom Filter
 		 */
 		registerChangeCustomFilterEvent: function (event) {
@@ -1221,8 +1191,13 @@ $.Class(
 				//to make alphabetic search empty
 				search_key: this.getAlphabetSearchField(),
 				search_value: '',
-				search_params: ''
+				search_params: '',
+				advancedConditions: ''
 			};
+			let tileSelect = this.getListViewTopMenuContainer().find('.js-selected-tile-size');
+			if (tileSelect.length > 0) {
+				urlParams.tile_size = tileSelect.attr('data-selected-tile-size');
+			}
 			//Make the select all count as empty
 			$('#recordsCount').val('');
 			//Make total number of pages as empty
@@ -1232,10 +1207,15 @@ $.Class(
 				this.breadCrumbsFilter(selectOption.text());
 				this.ListViewPostOperation();
 				this.updatePagination(1);
+				if (tileSelect.length > 0) {
+					const tileInstance = new Vtiger_Tiles_Js();
+					tileInstance.contentContainer = this.getListViewContainer();
+					tileInstance.setHeightOfTiles();
+				}
 			});
 			event.stopPropagation();
 		},
-		/*
+		/**
 		 * Function to register the event listeners for changing the custom Filter
 		 */
 		registerChangeCustomFilterEventListeners() {
@@ -1287,7 +1267,7 @@ $.Class(
 		ListViewPostOperation: function () {
 			return true;
 		},
-		/*
+		/**
 		 * Function to register the click event for list view main check box.
 		 */
 		registerMainCheckBoxClickEvent: function () {
@@ -1331,7 +1311,7 @@ $.Class(
 				thisInstance.writeExcludedIds(excludedIds);
 			});
 		},
-		/*
+		/**
 		 * Function  to register click event for list view check box.
 		 */
 		registerCheckBoxClickEvent: function () {
@@ -1362,7 +1342,7 @@ $.Class(
 				thisInstance.writeExcludedIds(excludedIds);
 			});
 		},
-		/*
+		/**
 		 * Function to register the click event for select all.
 		 */
 		registerSelectAllClickEvent: function () {
@@ -1378,7 +1358,7 @@ $.Class(
 				thisInstance.writeSelectedIds('all');
 			});
 		},
-		/*
+		/**
 		 * Function to register the click event for deselect All.
 		 */
 		registerDeselectAllClickEvent: function () {
@@ -1396,7 +1376,7 @@ $.Class(
 				thisInstance.writeExcludedIds(excludedIds);
 			});
 		},
-		/*
+		/**
 		 * Function to register the click event for listView headers
 		 */
 		registerHeadersClickEvent: function () {
@@ -1404,7 +1384,7 @@ $.Class(
 				this.getListViewRecords(data);
 			});
 		},
-		/*
+		/**
 		 * function to register the click event event for create filter
 		 */
 		createFilterClickEvent: function (event) {
@@ -1437,7 +1417,7 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the click event for duplicate filter
 		 */
 		registerDuplicateFilterClickEvent: function () {
@@ -1455,7 +1435,7 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the click event for edit filter
 		 */
 		registerEditFilterClickEvent: function () {
@@ -1473,28 +1453,29 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the click event for delete filter
 		 */
 		registerDeleteFilterClickEvent: function () {
-			const thisInstance = this;
+			const self = this;
 			const listViewFilterBlock = this.getFilterBlock();
 			if (listViewFilterBlock != false) {
 				//used mouseup event to stop the propagation of customfilter select change event.
 				listViewFilterBlock.on('mouseup', '.js-filter-delete', (event) => {
 					//to close the dropdown
-					thisInstance.getFilterSelectElement().data('select2').close();
+					self.getFilterSelectElement().data('select2').close();
 					const liElement = $(event.currentTarget).closest('.select2-results__option');
-					Vtiger_Helper_Js.showConfirmationBox({
-						message: app.vtranslate('JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE_FILTER')
-					}).done((e) => {
-						AppConnector.requestForm(thisInstance.getSelectOptionFromChosenOption(liElement).data('deleteurl'));
+					app.showConfirmModal({
+						title: app.vtranslate('JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE_FILTER'),
+						confirmedCallback: () => {
+							AppConnector.requestForm(self.getSelectOptionFromChosenOption(liElement).data('deleteurl'));
+						}
 					});
 					event.stopPropagation();
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the click event for approve filter
 		 */
 		registerApproveFilterClickEvent: function () {
@@ -1510,7 +1491,7 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the click event for deny filter
 		 */
 		registerDenyFilterClickEvent: function () {
@@ -1526,7 +1507,7 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to generate filter actions template
 		 */
 		appendFilterActionsTemplate: function (liElement) {
@@ -1554,7 +1535,7 @@ $.Class(
 				</span>`);
 			template.appendTo(liElement.find('.js-filter__title'));
 		},
-		/*
+		/**
 		 * Function to register the hover event for customview filter options
 		 */
 		registerCustomFilterOptionsHoverEvent: function () {
@@ -1572,7 +1553,7 @@ $.Class(
 				});
 			}
 		},
-		/*
+		/**
 		 * Function to register the list view row click event
 		 */
 		registerRowClickEvent: function () {
@@ -1582,6 +1563,7 @@ $.Class(
 				if ($(e.target).closest('div').hasClass('actions')) return;
 				if ($(e.target).is('button') || $(e.target).parent().is('button')) return;
 				if ($(e.target).closest('a').hasClass('noLinkBtn')) return;
+				if ($(e.target).is('a')) return;
 				if ($(e.target, $(e.currentTarget)).is('td:first-child')) return;
 				if ($(e.target).is('input[type="checkbox"]')) return;
 				if ($.contains($(e.currentTarget).find('td:last-child').get(0), e.target)) return;
@@ -1594,6 +1576,9 @@ $.Class(
 				window.location.href = recordUrl;
 			});
 		},
+		/**
+		 * Register mass records events.
+		 */
 		registerMassRecordsEvents: function () {
 			const self = this;
 			this.getListViewContainer().on('click', '.js-mass-record-event', function () {
@@ -1613,33 +1598,36 @@ $.Class(
 							app.showModalWindow(modal);
 						});
 					} else {
-						let params = {};
+						let params = {
+							icon: false,
+							confirmedCallback: () => {
+								let progressIndicatorElement = $.progressIndicator(),
+									dataParams = self.getSearchParams();
+								delete dataParams.view;
+								AppConnector.request({
+									type: 'POST',
+									url: target.data('url'),
+									data: dataParams
+								})
+									.done(function (data) {
+										progressIndicatorElement.progressIndicator({ mode: 'hide' });
+										if (data && data.result && data.result.notify) {
+											Vtiger_Helper_Js.showMessage(data.result.notify);
+										}
+										self.getListViewRecords();
+									})
+									.fail(function (error, err) {
+										progressIndicatorElement.progressIndicator({ mode: 'hide' });
+									});
+							}
+						};
 						if (target.data('confirm')) {
-							params.message = target.data('confirm');
+							params.text = target.data('confirm');
 							params.title = target.html();
 						} else {
-							params.message = target.html();
+							params.text = target.html();
 						}
-						Vtiger_Helper_Js.showConfirmationBox(params).done(function (e) {
-							let progressIndicatorElement = $.progressIndicator(),
-								dataParams = self.getSearchParams();
-							delete dataParams.view;
-							AppConnector.request({
-								type: 'POST',
-								url: target.data('url'),
-								data: dataParams
-							})
-								.done(function (data) {
-									progressIndicatorElement.progressIndicator({ mode: 'hide' });
-									if (data && data.result && data.result.notify) {
-										Vtiger_Helper_Js.showMessage(data.result.notify);
-									}
-									self.getListViewRecords();
-								})
-								.fail(function (error, err) {
-									progressIndicatorElement.progressIndicator({ mode: 'hide' });
-								});
-						});
+						app.showConfirmModal(params);
 					}
 				} else {
 					listInstance.noRecordSelectedAlert();
@@ -1679,7 +1667,7 @@ $.Class(
 			}
 			self.writeSelectedIds([]);
 		},
-		/*
+		/**
 		 * Function to register the click event of email field
 		 */
 		registerEmailFieldClickEvent: function () {
@@ -1688,7 +1676,7 @@ $.Class(
 				e.stopPropagation();
 			});
 		},
-		/*
+		/**
 		 * Function to register the click event of phone field
 		 */
 		registerPhoneFieldClickEvent: function () {
@@ -1697,7 +1685,7 @@ $.Class(
 				e.stopPropagation();
 			});
 		},
-		/*
+		/**
 		 * Function to register the click event of url field
 		 */
 		registerUrlFieldClickEvent: function () {
@@ -1712,25 +1700,20 @@ $.Class(
 		 * @param Accepts form as a parameter
 		 */
 		inactiveFieldsValidation: function (form) {
-			let massEditFieldList = $('#massEditFieldsNameList').data('value');
-			for (let fieldName in massEditFieldList) {
-				let fieldInfo = massEditFieldList[fieldName];
-
-				let fieldElement = form.find('[name="' + fieldInfo.name + '"]');
+			form.find('.fieldValue [data-validation-engine][data-fieldinfo]').each((_, e) => {
+				let fieldElement = $(e);
+				let fieldInfo = fieldElement.data('fieldinfo');
 				if (fieldInfo.type == 'reference') {
 					//get the element which will be shown which has "_display" appended to actual field name
 					fieldElement = form.find('[name="' + fieldInfo.name + '_display"]');
 				} else if (fieldInfo.type == 'multipicklist' || fieldInfo.type == 'sharedOwner') {
 					fieldElement = form.find('[name="' + fieldInfo.name + '[]"]');
 				}
-
 				//Not all the fields will be enabled for mass edit
 				if (fieldElement.length == 0) {
-					continue;
+					return;
 				}
-
 				let elemData = fieldElement.data();
-
 				//Blank validation by default
 				let validationVal = 'validate[]';
 				if ('validationEngine' in elemData) {
@@ -1739,7 +1722,7 @@ $.Class(
 				}
 				fieldElement.attr('data-invalid-validation-engine', validationVal);
 				fieldElement.removeAttr('data-validation-engine');
-			}
+			});
 		},
 		registerEventForTabClick: function (form) {
 			let ulContainer = form.find('.massEditTabs');
@@ -2089,11 +2072,33 @@ $.Class(
 		 */
 		registerKeyboardShortcutsEvent: function () {
 			document.addEventListener('keydown', (event) => {
-				if (event.altKey && event.code === 'KeyA' && $('.js-add-record').length) {
+				if (event.shiftKey && event.ctrlKey && event.code === 'KeyA' && $('.js-add-record').length) {
 					window.location.href = 'index.php?module=' + app.getModuleName() + '&view=Edit';
 				}
 			});
 		},
+		/**
+		 * Function that executes after the mass delete action
+		 */
+		postMassDeleteRecords: function () {
+			let aDeferred = $.Deferred();
+			let listInstance = Vtiger_List_Js.getInstance();
+			app.hideModalWindow();
+			listInstance.getListViewRecords().done(function (data) {
+				$('#recordsCount').val('');
+				$('#totalPageCount').text('');
+				$('#deSelectAllMsg').trigger('click');
+				listInstance.calculatePages().done(function () {
+					listInstance.updatePagination();
+				});
+				aDeferred.resolve();
+			});
+			$('#recordsCount').val('');
+			return aDeferred.promise();
+		},
+		/**
+		 * Function to register events
+		 */
 		registerEvents: function () {
 			this.registerRowClickEvent();
 			this.registerPageNavigationEvents();
@@ -2114,6 +2119,9 @@ $.Class(
 			this.registerApproveFilterClickEvent();
 			this.registerDenyFilterClickEvent();
 			this.registerCustomFilterOptionsHoverEvent();
+			if (typeof CustomView !== 'undefined') {
+				CustomView.registerCustomViewAdvCondEvents(this.getListViewContainer());
+			}
 			this.registerEmailFieldClickEvent();
 			this.registerPhoneFieldClickEvent();
 			this.registerMassActionsBtnEvents();
@@ -2130,25 +2138,6 @@ $.Class(
 			this.registerLastRelationsEvent();
 			this.registerKeyboardShortcutsEvent();
 			Vtiger_Index_Js.registerMailButtons(listViewContainer);
-		},
-		/**
-		 * Function that executes after the mass delete action
-		 */
-		postMassDeleteRecords: function () {
-			let aDeferred = $.Deferred();
-			let listInstance = Vtiger_List_Js.getInstance();
-			app.hideModalWindow();
-			listInstance.getListViewRecords().done(function (data) {
-				$('#recordsCount').val('');
-				$('#totalPageCount').text('');
-				$('#deSelectAllMsg').trigger('click');
-				listInstance.calculatePages().done(function () {
-					listInstance.updatePagination();
-				});
-				aDeferred.resolve();
-			});
-			$('#recordsCount').val('');
-			return aDeferred.promise();
 		}
 	}
 );

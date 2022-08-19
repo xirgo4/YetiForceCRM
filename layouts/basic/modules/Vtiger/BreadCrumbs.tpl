@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-BreadCrumbs -->
 	{if \App\Config::layout('breadcrumbs')}
@@ -57,7 +57,7 @@
 					{assign var="ITEM_PREV" value=$item['name']}
 				{/foreach}
 			</ol>
-			{if isset($SELECTED_PAGE)}
+			{if isset($SELECTED_PAGE) && $SELECTED_PAGE->get('description')}
 				{assign var="TRANSLATED_DESCRIPTION" value=\App\Language::translate($SELECTED_PAGE->get('description'),$QUALIFIED_MODULE)}
 				{if !empty(trim($TRANSLATED_DESCRIPTION)) && $SELECTED_PAGE->get('description') !== $TRANSLATED_DESCRIPTION}
 					<div class="js-popover-tooltip ml-2 d-inline my-auto u-h-fit u-cursor-pointer" data-js="popover" data-content="{$TRANSLATED_DESCRIPTION}">

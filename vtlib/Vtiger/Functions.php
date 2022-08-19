@@ -7,7 +7,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 namespace vtlib;
@@ -41,7 +41,7 @@ class Functions
 			}
 			\App\Cache::save('moduleTabs', 'all', $moduleList);
 		}
-		$restrictedModules = ['SMSNotifier', 'Dashboard', 'ModComments'];
+		$restrictedModules = ['Dashboard', 'ModComments'];
 		foreach ($moduleList as $id => $module) {
 			if (!$showRestricted && \in_array($module['name'], $restrictedModules)) {
 				unset($moduleList[$id]);
@@ -347,7 +347,7 @@ class Functions
 			} else {
 				$trace = '';
 				if (\App\Config::debug('DISPLAY_EXCEPTION_BACKTRACE') && \is_object($e)) {
-					$trace = str_replace(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR, '', "{$e->getFile()}({$e->getLine()})\n{$e->getTraceAsString()}");
+					$trace = str_replace(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR, '', "->{$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}");
 				}
 				$response->setError($code, $message, $trace);
 			}
@@ -357,18 +357,18 @@ class Functions
 				if (\App\Config::debug('DISPLAY_EXCEPTION_BACKTRACE') && \is_object($e)) {
 					$message = [
 						'message' => $message,
-						'trace' => str_replace(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR, '', "{$e->getFile()}({$e->getLine()})\n{$e->getTraceAsString()}"),
+						'trace' => str_replace(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR, '', "-> {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}"),
 					];
 					$code = $e->getCode();
 				}
 				http_response_code($code);
 				$viewer = new \Vtiger_Viewer();
-				$viewer->assign('MESSAGE', $message);
+				$viewer->assign('MESSAGE', \Config\Debug::$EXCEPTION_ERROR_TO_SHOW ? $message : \App\Language::translate('ERR_OCCURRED_ERROR'));
 				$viewer->assign('MESSAGE_EXPANDED', \is_array($message));
 				$viewer->assign('HEADER_MESSAGE', \App\Language::translate($messageHeader));
-				$viewer->view('ExceptionError.tpl', 'Vtiger');
+				$viewer->view('Exceptions/ExceptionError.tpl', 'Vtiger');
 			} else {
-				echo $message . PHP_EOL;
+				echo(\Config\Debug::$EXCEPTION_ERROR_TO_SHOW ? $message : \App\Language::translate('ERR_OCCURRED_ERROR')) . PHP_EOL;
 			}
 		}
 		if ($die) {
@@ -524,18 +524,6 @@ class Functions
 		return $str;
 	}
 
-	public static function getMaxUploadSize()
-	{
-		// find max filesize value
-		$maxFileSize = self::parseBytes(ini_get('upload_max_filesize'));
-		$maxPostSize = self::parseBytes(ini_get('post_max_size'));
-
-		if ($maxPostSize && $maxPostSize < $maxFileSize) {
-			$maxFileSize = $maxPostSize;
-		}
-		return $maxFileSize;
-	}
-
 	public static function getMinimizationOptions($type = 'js')
 	{
 		switch ($type) {
@@ -587,31 +575,38 @@ class Functions
 	 */
 	public static function getConversionRateInfo($currencyId, $date = '')
 	{
-		$currencyUpdateModel = \Settings_CurrencyUpdate_Module_Model::getCleanInstance();
 		$defaultCurrencyId = \App\Fields\Currency::getDefault()['id'];
 		$info = [];
-
 		if (empty($date)) {
 			$yesterday = date('Y-m-d', strtotime('-1 day'));
 			$date = self::getLastWorkingDay($yesterday);
 		}
 		$info['date'] = $date;
-
 		if ($currencyId == $defaultCurrencyId) {
 			$info['value'] = 1.0;
 			$info['conversion'] = 1.0;
 		} else {
-			$value = $currencyUpdateModel->getCRMConversionRate($currencyId, $defaultCurrencyId, $date);
+			$value = \Settings_CurrencyUpdate_Module_Model::getCleanInstance()->getCRMConversionRate($currencyId, $defaultCurrencyId, $date);
 			$info['value'] = empty($value) ? 1.0 : round($value, 5);
 			$info['conversion'] = empty($value) ? 1.0 : round(1 / $value, 5);
 		}
 		return $info;
 	}
 
-	public static function getQueryParams($url)
+	/**
+	 * Getting parameters from URL.
+	 *
+	 * @param string|null $url
+	 *
+	 * @return array
+	 */
+	public static function getQueryParams($url): array
 	{
-		$queryStr = parse_url(htmlspecialchars_decode($url), PHP_URL_QUERY);
-		parse_str($queryStr, $queryParams);
+		$queryParams = [];
+		if (!empty($url) && $queryStr = parse_url(htmlspecialchars_decode($url), PHP_URL_QUERY)) {
+			parse_str($queryStr, $queryParams);
+		}
+
 		return $queryParams;
 	}
 

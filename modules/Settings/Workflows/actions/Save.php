@@ -6,14 +6,12 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o.
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Settings_Workflows_Save_Action extends Settings_Vtiger_Basic_Action
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$summary = $request->get('summary');
@@ -48,7 +46,7 @@ class Settings_Workflows_Save_Action extends Settings_Vtiger_Basic_Action
 			} elseif ($workflowScheduleType == Workflow::$SCHEDULED_MONTHLY_BY_DATE) {
 				$dayOfMonth = \App\Json::encode($request->getArray('schdayofmonth', 'Integer'));
 			} elseif ($workflowScheduleType == Workflow::$SCHEDULED_ON_SPECIFIC_DATE) {
-				$date = $request->getByType('schdate', 'DateTimeInUserFormat', true);
+				$date = $request->getByType('schdate', 'dateTimeInUserFormat', true);
 				$date = \App\Fields\DateTime::formatToDb($date);
 				$currentTime = Vtiger_Util_Helper::getActiveAdminCurrentDateTime();
 				if ($date > $currentTime) {
@@ -66,7 +64,7 @@ class Settings_Workflows_Save_Action extends Settings_Vtiger_Basic_Action
 			$params = array_intersect_key($request->getMultiDimensionArray('params', [
 				'iterationOff' => \App\Purifier::BOOL,
 				'showTasks' => \App\Purifier::BOOL,
-				'enableTasks' => \App\Purifier::BOOL
+				'enableTasks' => \App\Purifier::BOOL,
 			]), array_flip(['iterationOff']));
 			$workflowModel->set('params', empty($params) ? null : \App\Json::encode($params));
 			$workflowModel->set('schdayofmonth', $dayOfMonth);
@@ -76,7 +74,7 @@ class Settings_Workflows_Save_Action extends Settings_Vtiger_Basic_Action
 			$params = array_intersect_key($request->getMultiDimensionArray('params', [
 				'iterationOff' => \App\Purifier::BOOL,
 				'showTasks' => \App\Purifier::BOOL,
-				'enableTasks' => \App\Purifier::BOOL
+				'enableTasks' => \App\Purifier::BOOL,
 			]), array_flip(['showTasks', 'enableTasks']));
 			$workflowModel->set('params', empty($params) ? null : \App\Json::encode($params));
 		}

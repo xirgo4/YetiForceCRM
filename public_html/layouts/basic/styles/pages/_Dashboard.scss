@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 
 .dashboardContainer {
 	padding: 0;
@@ -209,6 +209,31 @@
 	&__icons {
 		top: 50%;
 		transform: translateY(-50%);
-		position: relative;
+	}
+}
+//--- Widgets Working time counter---
+.o-time-counter {
+	&__navigator-icon {
+		font-size: 140px;
+		color: #f8f9fa;
+	}
+	&__timer {
+		font-size: 40px;
+		color: #b4b2af;
+	}
+	&__navigator-buttons {
+		width: calculate-rem(160px);
+		height: calculate-rem(160px);
+		border: 13px solid #fafafa;
+		border-radius: 50%;
+		a {
+			font-size: calculate-rem(85px);
+		}
+	}
+
+	&__navigator-buttons.active {
+		a {
+			font-size: calculate-rem(55px);
+		}
 	}
 }

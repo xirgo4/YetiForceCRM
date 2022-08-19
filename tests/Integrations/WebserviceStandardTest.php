@@ -6,8 +6,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -53,19 +53,15 @@ final class WebserviceStandardTest extends \Tests\Base
 	private static $authUserParams;
 	private static $recordId;
 
-	/**
-	 * @var SchemaManager
-	 */
+	/** @var SchemaManager */
 	protected static $schemaManager;
 
-	/**
-	 * @var \GuzzleHttp\Client
-	 */
+	/** @var \GuzzleHttp\Client */
 	protected $httpClient;
 
 	public static function setUpBeforeClass(): void
 	{
-		self::$schemaManager = new SchemaManager(json_decode(file_get_contents(ROOT_DIRECTORY . '/public_html/api/WebserviceStandard.json')));
+		self::$schemaManager = new SchemaManager(json_decode(file_get_contents(ROOT_DIRECTORY . \App\Installer\Developer::PATH . '/WebserviceStandard.json')));
 	}
 
 	protected function setUp(): void
@@ -178,7 +174,7 @@ final class WebserviceStandardTest extends \Tests\Base
 				'json' => [
 					'methods' => 'TOPO',
 					'secret' => $secretKey,
-					'code' => (new \Sonata\GoogleAuthenticator\GoogleAuthenticator())->getCode($secretKey),
+					'code' => (new \PragmaRX\Google2FA\Google2FA())->getCurrentOtp($secretKey),
 				],
 			], self::$requestOptions)
 		);
@@ -193,7 +189,7 @@ final class WebserviceStandardTest extends \Tests\Base
 				'json' => [
 					'userName' => 'api@yetiforce.com',
 					'password' => 'api',
-					'code' => (new \Sonata\GoogleAuthenticator\GoogleAuthenticator())->getCode($secretKey),
+					'code' => (new \PragmaRX\Google2FA\Google2FA())->getCurrentOtp($secretKey),
 				],
 			], self::$requestOptions)
 		);

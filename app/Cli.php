@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -67,7 +67,7 @@ class Cli
 		$this->climate->white('Version: ' . Version::get() . ' | CRM URL: ' . \Config\Main::$site_URL);
 		$this->climate->lightGreen()->border('─', 200);
 		\App\User::setCurrentUserId(\Users::getActiveAdminId());
-		\App\Language::setTemporaryLanguage('en_US');
+		\App\Language::setTemporaryLanguage('en-US');
 
 		$this->climate->arguments->add([
 			'module' => [

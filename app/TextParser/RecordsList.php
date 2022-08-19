@@ -4,8 +4,8 @@
  *
  * @package TextParser
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -65,15 +65,12 @@ class RecordsList extends Base
 			];
 			$html .= $this->parseConditions($conditions, $listView->getQueryGenerator());
 		}
-
-		$html .= '<table border="1" class="products-table" style="border-collapse:collapse;width:100%;"><thead><tr>';
-		$headerStyle = 'font-size:9px;padding:0px 4px;text-align:center;';
-		$bodyStyle = 'font-size:8px;border:1px solid #ddd;padding:0px4px;';
-
+		$html .= '<table class="records-list" style="border-collapse:collapse;width:100%;border:1px solid  #ddd;"><thead><tr>';
+		$headerStyle = 'text-align:center;background-color:#ddd;';
+		$bodyStyle = 'border:1px solid #ddd;padding:4px; ';
 		foreach ($fields as $fieldModel) {
 			$html .= "<th style=\"{$headerStyle}\">" . \App\Language::translate($fieldModel->getFieldLabel(), $this->textParser->moduleName) . '</th>';
 		}
-
 		$html .= '</tr></thead><tbody>';
 		foreach ($ids as $recordId) {
 			$html .= '<tr>';
@@ -85,9 +82,9 @@ class RecordsList extends Base
 				$value = '';
 				if (($sourceField = $fieldModel->get('source_field_name')) && !$recordModel->isEmpty($sourceField) && \App\Record::isExists($recordModel->get($sourceField))) {
 					$sourceRecordModel = \Vtiger_Record_Model::getInstanceById($recordModel->get($sourceField));
-					$value = $sourceRecordModel->getDisplayValue($fieldModel->getName(), $recordModel->getId(), true);
+					$value = $fieldModel->getUITypeModel()->getTextParserDisplayValue($sourceRecordModel->get($fieldModel->getName()), $sourceRecordModel, []);
 				} elseif (!$fieldModel->get('source_field_name')) {
-					$value = $recordModel->getDisplayValue($fieldModel->getName(), $recordModel->getId(), true);
+					$value = $fieldModel->getUITypeModel()->getTextParserDisplayValue($recordModel->get($fieldModel->getName()), $recordModel, []);
 				}
 				$html .= "<td style=\"{$bodyStyle}\">" . $value . '</td>';
 			}

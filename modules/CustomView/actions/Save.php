@@ -6,14 +6,12 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class CustomView_Save_Action extends \App\Controller\Action
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
 		if ($request->has('record') && !CustomView_Record_Model::getInstanceById($request->getInteger('record'))->isEditable()) {
@@ -24,9 +22,7 @@ class CustomView_Save_Action extends \App\Controller\Action
 		}
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$moduleModel = Vtiger_Module_Model::getInstance($request->getByType('source_module', 2));
@@ -43,7 +39,7 @@ class CustomView_Save_Action extends \App\Controller\Action
 		} else {
 			$response->setResult([
 				'success' => false,
-				'message' => \App\Language::translate('LBL_CUSTOM_VIEW_NAME_DUPLICATES_EXIST', $request->getModule(false))
+				'message' => \App\Language::translate('LBL_CUSTOM_VIEW_NAME_DUPLICATES_EXIST', $request->getModule(false)),
 			]);
 		}
 		$response->emit();
@@ -59,7 +55,6 @@ class CustomView_Save_Action extends \App\Controller\Action
 	private function getCVModelFromRequest(App\Request $request)
 	{
 		$cvId = $request->getInteger('record');
-
 		if (!empty($cvId)) {
 			$customViewModel = CustomView_Record_Model::getInstanceById($cvId);
 		} else {
@@ -80,9 +75,14 @@ class CustomView_Save_Action extends \App\Controller\Action
 		if (empty($selectedColumnsList)) {
 			$cvIdDefault = App\CustomView::getInstance($request->getByType('source_module', \App\Purifier::ALNUM))->getDefaultCvId();
 			$defaultCustomViewModel = CustomView_Record_Model::getInstanceById($cvIdDefault);
-			$selectedColumnsList = $defaultCustomViewModel->getSelectedFields();
+			$selectedColumnsList = array_keys($defaultCustomViewModel->getSelectedFields());
 		}
 		$customViewData['columnslist'] = $selectedColumnsList;
+		$customFieldNames = $request->getArray('customFieldNames', 'Text');
+		array_walk($customFieldNames, function (&$customLabel) {
+			$customLabel = \App\Purifier::decodeHtml(trim($customLabel));
+		});
+		$customViewData['customFieldNames'] = $customFieldNames;
 		$advFilterList = $request->getArray('advfilterlist', 'Text');
 		if (!empty($advFilterList)) {
 			$customViewData['advfilterlist'] = $advFilterList;
@@ -90,11 +90,16 @@ class CustomView_Save_Action extends \App\Controller\Action
 		$duplicateFields = $request->getMultiDimensionArray('duplicatefields', [
 			[
 				'fieldid' => 'Integer',
-				'ignore' => 'Bool'
-			]
+				'ignore' => 'Bool',
+			],
 		]);
 		if (!empty($duplicateFields)) {
 			$customViewData['duplicatefields'] = $duplicateFields;
+		}
+		$advancedConditions = $request->getArray('advanced_conditions', 'Text');
+		if (!empty($advancedConditions['relationId']) || !empty($advancedConditions['relationColumns'])) {
+			\App\Condition::validAdvancedConditions($advancedConditions);
+			$customViewData['advanced_conditions'] = \App\Json::encode($advancedConditions);
 		}
 		return $customViewModel->setData($customViewData);
 	}

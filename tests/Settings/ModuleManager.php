@@ -4,9 +4,10 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
 namespace Tests\Settings;
@@ -84,7 +85,7 @@ class ModuleManager extends \Tests\Base
 			'module_label' => 'TestModule',
 			'entitytype' => \Vtiger_Module_Model::ADVANCED_TYPE,
 			'entityfieldlabel' => 'TestModule',
-			'premium' => 2
+			'premium' => 2,
 		]);
 
 		$this->assertFileExists(ROOT_DIRECTORY . '/modules/TestModule/TestModule.php');
@@ -220,6 +221,8 @@ class ModuleManager extends \Tests\Base
 			case 305: //MultiReferenceValue
 				$this->assertTrue((new \App\Db\Query())->from('s_#__multireference')->where(['source_module' => 'TestModule', 'dest_module' => 'Contacts'])->exists(), 'No record in the table "s_yf_multireference" for type ' . $type);
 				break;
+			default:
+				break;
 		}
 	}
 
@@ -320,6 +323,8 @@ class ModuleManager extends \Tests\Base
 				break;
 			case 305: //MultiReferenceValue
 				$this->assertFalse((new \App\Db\Query())->from('s_#__multireference')->where(['source_module' => 'TestModule', 'dest_module' => 'Contacts'])->exists(), 'The record from "s_#__multireference" was not removed.');
+				break;
+			default:
 				break;
 		}
 	}

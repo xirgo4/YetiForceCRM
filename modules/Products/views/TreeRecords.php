@@ -3,16 +3,14 @@
 /**
  * Products TreeView View Class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Products_TreeRecords_View extends Vtiger_TreeRecords_View
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$baseModuleName = 'Accounts';
@@ -58,9 +56,7 @@ class Products_TreeRecords_View extends Vtiger_TreeRecords_View
 		$viewer->view('TreeRecords.tpl', $moduleName);
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function postProcess(App\Request $request, $display = true)
 	{
 		$viewer = $this->getViewer($request);

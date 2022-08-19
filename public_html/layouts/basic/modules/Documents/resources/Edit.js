@@ -5,6 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
+ * Contributor(s): YetiForce S.A.
  *************************************************************************************/
 'use strict';
 
@@ -14,10 +15,6 @@ Vtiger_Edit_Js(
 	{
 		INTERNAL_FILE_LOCATION_TYPE: 'I',
 		EXTERNAL_FILE_LOCATION_TYPE: 'E',
-
-		getMaxiumFileUploadingSize: function (container) {
-			return container.find('.maxUploadSize').data('value');
-		},
 
 		isFileLocationInternalType: function (fileLocationElement) {
 			if (fileLocationElement.val() == this.INTERNAL_FILE_LOCATION_TYPE) {
@@ -91,6 +88,7 @@ Vtiger_Edit_Js(
 
 		registerFileChangeEvent: function (container) {
 			var thisInstance = this;
+
 			container.on('change', 'input[name="filename"]', function (e) {
 				if (e.target.type === 'text') {
 					return false;
@@ -102,8 +100,8 @@ Vtiger_Edit_Js(
 				}
 				let uploadFileSizeHolder = element.closest('.fileUploadContainer').find('.uploadedFileSize');
 				let fileSize = element.get(0).files[0].size;
-				if (fileSize > thisInstance.getMaxiumFileUploadingSize(container)) {
-					app.showAlert(app.vtranslate('JS_EXCEEDS_MAX_UPLOAD_SIZE'));
+				if (fileSize > CONFIG['maxUploadLimit']) {
+					app.showAlert(app.vtranslate('JS_UPLOADED_FILE_SIZE_EXCEEDS'));
 					element.val('');
 					uploadFileSizeHolder.text('');
 				} else {
@@ -115,7 +113,7 @@ Vtiger_Edit_Js(
 		/**
 		 * Function to save the quickcreate module
 		 * @param accepts form element as parameter
-		 * @return returns deferred promise
+		 * @returns {Promise}
 		 */
 		quickCreateSave: function (form) {
 			var thisInstance = this;

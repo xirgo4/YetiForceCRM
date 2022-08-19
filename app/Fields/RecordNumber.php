@@ -7,8 +7,8 @@ namespace App\Fields;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Tomasz Kur <t.kur@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -44,7 +44,7 @@ class RecordNumber extends \App\Base
 		if (!\is_numeric($tabId)) {
 			$tabId = \App\Module::getModuleId($tabId);
 		}
-		$row = (new \App\Db\Query())->from('vtiger_modentity_num')->where(['tabid' => $tabId])->one();
+		$row = (new \App\Db\Query())->from('vtiger_modentity_num')->where(['tabid' => $tabId])->one() ?: [];
 		$row['tabid'] = $tabId;
 		$instance->setData($row);
 		return self::$instanceCache[$tabId] = $instance;
@@ -66,9 +66,9 @@ class RecordNumber extends \App\Base
 	/**
 	 * Returns model of record.
 	 *
-	 * @return mixed
+	 * @return \Vtiger_Record_Model|null
 	 */
-	public function getRecord()
+	public function getRecord(): ?\Vtiger_Record_Model
 	{
 		return $this->get('recordModel');
 	}
@@ -83,6 +83,7 @@ class RecordNumber extends \App\Base
 		$actualSequence = static::getSequenceNumber($this->get('reset_sequence'));
 		if ($this->get('reset_sequence') && $this->get('cur_sequence') !== $actualSequence) {
 			$currentSequenceNumber = 1;
+			$this->updateModuleSystemVariablesSequences($currentSequenceNumber);
 		} else {
 			$currentSequenceNumber = $this->getCurrentSequenceNumber();
 		}
@@ -208,6 +209,18 @@ class RecordNumber extends \App\Base
 	}
 
 	/**
+	 * Update all module system variables sequences.
+	 *
+	 * @param string $currentId
+	 *
+	 * @return void
+	 */
+	public function updateModuleSystemVariablesSequences($currentId): void
+	{
+		\App\Db::getInstance()->createCommand()->update('u_#__modentity_sequences', ['cur_id' => $currentId], ['tabid' => $this->get('tabid')])->execute();
+	}
+
+	/**
 	 * Function to check if record need a new number of sequence.
 	 *
 	 * @return bool
@@ -216,7 +229,7 @@ class RecordNumber extends \App\Base
 	{
 		return $this->getRecord()->isNew()
 			|| ($this->getRelatedValue() && $this->getRelatedValue() !== self::getInstance($this->getRecord()->getModuleName())
-				->setRecord((clone $this->getRecord())->getInstanceByEntity($this->getRecord()->getEntity(), $this->getRecord()->getId()))->getRelatedValue());
+				->setRecord((clone $this->getRecord())->getInstanceByEntity($this->getRecord()->getEntity(), $this->getRecord()->getId())->setData($this->getRecord()->getData()))->getRelatedValue());
 	}
 
 	/**
@@ -230,7 +243,7 @@ class RecordNumber extends \App\Base
 	private function getPicklistValue(string $picklistName, ?string $recordValue = null): string
 	{
 		$values = Picklist::getValues($picklistName);
-		if (!isset($recordValue)) {
+		if (null === $recordValue) {
 			$recordValue = $this->getRecord()->get($picklistName);
 		}
 		foreach ($values as $value) {

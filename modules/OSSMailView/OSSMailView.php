@@ -3,8 +3,8 @@
 /**
  * OSSMailView CRMEntity class.
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 class OSSMailView extends CRMEntity
 {
@@ -73,9 +73,7 @@ class OSSMailView extends CRMEntity
 	public $default_order_by = 'date';
 	public $default_sort_order = 'DESC';
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function moduleHandler($moduleName, $eventType)
 	{
 		$dbCommand = App\Db::getInstance()->createCommand();

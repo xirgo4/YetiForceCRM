@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
 
 jQuery.Class(
@@ -135,11 +135,11 @@ jQuery.Class(
 					function (data, err) {}
 				);
 			});
-			container.find('.js-delate-accont').on('click', function () {
+			container.find('.js-delate-account').on('click', function () {
 				if (window.confirm(app.vtranslate('whether_remove_an_identity'))) {
 					const userId = jQuery(this).data('user-id');
 					AppConnector.request({
-						data: { module: 'OSSMailScanner', action: 'AccontRemove', id: userId },
+						data: { module: 'OSSMailScanner', action: 'AccountRemove', id: userId },
 						async: true
 					}).done(function (data) {
 						app.showNotify({

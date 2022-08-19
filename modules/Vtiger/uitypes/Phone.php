@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Phone_UIType extends Vtiger_Base_UIType
@@ -85,7 +85,7 @@ class Vtiger_Phone_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getListViewDisplayValue($value, $record = false, $recordModel = false, $rawText = false)
 	{
-		$href = $international = \App\Purifier::encodeHtml($value);
+		$href = $international = ($value ? \App\Purifier::encodeHtml($value) : '');
 		if ((\Config\Main::$phoneFieldAdvancedVerification ?? false) && ($format = \App\Config::main('phoneFieldAdvancedHrefFormat', \libphonenumber\PhoneNumberFormat::RFC3966)) !== false) {
 			$phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
 			try {
@@ -110,6 +110,31 @@ class Vtiger_Phone_UIType extends Vtiger_Base_UIType
 	}
 
 	/** {@inheritdoc} */
+	public function getTextParserDisplayValue($value, Vtiger_Record_Model $recordModel, $params)
+	{
+		if (empty($value)) {
+			return '';
+		}
+		$href = $international = \App\Purifier::encodeHtml($value);
+		if ((\Config\Main::$phoneFieldAdvancedVerification ?? false) && ($format = \App\Config::main('phoneFieldAdvancedHrefFormat', \libphonenumber\PhoneNumberFormat::RFC3966)) !== false) {
+			$phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+			try {
+				$swissNumberProto = $phoneUtil->parse($value);
+				$international = $phoneUtil->format($swissNumberProto, \libphonenumber\PhoneNumberFormat::INTERNATIONAL);
+				$href = $phoneUtil->format($swissNumberProto, $format);
+			} catch (\libphonenumber\NumberParseException $e) {
+				\App\Log::info($e->__toString(), __CLASS__);
+			}
+			if (\libphonenumber\PhoneNumberFormat::RFC3966 !== $format) {
+				$href = 'tel:' . $href;
+			}
+		} else {
+			$href = 'tel:' . $href;
+		}
+		return '<a href="' . $href . '">' . $international . '</a>';
+	}
+
+	/** {@inheritdoc} */
 	public function getTemplateName()
 	{
 		return 'Edit/Field/Phone.tpl';
@@ -118,7 +143,7 @@ class Vtiger_Phone_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny'];
+		return ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/**

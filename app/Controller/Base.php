@@ -4,9 +4,10 @@
  *
  * @package   Controller
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
 namespace App\Controller;
@@ -18,25 +19,12 @@ abstract class Base
 {
 	/** @var \App\Headers Headers instance. */
 	public $headers;
-	/**
-	 * CSRF is active?.
-	 *
-	 * @var bool
-	 */
-	public $csrfActive = true;
 
-	/**
-	 * Activated language locale.
-	 *
-	 * @var bool
-	 */
+	/** @var bool Activated language locale. */
 	protected static $activatedLocale = false;
-	/**
-	 * Activated csrf.
-	 *
-	 * @var bool
-	 */
-	protected static $activatedCsrf = false;
+
+	/** @var bool  CSRF already initiated. */
+	private static $csrfInitiated = false;
 
 	/**
 	 * Constructor.
@@ -48,15 +36,10 @@ abstract class Base
 			\App\Language::initLocale();
 			self::$activatedLocale = true;
 		}
-		if (!self::$activatedCsrf) {
-			if ($this->csrfActive && \App\Config::security('csrfActive')) {
-				require_once 'config/csrf_config.php';
-				\CsrfMagic\Csrf::init();
-				$this->csrfActive = true;
-			} else {
-				$this->csrfActive = false;
-			}
-			self::$activatedCsrf = true;
+		if (\App\Config::security('csrfActive') && !self::$csrfInitiated) {
+			require_once 'config/csrf_config.php';
+			\CsrfMagic\Csrf::init();
+			self::$csrfInitiated = true;
 		}
 	}
 

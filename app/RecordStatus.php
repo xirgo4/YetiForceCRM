@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Rafal Pospiech <r.pospiech@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -295,9 +295,9 @@ class RecordStatus
 		$timeCountingValues = self::getTimeCountingValues($fieldName);
 		$previous = $recordModel->getPreviousValue($fieldName);
 		$current = $recordModel->get($fieldName);
-		$currentCountingValue = $timeCountingValues[$current] ?? '';
-		$previousCountingValue = $timeCountingValues[$previous] ?? '';
-		if ($previous && $currentCountingValue !== $previousCountingValue
+		$currentCountingValue = $timeCountingValues[$current] ?? null;
+		$previousCountingValue = $timeCountingValues[$previous] ?? null;
+		if ($previous && $currentCountingValue !== $previousCountingValue && null !== $previousCountingValue
 		&& ($date = self::getStateDate($recordModel, $previousCountingValue)) && ($key = self::$fieldsByStateTime[$previousCountingValue] ?? '')) {
 			$recordModel->set($key . '_range_time', $recordModel->get($key . '_range_time') + Utils\ServiceContracts::getDiff($date, $recordModel));
 			$recordModel->set($key . '_datatime', date('Y-m-d H:i:s'));
@@ -308,7 +308,7 @@ class RecordStatus
 	}
 
 	/**
-	 * Get date date from the status change history by status.
+	 * Get date from the status change history by status.
 	 *
 	 * @param \Vtiger_Record_Model $recordModel
 	 * @param int                  $value
@@ -377,7 +377,7 @@ class RecordStatus
 	 * @param string $moduleName
 	 * @param bool   $byName
 	 *
-	 * @return string[]
+	 * @return array
 	 */
 	public static function getLockStatus(string $moduleName, bool $byName = true): array
 	{

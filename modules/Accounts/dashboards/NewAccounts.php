@@ -3,8 +3,8 @@
 /**
  * Wdiget to show new accounts.
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Tomasz Kur <t.kur@yetiforce.com>
  */
 class Accounts_NewAccounts_Dashboard extends Vtiger_IndexAjax_View
@@ -53,6 +53,7 @@ class Accounts_NewAccounts_Dashboard extends Vtiger_IndexAjax_View
 		$time = $request->getByType('time', 'DateRangeUserFormat');
 		$displayTime = [];
 		if (empty($time)) {
+			$time = [];
 			$time['start'] = App\Fields\Date::formatToDb('');
 			$time['end'] = $time['start'];
 		}

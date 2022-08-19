@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * ********************************************************************************** */
 
 class Settings_LayoutEditor_Field_Model extends Vtiger_Field_Model
@@ -67,6 +67,7 @@ class Settings_LayoutEditor_Field_Model extends Vtiger_Field_Model
 		318 => 'ServerAccess',
 		319 => 'MultiDomain',
 		324 => 'Token',
+		330 => 'MultiAttachment',
 		365 => 'AdvPercentage',
 	];
 
@@ -121,7 +122,6 @@ class Settings_LayoutEditor_Field_Model extends Vtiger_Field_Model
 					}
 					$db->createCommand()->delete('vtiger_picklist', ['name' => $fieldname])->execute();
 				}
-				$db->createCommand()->delete('vtiger_picklist_dependency', ['and', ['tabid' => $tabId], ['or', ['sourcefield' => $fieldname], ['targetfield' => $fieldname]]])->execute();
 			}
 
 			$entityInfo = \App\Module::getEntityInfo($fldModule);
@@ -341,12 +341,8 @@ class Settings_LayoutEditor_Field_Model extends Vtiger_Field_Model
 		return $fieldModelsList;
 	}
 
-	/**
-	 * Function to get the field details.
-	 *
-	 * @return <Array> - array of field values
-	 */
-	public function getFieldInfo()
+	/** {@inheritdoc} */
+	public function getFieldInfo(): array
 	{
 		$fieldInfo = parent::getFieldInfo();
 		$fieldInfo['isQuickCreateDisabled'] = $this->isQuickCreateOptionDisabled();

@@ -6,7 +6,7 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-* Contributor(s): YetiForce Sp. z o.o.
+* Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
@@ -40,10 +40,10 @@
 						<div class="input-group-prepend m-0 p-0">
 							<select name="{$FIELD_MODEL->getFieldName()}_country" tabindex="{$TABINDEX}"
 								{if $IS_LAZY} data-select-lazy="true" {/if}
-								id="{$MODULE}_editView_fieldName_{$FIELD_MODEL->getName()}_dropDown_{\App\Layout::getUniqueId()}" class="select2 phoneCountryList" data-template-result="prependDataTemplate" data-template-selection="prependDataTemplate" required="required" data-dropdown-auto-width="true">
+								id="{$MODULE}_editView_fieldName_{$FIELD_MODEL->getName()}_dropDown_{\App\Layout::getUniqueId()}" class="select2 phoneCountryList" data-template-result="prependDataTemplate" data-template-selection="prependDataTemplate" required="required" data-dropdown-auto-width="true" {if $FIELD_MODEL->isEditableReadOnly()} readonly="readonly" {/if}>
 								{foreach key=KEY item=ROW from=$PICKLIST_VALUES}
 									{assign var=TRANSLATE value=\App\Language::translateSingleMod($ROW['name'],'Other.Country')}
-									<option value="{$KEY}" {if $COUNTRY === $KEY} selected {/if} title="{$TRANSLATE}" data-template="<span><span class='flag-icon flag-icon-{$KEY|lower} mr-2'></span>{$TRANSLATE}</span>">{$TRANSLATE}</option>
+									<option value="{$KEY}" {if $COUNTRY === $KEY} selected {/if} title="{$TRANSLATE}" data-template="<span><span class='fi fi-{$KEY|lower} mr-2'></span>{$TRANSLATE}</span>">{$TRANSLATE}</option>
 								{/foreach}
 							</select>
 						</div>

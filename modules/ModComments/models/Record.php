@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -23,9 +23,7 @@ class ModComments_Record_Model extends Vtiger_Record_Model
 	/** @var \Vtiger_Record_Model Parent comment record model instance. */
 	private $parentCommentModel;
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getId()
 	{
 		$id = $this->get('modcommentsid');
@@ -35,17 +33,13 @@ class ModComments_Record_Model extends Vtiger_Record_Model
 		return $this->get('modcommentsid');
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function setId($id)
 	{
 		return $this->set('modcommentsid', $id);
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getDisplayValue($fieldName, $record = false, $rawText = false, $length = false)
 	{
 		if ('commentcontent' !== $fieldName) {
@@ -135,20 +129,16 @@ class ModComments_Record_Model extends Vtiger_Record_Model
 	 */
 	public function getCommentedByModel(): ?Vtiger_Record_Model
 	{
-		if (isset($this->commentedModel)) {
+		if (isset($this->commentatorModel)) {
 			return $this->commentatorModel;
 		}
 		if ($customer = $this->get('customer')) {
-			return $this->commentatorModel = Vtiger_Record_Model::getInstanceById($customer, 'Contacts');
+			$this->commentatorModel = Vtiger_Record_Model::getInstanceById($customer, 'Contacts');
+		} elseif (($commentedBy = $this->get('assigned_user_id')) && \App\User::isExists($commentedBy, false)) {
+			$this->commentatorModel = Vtiger_Record_Model::getInstanceById($commentedBy, 'Users');
 		}
-		$commentatorModel = null;
-		if ($commentedBy = $this->get('assigned_user_id')) {
-			$commentatorModel = Users_Privileges_Model::getInstanceById($commentedBy, 'Users');
-			if (empty($commentatorModel->entity->column_fields['user_name'])) {
-				$commentatorModel = Users_Privileges_Model::getInstanceById(Users::getActiveAdminId(), 'Users');
-			}
-		}
-		return $this->commentatorModel = $commentatorModel;
+
+		return $this->commentatorModel;
 	}
 
 	/**

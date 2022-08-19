@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-List-Field-DateTime -->
 	{assign var=FIELD_INFO value=\App\Json::encode($FIELD_MODEL->getFieldInfo())}
@@ -8,7 +8,7 @@
 	{else}
 		{assign var=SEARCH_VALUES value=''}
 	{/if}
-	<div class="picklistSearchField">
+	<div class="picklistSearchField u-min-w-150pxr">
 		<input name="{$FIELD_MODEL->getName()}" class="listSearchContributor dateTimePickerField form-control datepicker"
 			title="{\App\Language::translate($FIELD_MODEL->getFieldLabel(), $FIELD_MODEL->getModule()->getName())}"
 			type="text" value="{$SEARCH_VALUES}" data-date-format="{$dateFormat}" data-calendar-type="range"

@@ -1,22 +1,24 @@
 <?php
-
 /**
- * Date Query Field file.
+ * Date query field conditions file.
+ *
+ * @package UIType
+ *
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
 namespace App\Conditions\QueryFields;
 
 /**
- * Date Query Field Class.
- *
- * @package UIType
- *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * Date query field conditions class.
  */
 class DateField extends BaseField
 {
+	use \App\Conditions\QueryTraits\Comparison;
+	use \App\Conditions\QueryTraits\ComparisonField;
+
 	/**
 	 * Get order by.
 	 *
@@ -24,7 +26,7 @@ class DateField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function getOrderBy($order = false)
+	public function getOrderBy($order = false): array
 	{
 		if ($order && 'DESC' === strtoupper($order)) {
 			$sort = SORT_DESC;
@@ -102,7 +104,6 @@ class DateField extends BaseField
 	public function getStdOperator()
 	{
 		$value = $this->getStdValue();
-
 		return ['between', $this->getColumnName(), $value[0], $value[1]];
 	}
 
@@ -114,8 +115,7 @@ class DateField extends BaseField
 	public function operatorBw()
 	{
 		$value = $this->getArrayValue();
-
-		return ['between', $this->getColumnName(), $value[0], $value[1]];
+		return ['between', $this->getColumnName(), $value[0], $value[1] ?? $value[0]];
 	}
 
 	/**
@@ -133,7 +133,7 @@ class DateField extends BaseField
 	 *
 	 * @return array
 	 */
-	public function operatorA()
+	public function operatorA(): array
 	{
 		return ['>', $this->getColumnName(), $this->getValue()];
 	}
@@ -178,15 +178,5 @@ class DateField extends BaseField
 	public function operatorMoreThanDaysAgo()
 	{
 		return ['<=', $this->getColumnName(), date('Y-m-d', strtotime('-' . $this->getValue() . ' days'))];
-	}
-
-	/**
-	 * Lower operator.
-	 *
-	 * @return array
-	 */
-	public function operatorL()
-	{
-		return ['<', $this->getColumnName(), $this->getValue()];
 	}
 }

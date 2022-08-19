@@ -6,14 +6,12 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getDetailViewLinks(array $linkParams): array
 	{
 		$linkModelList = parent::getDetailViewLinks($linkParams);
@@ -21,7 +19,7 @@ class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 			$massActionLink = [
 				'linktype' => 'DETAIL_VIEW_BASIC',
 				'linklabel' => 'LBL_TRANSFER_OWNERSHIP',
-				'linkurl' => 'javascript:Vtiger_Detail_Js.triggerTransferOwnership("index.php?module=' . $this->getModule()->getName() . '&view=MassActionAjax&mode=transferOwnership")',
+				'linkurl' => 'javascript:Vtiger_Detail_Js.triggerTransferOwnership("index.php?module=' . $this->getModule()->getName() . '&view=TransferOwnership&record=' . $this->record->getId() . '")',
 				'linkclass' => 'btn-outline-dark btn-sm',
 				'linkicon' => 'yfi yfi-change-of-owner',
 			];
@@ -30,9 +28,7 @@ class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 		return $linkModelList;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function getDetailViewRelatedLinks()
 	{
 		$recordModel = $this->getRecord();
@@ -115,9 +111,9 @@ class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 			];
 		}
 		if (
-			\App\User::getCurrentUserId() === \App\User::getCurrentUserRealId() &&
-			\App\Module::isModuleActive('Chat') && !\App\RequestUtil::getBrowserInfo()->ie &&
-			false !== \App\ModuleHierarchy::getModuleLevel($parentModuleModel->getName())
+			\App\User::getCurrentUserId() === \App\User::getCurrentUserRealId()
+			&& \App\Module::isModuleActive('Chat') && !\App\RequestUtil::getBrowserInfo()->ie
+			&& false !== \App\ModuleHierarchy::getModuleLevel($parentModuleModel->getName())
 		) {
 			$relatedLinks[] = [
 				'linktype' => 'DETAILVIEWTAB',

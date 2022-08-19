@@ -5,8 +5,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -158,7 +158,7 @@ class C_RecordActions extends \Tests\Base
 			return self::$recordAccounts;
 		}
 		$recordModel = \Vtiger_Record_Model::getCleanInstance('Accounts');
-		$recordModel->set('accountname', 'YetiForce Sp. z o.o.');
+		$recordModel->set('accountname', 'YetiForce S.A.');
 		$recordModel->set('legal_form', 'PLL_COMPANY');
 		$recordModel->save();
 		if ($cache) {
@@ -317,7 +317,7 @@ class C_RecordActions extends \Tests\Base
 	 */
 	public function testGetDisplayName()
 	{
-		$this->assertTrue('YetiForce Sp. z o.o.' === self::$recordAccounts->getDisplayName());
+		$this->assertTrue('YetiForce S.A.' === self::$recordAccounts->getDisplayName());
 	}
 
 	/**
@@ -327,9 +327,9 @@ class C_RecordActions extends \Tests\Base
 	{
 		self::$recordAccounts->changeState('Trash');
 		$this->assertSame(1, (new \App\Db\Query())->select(['deleted'])->from('vtiger_crmentity')->where(['crmid' => self::$recordAccounts->getId()])->scalar());
-		self::$recordAccounts->changeState('Active');
-		$this->assertSame(0, (new \App\Db\Query())->select(['deleted'])->from('vtiger_crmentity')->where(['crmid' => self::$recordAccounts->getId()])->scalar());
 		self::$recordAccounts->changeState('Archived');
 		$this->assertSame(2, (new \App\Db\Query())->select(['deleted'])->from('vtiger_crmentity')->where(['crmid' => self::$recordAccounts->getId()])->scalar());
+		self::$recordAccounts->changeState('Active');
+		$this->assertSame(0, (new \App\Db\Query())->select(['deleted'])->from('vtiger_crmentity')->where(['crmid' => self::$recordAccounts->getId()])->scalar());
 	}
 }

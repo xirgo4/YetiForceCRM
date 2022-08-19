@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Users_SaveAjax_Action extends Vtiger_SaveAjax_Action
@@ -25,8 +25,8 @@ class Users_SaveAjax_Action extends Vtiger_SaveAjax_Action
 	public function checkPermission(App\Request $request)
 	{
 		parent::checkPermission($request);
-		$currentUserModel = Users_Record_Model::getCurrentUserModel();
-		if (!$currentUserModel->isAdminUser() && (int) $currentUserModel->getId() !== $request->getInteger('record') && (int) $currentUserModel->getId() !== $request->getInteger('userid')) {
+		$userModel = \App\User::getCurrentUserModel();
+		if (!$userModel->isAdmin() && (int) $userModel->getId() !== $request->getInteger('record')) {
 			throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
 		}
 	}
@@ -42,8 +42,6 @@ class Users_SaveAjax_Action extends Vtiger_SaveAjax_Action
 		}
 
 		$this->saveRecord($request);
-		$settingsModuleModel = Settings_Users_Module_Model::getInstance();
-		$settingsModuleModel->refreshSwitchUsers();
 		$fieldModelList = $this->record->getModule()->getFields();
 		$result = [];
 		foreach ($fieldModelList as $fieldName => &$fieldModel) {
@@ -98,8 +96,11 @@ class Users_SaveAjax_Action extends Vtiger_SaveAjax_Action
 	 */
 	public function restoreUser(App\Request $request)
 	{
+		if (!\App\User::getCurrentUserModel()->isAdmin()) {
+			throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
+		}
 		$moduleName = $request->getModule();
-		$record = $request->get('userid');
+		$record = $request->getInteger('record');
 
 		$recordModel = Users_Record_Model::getInstanceById($record, $moduleName);
 		$recordModel->set('status', 'Active');
@@ -117,7 +118,7 @@ class Users_SaveAjax_Action extends Vtiger_SaveAjax_Action
 
 	public function changeAccessKey(App\Request $request)
 	{
-		$recordId = $request->get('record');
+		$recordId = $request->getInteger('record');
 		$moduleName = $request->getModule();
 
 		$response = new Vtiger_Response();

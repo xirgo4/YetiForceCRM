@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Settings_CronTasks_Record_Model extends Settings_Vtiger_Record_Model
@@ -276,12 +276,8 @@ class Settings_CronTasks_Record_Model extends Settings_Vtiger_Record_Model
 		return false;
 	}
 
-	/**
-	 * Function to get the list view actions for the record.
-	 *
-	 * @return <Array> - Associate array of Vtiger_Link_Model instances
-	 */
-	public function getRecordLinks()
+	/** {@inheritdoc} */
+	public function getRecordLinks(): array
 	{
 		$links = [];
 

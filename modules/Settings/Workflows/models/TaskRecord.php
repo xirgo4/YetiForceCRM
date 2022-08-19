@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 require_once 'modules/com_vtiger_workflow/include.php';
@@ -297,5 +297,20 @@ class Settings_Workflows_TaskRecord_Model extends Settings_Vtiger_Record_Model
 		$taskObject = $this->getTaskObject();
 		$this->task_manager->saveTask($taskObject);
 		$this->set('summary', $taskObject->summary)->set('status', $taskObject->active);
+	}
+
+	/**
+	 * Get next task action sequence number.
+	 *
+	 * @param int $workflowId
+	 *
+	 * @return int
+	 */
+	public function getNextSequenceNumber(int $workflowId): int
+	{
+		return (new \App\Db\Query())
+			->from('com_vtiger_workflowtasks')
+			->where(['workflow_id' => $workflowId])
+			->max('sequence') + 1;
 	}
 }

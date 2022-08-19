@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o.
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 /**
@@ -40,12 +40,8 @@ class Users_Field_Model extends Vtiger_Field_Model
 		return parent::isViewEnabled();
 	}
 
-	/**
-	 * Function to check if the field is export table.
-	 *
-	 * @return bool
-	 */
-	public function isExportTable()
+	/** {@inheritdoc} */
+	public function isExportable(): bool
 	{
 		return $this->isViewable() || 99 === $this->getUIType();
 	}
@@ -118,13 +114,13 @@ class Users_Field_Model extends Vtiger_Field_Model
 	public function isEditable(): bool
 	{
 		if (null === $this->get('editable')) {
-			if (115 === $this->get('uitype') && (!\App\User::getCurrentUserModel()->isAdmin() || \App\User::getCurrentUserId() === $this->get('rocordId'))) {
+			if (115 === $this->get('uitype') && (!\App\User::getCurrentUserModel()->isAdmin() || \App\User::getCurrentUserId() === $this->get('recordId'))) {
 				$permission = false;
 			} elseif ('super_user' === $this->getName()) {
 				$permission = \App\User::getCurrentUserModel()->isAdmin();
 			} elseif ('authy_secret_totp' === $this->getColumnName()) {
-				$permission = $this->get('rocordId') === \App\User::getCurrentUserId();
-			} elseif (!$this->get('editable')) {
+				$permission = $this->get('recordId') === \App\User::getCurrentUserId();
+			} else {
 				$permission = parent::isEditable();
 			}
 			$this->set('editable', $permission);
@@ -135,10 +131,7 @@ class Users_Field_Model extends Vtiger_Field_Model
 	/** {@inheritdoc} */
 	public function isViewable()
 	{
-		if ('authy_secret_totp' === $this->getColumnName()) {
-			return $this->get('rocordId') === \App\User::getCurrentUserId();
-		}
-		return parent::isViewable();
+		return 'authy_secret_totp' !== $this->getColumnName() && parent::isViewable();
 	}
 
 	/** {@inheritdoc} */

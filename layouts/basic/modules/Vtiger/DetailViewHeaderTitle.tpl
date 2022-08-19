@@ -6,7 +6,7 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-* Contributor(s): YetiForce Sp. z o.o.
+* Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
@@ -24,7 +24,7 @@
 			</div>
 			<div class="pl-1">
 				<div class="d-flex flex-nowrap align-items-center js-popover-tooltip--ellipsis-icon"
-					 data-content="{\App\Purifier::encodeHtml($RECORD->getName())}" data-toggle="popover" data-js="popover | mouseenter">
+					data-content="{\App\Purifier::encodeHtml($RECORD->getName())}" data-toggle="popover" data-js="popover | mouseenter">
 					<h4 class="recordLabel h6 mb-0 js-popover-text" data-js="clone">
 						<span class="modCT_{$MODULE_NAME}">
 							{\App\Utils\Completions::decode(Vtiger_Util_Helper::toVtiger6SafeHTML(\App\Purifier::decodeHtml($RECORD->getName())))}
@@ -34,10 +34,12 @@
 					{assign var=RECORD_STATE value=\App\Record::getState($RECORD->getId())}
 					{if $RECORD_STATE && $RECORD_STATE !== 'Active'}
 						{assign var=COLOR value=App\Config::search('LIST_ENTITY_STATE_COLOR')}
-						<span class="badge badge-secondary" {if $COLOR[$RECORD_STATE]}style="background-color: {$COLOR[$RECORD_STATE]};"{/if}>
+						<span class="badge badge-secondary ml-1" {if $COLOR[$RECORD_STATE]}style="background-color: {$COLOR[$RECORD_STATE]};" {/if}>
 							{if \App\Record::getState($RECORD->getId()) === 'Trash'}
+								<span class="fas fa-trash-alt mr-2"></span>
 								{\App\Language::translate('LBL_ENTITY_STATE_TRASH')}
 							{else}
+								<span class="fas fa-archive mr-2"></span>
 								{\App\Language::translate('LBL_ENTITY_STATE_ARCHIVED')}
 							{/if}
 						</span>

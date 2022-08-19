@@ -4,8 +4,8 @@
  *
  * @package   Dashboard
  *
- * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
@@ -152,5 +152,27 @@ class Vtiger_MiniListModel_Dashboard extends Vtiger_Widget_Model
 				break;
 		}
 		return $value;
+	}
+
+	/** {@inheritdoc} */
+	public function isDeletable(): bool
+	{
+		return parent::isDeletable() && Users_Privileges_Model::getCurrentUserPrivilegesModel()->hasModuleActionPermission($this->get('tabid'), 'CreateDashboardFilter');
+	}
+
+	/** {@inheritdoc} */
+	public function isViewable(): bool
+	{
+		$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
+		$moduleName = \App\Json::decode($this->get('data'))['module'];
+
+		return $userPrivModel->hasModulePermission($moduleName) && \App\CustomView::isPermitted((int) $this->get('filterid'));
+	}
+
+	/** {@inheritdoc} */
+	public function isCreatable(): bool
+	{
+		$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
+		return $this->isViewable() && $userPrivModel->hasModuleActionPermission($this->get('module') ?: $this->get('tabid'), 'CreateDashboardFilter');
 	}
 }

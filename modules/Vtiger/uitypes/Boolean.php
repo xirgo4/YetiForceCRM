@@ -6,7 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Boolean_UIType extends Vtiger_Base_UIType
@@ -35,13 +35,13 @@ class Vtiger_Boolean_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getDisplayValue($value, $record = false, $recordModel = false, $rawText = false, $length = false)
 	{
-		if (1 === $value || '1' === $value || 'on' === strtolower($value) || 'yes' === strtolower($value) || true === $value) {
+		if (null !== $value && (1 === $value || '1' === $value || 'on' === strtolower($value) || 'yes' === strtolower($value) || true === $value)) {
 			return App\Language::translate('LBL_YES', $this->getFieldModel()->getModuleName());
 		}
-		if (0 === $value || '0' === $value || 'off' === strtolower($value) || 'no' === strtolower($value) || false === $value) {
+		if (null !== $value && (0 === $value || '0' === $value || 'off' === strtolower($value) || 'no' === strtolower($value) || false === $value)) {
 			return App\Language::translate('LBL_NO', $this->getFieldModel()->getModuleName());
 		}
-		return \App\Purifier::encodeHtml($value);
+		return '';
 	}
 
 	/** {@inheritdoc} */
@@ -65,7 +65,7 @@ class Vtiger_Boolean_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getQueryOperators()
 	{
-		return ['e', 'n', 'y', 'ny'];
+		return ['e', 'n', 'y', 'ny', 'ef', 'nf'];
 	}
 
 	/** {@inheritdoc} */

@@ -4,8 +4,8 @@
  *
  * @package   Tests
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Tomasz Kur <t.kur@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -88,7 +88,33 @@ class Encryption extends \Tests\Base
 		$testText = 'TEST TEXT';
 		$encryptText = $instance->encrypt($testText);
 		$this->assertTrue(!empty($encryptText), 'Encryption is not available');
-		$this->assertFalse($testText === $encryptText, 'Encryption is not working');
+		$this->assertNotSame($testText, $encryptText, 'Encryption is not working');
 		$this->assertSame($testText, $instance->decrypt($encryptText), 'The decrypted text does not match the encrypted text');
+	}
+
+	/**
+	 * Testing process function for module.
+	 *
+	 * @param string $method
+	 * @param string $password
+	 *
+	 * @dataProvider encryptionProvider
+	 */
+	public function testEncryptionModule(string $method, string $password)
+	{
+		$instance = clone \App\Encryption::getInstance(\App\Module::getModuleId('Passwords'));
+		$instance->set('method', $method);
+		$instance->set('vector', $password);
+		$instance->set('pass', $password);
+
+		$this->assertTrue($instance->isActive(true), 'The encryption mechanism is not active');
+		foreach (['TEST TEXT', ''] as $testText) {
+			$encryptText = $instance->encrypt($testText, true);
+			if ($testText) {
+				$this->assertTrue(!empty($encryptText), 'Encryption is not available');
+				$this->assertNotSame($testText, $encryptText, 'Encryption is not working');
+			}
+			$this->assertSame($testText, $instance->decrypt($encryptText, true), 'The decrypted text does not match the encrypted text');
+		}
 	}
 }

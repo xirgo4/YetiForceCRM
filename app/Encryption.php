@@ -4,8 +4,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Tomasz Kur <t.kur@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -66,6 +66,16 @@ class Encryption extends Base
 	}
 
 	/**
+	 * Get vector.
+	 *
+	 * @return string
+	 */
+	public function getVector(): string
+	{
+		return $this->get('vector') ?? '';
+	}
+
+	/**
 	 * Get target ID.
 	 *
 	 * @return int
@@ -86,6 +96,16 @@ class Encryption extends Base
 	}
 
 	/**
+	 * Get options or options default value(0).
+	 *
+	 * @return int
+	 */
+	public function getOptions(): int
+	{
+		return $this->get('options') ?? 0;
+	}
+
+	/**
 	 * Function to encrypt data.
 	 *
 	 * @param string $decrypted
@@ -98,7 +118,7 @@ class Encryption extends Base
 		if (!$this->isActive($testMode)) {
 			return $decrypted;
 		}
-		$encrypted = openssl_encrypt($decrypted, $this->get('method'), $this->get('pass'), $this->get('options'), $this->get('vector'));
+		$encrypted = openssl_encrypt($decrypted, $this->getMethod(), $this->get('pass'), $this->getOptions(), $this->get('vector'));
 		return base64_encode($encrypted);
 	}
 
@@ -115,7 +135,7 @@ class Encryption extends Base
 		if (!$this->isActive($testMode)) {
 			return $encrypted;
 		}
-		return openssl_decrypt(base64_decode($encrypted), $this->get('method'), $this->get('pass'), $this->get('options'), $this->get('vector'));
+		return openssl_decrypt(base64_decode($encrypted), $this->getMethod(), $this->get('pass'), $this->getOptions(), $this->get('vector'));
 	}
 
 	/**
@@ -125,9 +145,7 @@ class Encryption extends Base
 	 */
 	public static function getMethods()
 	{
-		return array_filter(openssl_get_cipher_methods(), function ($methodName) {
-			return false === stripos($methodName, 'gcm') && false === stripos($methodName, 'ccm');
-		});
+		return array_filter(openssl_get_cipher_methods(), fn ($methodName) => false === stripos($methodName, 'gcm') && false === stripos($methodName, 'ccm'));
 	}
 
 	/**

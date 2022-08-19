@@ -4,8 +4,8 @@
  *
  * @package   Controller
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -55,7 +55,7 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Get unlock data.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
 	 * @return void
 	 */
@@ -68,7 +68,7 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Get confirmations data.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
 	 * @return void
 	 */
@@ -81,7 +81,7 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Save unlock data.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
 	 * @return void
 	 */
@@ -95,7 +95,7 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Save confirmations data.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
 	 * @return void
 	 */
@@ -109,7 +109,7 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Get response.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
 	 * @return array
 	 */
@@ -126,7 +126,7 @@ class InterestsConflict extends \App\Controller\Action
 				'user_id' => \App\Fields\Owner::getUserLabel($row['user_id']),
 				'related' => $row['related_id'],
 				'source_id' => $row['source_id'],
-				'comment' => nl2br(\App\Layout::truncateText($row['comment'], 40)),
+				'comment' => \App\Layout::truncateText($row['comment'], 40, true, true),
 				'modify_user' => $row['modify_user_id'] ? \App\Fields\Owner::getUserLabel($row['modify_user_id']) : null,
 				'modify_date_time' => $row['modify_date_time'] ? \App\Fields\DateTime::formatToDisplay($row['modify_date_time']) : null,
 			];
@@ -135,10 +135,10 @@ class InterestsConflict extends \App\Controller\Action
 		\App\Record::getLabel($ids);
 		\vtlib\Functions::getCRMRecordMetadata($ids);
 		foreach ($rows as &$row) {
-			$row['related'] = \App\Layout::getRecordLabel($row['related']);
+			$row['related'] = \App\Record::getHtmlLink($row['related'], null, \App\Config::main('href_max_length'));
 			$info = '';
 			if ($row['source_id']) {
-				$info .= \App\Language::translate('LBL_SOURCE_RECORD') . ': ' . \App\Layout::getRecordLabel($row['source_id']) . '<br>';
+				$info .= \App\Language::translate('LBL_SOURCE_RECORD') . ': ' . \App\Record::getHtmlLink($row['source_id'], null, \App\Config::main('href_max_length')) . '<br>';
 			}
 			if ($row['modify_user']) {
 				$info .= \App\Language::translate('Last Modified By') . ': ' . $row['modify_user'] . '<br>';
@@ -160,9 +160,9 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Get query.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
-	 * @return App\Db\Query
+	 * @return \App\Db\Query
 	 */
 	public function getUnlockQuery(\App\Request $request): \App\Db\Query
 	{
@@ -196,7 +196,7 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Get response.
 	 *
-	 * @param App\Request $request
+	 * @param \App\Request $request
 	 *
 	 * @return array
 	 */
@@ -231,10 +231,10 @@ class InterestsConflict extends \App\Controller\Action
 		\App\Record::getLabel($ids);
 		\vtlib\Functions::getCRMRecordMetadata($ids);
 		foreach ($rows as &$row) {
-			$row['related'] = \App\Layout::getRecordLabel($row['related_id']);
+			$row['related'] = \App\Record::getHtmlLink($row['related_id'], null, \App\Config::main('href_max_length'));
 			$info = '';
 			if ($row['source_id']) {
-				$info .= \App\Language::translate('LBL_SOURCE_RECORD') . ': ' . \App\Layout::getRecordLabel($row['source_id']) . '<br>';
+				$info .= \App\Language::translate('LBL_SOURCE_RECORD') . ': ' . \App\Record::getHtmlLink($row['source_id'], null, \App\Config::main('href_max_length')) . '<br>';
 			}
 			if ($row['modify_user']) {
 				$info .= \App\Language::translate('Last Modified By') . ': ' . $row['modify_user'] . '<br>';
@@ -263,10 +263,10 @@ class InterestsConflict extends \App\Controller\Action
 	/**
 	 * Get query.
 	 *
-	 * @param App\Request $request
-	 * @param string      $type
+	 * @param \App\Request $request
+	 * @param string       $type
 	 *
-	 * @return App\Db\Query
+	 * @return \App\Db\Query
 	 */
 	public function getConfirmQuery(\App\Request $request, string $type): \App\Db\Query
 	{

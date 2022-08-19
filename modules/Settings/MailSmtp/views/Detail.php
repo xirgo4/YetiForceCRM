@@ -3,16 +3,14 @@
 /**
  * Mail edit view.
  *
- * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author  Adrian Koń <a.kon@yetiforce.com>
  * @author  Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Settings_MailSmtp_Detail_View extends Settings_Vtiger_Index_View
 {
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function checkPermission(App\Request $request)
 	{
 		parent::checkPermission($request);
@@ -21,9 +19,7 @@ class Settings_MailSmtp_Detail_View extends Settings_Vtiger_Index_View
 		}
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function process(App\Request $request)
 	{
 		$record = $request->getInteger('record');

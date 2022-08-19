@@ -6,11 +6,17 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce Sp. z o.o
+ * Contributor(s): YetiForce S.A.
  * *********************************************************************************** */
 
 class Vtiger_Password_UIType extends Vtiger_Base_UIType
 {
+	/** {@inheritdoc} */
+	protected $search = false;
+
+	/** {@inheritdoc} */
+	protected $sortable = false;
+
 	/** {@inheritdoc} */
 	public function setValueFromRequest(App\Request $request, Vtiger_Record_Model $recordModel, $requestFieldName = false)
 	{
@@ -30,10 +36,12 @@ class Vtiger_Password_UIType extends Vtiger_Base_UIType
 		if (empty($value) || isset($this->validate[$value])) {
 			return;
 		}
-		$dbValue = $isUserFormat ? $this->getDBValue($value) : $value;
-		$maximumLength = $this->getFieldModel()->get('maximumlength');
-		if ($maximumLength && App\TextParser::getTextLength($dbValue) > $maximumLength) {
-			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $dbValue, 406);
+		$maximumLength = $this->getFieldModel()->getMaxValue();
+		if (!$isUserFormat && \App\Encryption::getInstance()->isActive()) {
+			$maximumLength = $this->getFieldModel()->getDbValueLength();
+		}
+		if ($maximumLength && App\TextUtils::getTextLength($value) > $maximumLength) {
+			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . $value, 406);
 		}
 		$this->validate[$value] = true;
 	}
@@ -65,23 +73,11 @@ class Vtiger_Password_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function getEditViewDisplayValue($value, $recordModel = false)
 	{
-		return $value ? $this->getDisplayValue($value, false, false, true) : '';
+		return $this->getDisplayValue($value, false, false, true);
 	}
 
 	/** {@inheritdoc} */
-	public function getDuplicateValue(Vtiger_Record_Model $recordModel)
-	{
-		return '';
-	}
-
-	/** {@inheritdoc} */
-	public function isActiveSearchView()
-	{
-		return false;
-	}
-
-	/** {@inheritdoc} */
-	public function isListviewSortable()
+	public function isDuplicable(): bool
 	{
 		return false;
 	}
@@ -89,7 +85,7 @@ class Vtiger_Password_UIType extends Vtiger_Base_UIType
 	/** {@inheritdoc} */
 	public function isWritable(): bool
 	{
-		return !\App\Encryption::getInstance($this->getFieldModel()->getModuleId())->isRunning();
+		return parent::isWritable() && !\App\Encryption::getInstance($this->getFieldModel()->getModuleId())->isRunning();
 	}
 
 	/** {@inheritdoc} */
@@ -108,6 +104,36 @@ class Vtiger_Password_UIType extends Vtiger_Base_UIType
 	public function getHistoryDisplayValue($value, Vtiger_Record_Model $recordModel, $rawText = false)
 	{
 		return $this->getDisplayValue($value, false, false, true);
+	}
+
+	/** {@inheritdoc} */
+	public function getRawValue($value)
+	{
+		return '******';
+	}
+
+	/** {@inheritdoc} */
+	public function getApiDisplayValue($value, Vtiger_Record_Model $recordModel, array $params = [])
+	{
+		if (!empty($params['showHiddenData'])) {
+			$value = $this->getPwd($value);
+			(new App\EventHandler())->setRecordModel($recordModel)->setModuleName($recordModel->getModuleName())->trigger('EntityAfterShowHiddenData');
+		} else {
+			$value = parent::getApiDisplayValue($value, $recordModel, $params);
+		}
+		return $value;
+	}
+
+	/** {@inheritdoc} */
+	public function getQueryOperators()
+	{
+		return [];
+	}
+
+	/** {@inheritdoc} */
+	public function getTemplateName()
+	{
+		return 'Edit/Field/Password.tpl';
 	}
 
 	/**
@@ -165,15 +191,17 @@ class Vtiger_Password_UIType extends Vtiger_Base_UIType
 		return $value;
 	}
 
-	/** {@inheritdoc} */
-	public function getQueryOperators()
+	/**
+	 * Get actions urls.
+	 *
+	 * @return array
+	 */
+	public function getActionsUrl(): array
 	{
-		return [];
-	}
-
-	/** {@inheritdoc} */
-	public function getTemplateName()
-	{
-		return 'Edit/Field/Password.tpl';
+		$fieldModel = $this->getFieldModel();
+		return [
+			'generate' => "index.php?module={$fieldModel->getModuleName()}&action=Password&mode=generatePwd&field={$fieldModel->getName()}",
+			'validate' => "index.php?module={$fieldModel->getModuleName()}&action=Password&mode=validatePwd&field={$fieldModel->getName()}",
+		];
 	}
 }

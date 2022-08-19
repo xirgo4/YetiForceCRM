@@ -6,7 +6,7 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-* Contributor(s): YetiForce.com
+* Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
@@ -96,6 +96,11 @@
 								{/if}
 							{/foreach}
 						{/if}
+						{if isset($RELATED_LIST_LINKS['RELATEDLIST_BASIC'])}
+							{foreach item=LINK from=$RELATED_LIST_LINKS['RELATEDLIST_BASIC']}
+								{include file=\App\Layout::getTemplatePath('ButtonLink.tpl', $MODULE) BUTTON_VIEW='relatedListView' CLASS='mr-sm-1 c-btn-block-sm-down'}
+							{/foreach}
+						{/if}
 					</div>
 					{if $CUSTOM_VIEW_LIST}
 						<div class="mr-auto col-xl-2 col-md-4 col-12 px-0 mb-md-0 mb-1">
@@ -110,7 +115,7 @@
 									</div>
 									<select class="form-control select2 js-relation-cv-id" data-js="change|select2|value">
 										{foreach key=CV_ID item=CV_NAME from=$CUSTOM_VIEW_LIST}
-											<option value="{$CV_ID}" {if $CV_ID == $VIEW_MODEL->get('cvId')}selected{/if}>{$CV_NAME}</option>
+											<option value="{$CV_ID}" {if $CV_ID == $VIEW_MODEL->get('viewId')}selected{/if}>{$CV_NAME}</option>
 										{/foreach}
 									</select>
 								</div>

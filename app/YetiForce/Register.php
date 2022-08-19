@@ -5,8 +5,8 @@
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -20,7 +20,7 @@ class Register
 	/**
 	 * Registration config cache.
 	 *
-	 * @var
+	 * @var array
 	 */
 	private static $config;
 	/**
@@ -155,7 +155,7 @@ class Register
 			return -1;
 		}
 		$conf = static::getConf();
-		if (!$force && (!empty($conf['last_check_time']) && (($conf['status'] < 6 && strtotime('+6 hours', strtotime($conf['last_check_time'])) > time()) || ($conf['status'] > 6 && strtotime('+7 day', strtotime($conf['last_check_time'])) > time())))) {
+		if (!$force && (!empty($conf['last_check_time']) && (($conf['status'] < 6 && strtotime('+6 hours', strtotime($conf['last_check_time'])) > time()) || ($conf['status'] >= 6 && strtotime('+7 day', strtotime($conf['last_check_time'])) > time())))) {
 			return -2;
 		}
 		$status = 0;
@@ -345,7 +345,7 @@ class Register
 	 */
 	public static function isRegistered(): bool
 	{
-		return static::getStatus() > 6;
+		return static::getStatus() >= 6;
 	}
 
 	/**

@@ -11,7 +11,7 @@
  * The Initial Developer of the Original Code is SugarCRM, Inc.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.;
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
+ * Contributor(s): YetiForce S.A.
  * ****************************************************************************** */
 /* * *******************************************************************************
  * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/data/CRMEntity.php,v 1.16 2005/04/29 04:21:31 mickie Exp $
@@ -33,7 +33,12 @@ require_once 'include/Webservices/Utils.php';
 
 class CRMEntity
 {
-	public $ownedby;
+	/** @var string[] Tables join clause. */
+	public $tableJoinClause = [
+		'vtiger_entity_stats' => 'LEFT JOIN',
+		'u_yf_openstreetmap' => 'LEFT JOIN',
+		'u_yf_wapro_records_map' => 'LEFT JOIN',
+	];
 
 	/**
 	 * Constructor which will set the column_fields in this object.
@@ -70,20 +75,33 @@ class CRMEntity
 		}
 		$focus = new $module();
 		$focus->moduleName = $module;
+		if (method_exists($focus, 'init')) {
+			$focus->init();
+		}
 		\App\Cache::staticSave('CRMEntity', $module, clone $focus);
 		return $focus;
 	}
 
 	/**
+	 * Loading the system configuration.
+	 *
+	 * @return void
+	 */
+	protected function init(): void
+	{
+		$this->tab_name_index += ['u_yf_wapro_records_map' => 'crmid'];
+	}
+
+	/**
 	 * Function returns the column alias for a field.
 	 *
-	 * @param <Array> $fieldinfo - field information
+	 * @param array $fieldInfo - field information
 	 *
 	 * @return string field value
 	 */
-	protected function createColumnAliasForField($fieldinfo)
+	protected function createColumnAliasForField(array $fieldInfo)
 	{
-		return strtolower($fieldinfo['tablename'] . $fieldinfo['fieldname']);
+		return strtolower($fieldInfo['tablename'] . $fieldInfo['fieldname']);
 	}
 
 	/**
@@ -92,29 +110,33 @@ class CRMEntity
 	 * @param int    $record - crmid of record
 	 * @param string $module - module name
 	 */
-	public function retrieveEntityInfo($record, $module)
+	public function retrieveEntityInfo(int $record, string $module)
 	{
 		if (!isset($record)) {
 			throw new \App\Exceptions\NoPermittedToRecord('LBL_RECORD_NOT_FOUND');
 		}
 		if ($cachedModuleFields = \App\Field::getModuleFieldInfosByPresence($module)) {
 			$query = new \App\Db\Query();
-			$columnClause = [];
-			$requiredTables = $this->tab_name_index; // copies-on-write
-
+			$tabNameIndex = $this->tab_name_index; // copies-on-write
+			$requiredTables = $columnClause = [];
 			foreach ($cachedModuleFields as $fieldInfo) {
-				// Alias prefixed with tablename+fieldname to avoid duplicate column name across tables
-				// fieldname are always assumed to be unique for a module
-				$columnClause[] = $fieldInfo['tablename'] . '.' . $fieldInfo['columnname'] . ' AS ' . $this->createColumnAliasForField($fieldInfo);
+				if (isset($tabNameIndex[$fieldInfo['tablename']])) {
+					if (!isset($requiredTables[$fieldInfo['tablename']])) {
+						$requiredTables[$fieldInfo['tablename']] = $tabNameIndex[$fieldInfo['tablename']];
+					}
+					// Alias prefixed with tablename+fieldname to avoid duplicate column name across tables
+					// fieldname are always assumed to be unique for a module
+					$columnClause[] = $fieldInfo['tablename'] . '.' . $fieldInfo['columnname'] . ' AS ' . $this->createColumnAliasForField($fieldInfo);
+				}
 			}
 			$columnClause[] = 'vtiger_crmentity.deleted';
 			$query->select($columnClause);
+			$query->from('vtiger_crmentity');
 			if (isset($requiredTables['vtiger_crmentity'])) {
-				$query->from('vtiger_crmentity');
 				unset($requiredTables['vtiger_crmentity']);
-				foreach ($requiredTables as $tableName => $tableIndex) {
-					$query->leftJoin($tableName, "vtiger_crmentity.crmid = $tableName.$tableIndex");
-				}
+			}
+			foreach ($requiredTables as $tableName => $tableIndex) {
+				$query->leftJoin($tableName, "vtiger_crmentity.crmid = $tableName.$tableIndex");
 			}
 			$query->where(['vtiger_crmentity.crmid' => $record]);
 			if ('' != $module) {
@@ -122,7 +144,7 @@ class CRMEntity
 			}
 			$resultRow = $query->one();
 			if (empty($resultRow)) {
-				throw new \App\Exceptions\AppException('ERR_RECORD_NOT_FOUND||' . $record);
+				throw new \App\Exceptions\NoPermittedToRecord('ERR_RECORD_NOT_FOUND||' . $record);
 			}
 			foreach ($cachedModuleFields as $fieldInfo) {
 				$fieldvalue = '';
@@ -145,17 +167,19 @@ class CRMEntity
 	}
 
 	/**
+	 * Get table join clause by table name.
+	 *
 	 * @param string $tableName
 	 *
 	 * @return string
 	 */
-	public function getJoinClause($tableName)
+	public function getJoinClause($tableName): string
 	{
 		if (strripos($tableName, 'rel') === (\strlen($tableName) - 3)) {
 			return 'LEFT JOIN';
 		}
-		if ('vtiger_entity_stats' == $tableName || 'u_yf_openstreetmap' == $tableName) {
-			return 'LEFT JOIN';
+		if (isset($this->tableJoinClause[$tableName])) {
+			return $this->tableJoinClause[$tableName];
 		}
 		return 'INNER JOIN';
 	}

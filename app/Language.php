@@ -7,8 +7,8 @@ namespace App;
  *
  * @package App
  *
- * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @copyright YetiForce S.A.
+ * @license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Adrian Koń <a.kon@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -150,14 +150,15 @@ class Language
 	/**
 	 * Functions that gets translated string.
 	 *
-	 * @param string      $key        - string which need to be translated
-	 * @param string      $moduleName - module scope in which the translation need to be check
-	 * @param bool|string $language   - language of translation
-	 * @param mixed       $encode
+	 * @param string      $key              - string which need to be translated
+	 * @param string      $moduleName       - module scope in which the translation need to be check
+	 * @param string|null $language         - language of translation
+	 * @param bool        $encode           - When no translation was found do encode the output
+	 * @param string      $secondModuleName - Additional module name to be translated when not in $moduleName
 	 *
 	 * @return string - translated string
 	 */
-	public static function translate($key, $moduleName = '_Base', $language = false, $encode = true)
+	public static function translate(string $key, string $moduleName = '_Base', ?string $language = null, bool $encode = true, ?string $secondModuleName = null)
 	{
 		if (empty($key)) { // nothing to translate
 			return $key;
@@ -181,6 +182,16 @@ class Language
 			}
 			return \nl2br(static::$languageContainer[$language][$moduleName]['php'][$key]);
 		}
+		if ($secondModuleName) {
+			$secondModuleName = str_replace([':', '.'], [\DIRECTORY_SEPARATOR, \DIRECTORY_SEPARATOR], $secondModuleName);
+			static::loadLanguageFile($language, $secondModuleName);
+			if (isset(static::$languageContainer[$language][$secondModuleName]['php'][$key])) {
+				if ($encode) {
+					return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$secondModuleName]['php'][$key]));
+				}
+				return \nl2br(static::$languageContainer[$language][$secondModuleName]['php'][$key]);
+			}
+		}
 		// Lookup for the translation in base module, in case of sub modules, before ending up with common strings
 		if (0 === strpos($moduleName, 'Settings')) {
 			$base = 'Settings' . \DIRECTORY_SEPARATOR . '_Base';
@@ -200,10 +211,11 @@ class Language
 			return \nl2br(static::$languageContainer[$language]['_Base']['php'][$key]);
 		}
 		if (\App\Config::performance('recursiveTranslate') && static::DEFAULT_LANG !== $language) {
-			return static::translate($key, $moduleName, static::DEFAULT_LANG, $encode);
+			return static::translate($key, $moduleName, static::DEFAULT_LANG, $encode, $secondModuleName);
 		}
 		\App\Log::info("Cannot translate this: '$key' for module '$moduleName', lang: $language");
-		return Purifier::encodeHtml($key);
+
+		return $encode ? Purifier::encodeHtml($key) : $key;
 	}
 
 	/**
@@ -269,7 +281,7 @@ class Language
 	 * @param int    $count      Quantityu for plural determination
 	 *
 	 * @see https://www.i18next.com/plurals.html
-	 * @see http://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html?id=l10n/pluralforms#pluralforms-list
+	 * @see https://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html?id=l10n/pluralforms#pluralforms-list
 	 *
 	 * @return string
 	 */
@@ -309,7 +321,7 @@ class Language
 		if (\App\Config::performance('recursiveTranslate') && static::DEFAULT_LANG !== $language) {
 			return static::translateSingleMod($key, $moduleName, static::DEFAULT_LANG, $encode);
 		}
-		return $key;
+		return $encode ? Purifier::encodeHtml($key) : $key;
 	}
 
 	/**
@@ -425,7 +437,7 @@ class Language
 	 * - 3 or more forms : key_X with X indented for each plural form.
 	 *
 	 * @see https://www.i18next.com/plurals.html for some examples
-	 * @see http://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html?id=l10n/pluralforms for whole plural rules used by getText
+	 * @see https://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html?id=l10n/pluralforms for whole plural rules used by getText
 	 *
 	 * @param float $count Quantityu for plural determination
 	 *

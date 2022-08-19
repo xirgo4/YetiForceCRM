@@ -2,7 +2,7 @@
  * gulpfile.js
  *
  * @description contains css tasks
- * @license YetiForce Public License 4.0
+ * @license YetiForce Public License 5.0
  * @author Tomasz Poradzewski <t.poradzewski@yetiforce.com>
  */
 

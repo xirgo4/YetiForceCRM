@@ -6,19 +6,19 @@
 * The Initial Developer of the Original Code is vtiger.
 * Portions created by vtiger are Copyright (C) vtiger.
 * All Rights Reserved.
-*Contributor(s): YetiForce.com
+*Contributor(s): YetiForce S.A.
 ********************************************************************************/
 -->*}
 {strip}
 	<!-- tpl-Base-List-Field-PickList -->
-	{assign var=FIELD_INFO value=\App\Json::encode($FIELD_MODEL->getFieldInfo())}
 	{assign var=PICKLIST_VALUES value=$FIELD_MODEL->getPicklistValues(true)}
+	{assign var=FIELD_INFO value=\App\Json::encode($FIELD_MODEL->getFieldInfo())}
 	{if isset($SEARCH_INFO['searchValue'])}
 		{assign var=SEARCH_VALUES value=explode('##', \App\Purifier::decodeHtml($SEARCH_INFO['searchValue']))}
 	{else}
 		{assign var=SEARCH_VALUES value=[]}
 	{/if}
-	<div class="picklistSearchField input-group {if isset($CLASS_SIZE)}{$CLASS_SIZE}{/if}">
+	<div class="picklistSearchField input-group {if isset($CLASS_SIZE)}{$CLASS_SIZE}{/if} u-min-w-150pxr">
 		<select class="select2 listSearchContributor form-control" name="{$FIELD_MODEL->getName()}" multiple="multiple"
 			{if !$FIELD_MODEL->isActiveSearchView()}disabled="disabled" data-placeholder=" " {/if}
 			title="{\App\Language::translate($FIELD_MODEL->getFieldLabel(), $FIELD_MODEL->getModule()->getName())}"

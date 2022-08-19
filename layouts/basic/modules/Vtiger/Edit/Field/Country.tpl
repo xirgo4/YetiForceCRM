@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Base-Edit-Field-Country -->
 	{assign var=FIELD_INFO value=\App\Json::encode($FIELD_MODEL->getFieldInfo())}
@@ -30,7 +30,7 @@
 				{foreach item=VALUE key=KEY from=$PICKLIST_VALUES}
 					{assign var=CODE value=$COUNTRY_DATA[$KEY]['code']}
 					<option value="{\App\Purifier::encodeHtml($KEY)}" data-code="{$CODE}" title="{\App\Purifier::encodeHtml($VALUE)}"
-						data-template="<span><span class='flag-icon flag-icon-{$CODE|lower} mr-2'></span>{\App\Purifier::encodeHtml($VALUE)}</span>"
+						data-template="<span><span class='fi fi-{$CODE|lower} mr-2'></span>{\App\Purifier::encodeHtml($VALUE)}</span>"
 						{if trim($FIELD_VALUE) eq trim($KEY)} selected{/if}>
 						{\App\Purifier::encodeHtml($VALUE)}
 					</option>
