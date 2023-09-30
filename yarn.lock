@@ -178,10 +178,10 @@ csstype@^3.1.0:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.2.tgz#1d4bf9d572f11c14031f0436e1c10bc1f571f50b"
   integrity sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==
 
-datatables.net-bs4@>=1.13.4, datatables.net-bs4@^1.11.3:
-  version "1.13.5"
-  resolved "https://registry.yarnpkg.com/datatables.net-bs4/-/datatables.net-bs4-1.13.5.tgz#b4919861a86ab422ac691747d687e9f62e0e1519"
-  integrity sha512-ii7+yRMkxdEkv4NuzVVsJydTKW24qKIs1m1kX//C2T4eb6cV1cOT+CxV65UchJe6cKLUM883NLxZ0yy7eEaBjw==
+datatables.net-bs4@>=1.13.4, datatables.net-bs4@^1.13.6:
+  version "1.13.6"
+  resolved "https://registry.yarnpkg.com/datatables.net-bs4/-/datatables.net-bs4-1.13.6.tgz#171ac930cbb68cd1a337e80040bddf537f3845a7"
+  integrity sha512-+ZYDvpvCf0L0qSXPGKbb17arFPNqnjkyrvAEamR9SGQaGK7PprVaNTLmRfP0Xq2dBxVYr+Y+OD/q63zaDo0cSA==
   dependencies:
     datatables.net ">=1.13.4"
     jquery ">=1.7"
